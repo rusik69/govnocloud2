@@ -23,13 +23,13 @@ func Parse() (types.Args, error) {
 	default:
 		return arg, errors.New("unknown command")
 	}
-	mastersString := flag.String("masters", "", "comma separated list of masters")
+	masterString := flag.String("master", "", "master host")
 	workersString := flag.String("workers", "", "comma separated list of workers")
 	user := flag.String("user", "ubuntu", "user to connect to the remote host")
 	key := flag.String("key", "~/.ssh/id_rsa", "path to the private key file")
 	flag.Parse()
-	if *mastersString != "" {
-		arg.Master = *mastersString
+	if *masterString != "" {
+		arg.Master = *masterString
 	} else {
 		return arg, errors.New("master is required")
 	}
