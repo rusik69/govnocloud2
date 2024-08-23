@@ -9,6 +9,8 @@ jobs:
   uninstall:
     runs-on: master
     steps:
+    - name: build
+      run: make build
     - name: Checkout code
       uses: actions/checkout@v4
     - name: uninstall
