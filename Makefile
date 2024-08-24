@@ -8,9 +8,9 @@ build:
 	chmod +x bin/*
 
 install:
-	bin/govnocloud2-linux-amd64 install -m master.govno.cloud -w node0.govno.cloud,node1.govno.cloud,node2.govno.cloud
+	bin/govnocloud2-linux-amd64 -m master.govno.cloud -w node0.govno.cloud,node1.govno.cloud,node2.govno.cloud install
 
 uninstall:
-	bin/govnocloud2-linux-amd64 uninstall -m master.govno.cloud -w node0.govno.cloud,node1.govno.cloud,node2.govno.cloud
+	bin/govnocloud2-linux-amd64 -m master.govno.cloud -w node0.govno.cloud,node1.govno.cloud,node2.govno.cloud uninstall
 
 all: get build
