@@ -24,6 +24,10 @@ var installCmd = &cobra.Command{
 	Short: "install govnocloud2 cluster",
 	Long:  `install govnocloud2 cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Println("master: ", masterFlag)
+		log.Println("workers: ", workersFlag)
+		log.Println("user: ", userFlag)
+		log.Println("key: ", keyFlag)
 		if masterFlag == "" {
 			panic("master is required")
 		}
@@ -58,6 +62,10 @@ var uninstallCmd = &cobra.Command{
 	Short: "uninstall govnocloud2 cluster",
 	Long:  `uninstall govnocloud2 cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Println("master: ", masterFlag)
+		log.Println("workers: ", workersFlag)
+		log.Println("user: ", userFlag)
+		log.Println("key: ", keyFlag)
 		if masterFlag == "" {
 			panic("master is required")
 		}
@@ -87,17 +95,17 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	defaultKeyDir := usr + "/.ssh/id_rsa"
+	defaultKeyPath := usr + "/.ssh/id_rsa"
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(uninstallCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	uninstallCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
 	uninstallCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
-	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyDir, "ssh key")
+	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	installCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
 	installCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
-	installCmd.Flags().StringVarP(&keyFlag, "key", "k", "~/.ssh/id_rsa", "ssh key")
+	installCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 }
 
 func main() {
