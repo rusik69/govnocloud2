@@ -84,10 +84,10 @@ var uninstallCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(uninstallCmd)
-	rootCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
-	rootCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
-	rootCmd.Flags().StringVarP(&userFlag, "user", "u", "root", "ssh user")
-	rootCmd.Flags().StringVarP(&keyFlag, "key", "k", "", "ssh key")
+	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
+	uninstallCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
+	uninstallCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
+	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", "", "ssh key")
 }
 
 func main() {
