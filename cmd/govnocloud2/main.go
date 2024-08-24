@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/k3s"
@@ -82,12 +83,17 @@ var uninstallCmd = &cobra.Command{
 }
 
 func init() {
+	usr, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	defaultKeyDir := usr + "/.ssh/id_rsa"
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(uninstallCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	uninstallCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
 	uninstallCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
-	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", "~/.ssh/id_rsa", "ssh key")
+	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyDir, "ssh key")
 	installCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	installCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
 	installCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
