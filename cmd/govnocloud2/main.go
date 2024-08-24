@@ -2,50 +2,97 @@ package main
 
 import (
 	"log"
+	"strings"
 
-	"github.com/rusik69/govnocloud2/pkg/args"
 	"github.com/rusik69/govnocloud2/pkg/k3s"
+	"github.com/spf13/cobra"
 )
 
+var masterFlag, workersFlag, userFlag, keyFlag string
+
+// root command
+var rootCmd = &cobra.Command{
+	Use:   "govnocloud2 [install | uninstall]",
+	Short: "govnocloud2 is a shitty cloud 2",
+	Long:  `govnocloud2 is a shitty cloud 2`,
+}
+
+// install command
+var installCmd = &cobra.Command{
+	Use:   "install [master] [workers]",
+	Short: "install govnocloud2 cluster",
+	Long:  `install govnocloud2 cluster`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if masterFlag == "" {
+			panic("master is required")
+		}
+		workersSplit := strings.Split(workersFlag, ",")
+		if len(workersSplit) == 0 {
+			panic("workers are required")
+		}
+		log.Println("Deploying k3s master on " + masterFlag)
+		out, err := k3s.DeployMaster(masterFlag, userFlag, keyFlag)
+		if err != nil {
+			panic(err)
+		}
+		log.Println(out)
+		token, err := k3s.GetToken(masterFlag, userFlag, keyFlag)
+		if err != nil {
+			panic(err)
+		}
+		for _, worker := range workersSplit {
+			log.Println("Deploying k3s worker on " + worker)
+			out, err := k3s.DeployNode(worker, userFlag, keyFlag, masterFlag, token)
+			if err != nil {
+				panic(err)
+			}
+			log.Println(out)
+		}
+	},
+}
+
+// uninstall command
+var uninstallCmd = &cobra.Command{
+	Use:   "uninstall [master] [workers]",
+	Short: "uninstall govnocloud2 cluster",
+	Long:  `uninstall govnocloud2 cluster`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if masterFlag == "" {
+			panic("master is required")
+		}
+		workersSplit := strings.Split(workersFlag, ",")
+		if len(workersSplit) == 0 {
+			panic("workers are required")
+		}
+		log.Println("Uninstalling k3s master on " + masterFlag)
+		out, err := k3s.UninstallMaster(masterFlag, userFlag, keyFlag)
+		if err != nil {
+			panic(err)
+		}
+		log.Println(out)
+		for _, worker := range workersSplit {
+			log.Println("Uninstalling k3s worker on " + worker)
+			out, err := k3s.UninstallNode(worker, userFlag, keyFlag)
+			if err != nil {
+				panic(err)
+			}
+			log.Println(out)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(installCmd)
+	rootCmd.AddCommand(uninstallCmd)
+	rootCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
+	rootCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
+	rootCmd.Flags().StringVarP(&userFlag, "user", "u", "root", "ssh user")
+	rootCmd.Flags().StringVarP(&keyFlag, "key", "k", "", "ssh key")
+}
+
 func main() {
-	arg, err := args.Parse()
+	err := rootCmd.Execute()
 	if err != nil {
 		panic(err)
-	}
-	switch arg.Command {
-	case "install":
-		log.Println("Deploying k3s master on " + arg.Master)
-		out, err := k3s.DeployMaster(arg.Master, arg.User, arg.Key)
-		if err != nil {
-			panic(err)
-		}
-		log.Println(out)
-		token, err := k3s.GetToken(arg.Master, arg.User, arg.Key)
-		if err != nil {
-			panic(err)
-		}
-		for _, worker := range arg.Workers {
-			log.Println("Deploying k3s worker on " + worker)
-			out, err := k3s.DeployNode(worker, arg.User, arg.Key, arg.Master, token)
-			if err != nil {
-				panic(err)
-			}
-			log.Println(out)
-		}
-	case "uninstall":
-		log.Println("Uninstalling k3s master on " + arg.Master)
-		out, err := k3s.UninstallMaster(arg.Master, arg.User, arg.Key)
-		if err != nil {
-			panic(err)
-		}
-		log.Println(out)
-		for _, worker := range arg.Workers {
-			log.Println("Uninstalling k3s worker on " + worker)
-			out, err := k3s.UninstallNode(worker, arg.User, arg.Key)
-			if err != nil {
-				panic(err)
-			}
-			log.Println(out)
-		}
 	}
 }
