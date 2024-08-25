@@ -1,10 +1,15 @@
 package k3s
 
-import "github.com/rusik69/govnocloud2/pkg/ssh"
+import (
+	"log"
+
+	"github.com/rusik69/govnocloud2/pkg/ssh"
+)
 
 // DeployMaster deploys k3s masters.
 func DeployMaster(host, user, key string) (string, error) {
 	cmd := "curl -sfL https://get.k3s.io | sh -"
+	log.Println(cmd)
 	output, err := ssh.Run(cmd, host, key, user)
 	if err != nil {
 		return "", err

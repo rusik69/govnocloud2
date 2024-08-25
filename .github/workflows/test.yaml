@@ -6,7 +6,7 @@ on:
       - '*'
 name: test
 jobs:
-  uninstall:
+  test:
     runs-on: master
     steps:
     - name: Checkout code
