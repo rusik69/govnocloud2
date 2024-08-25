@@ -1,7 +1,9 @@
 package k3s
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
@@ -24,7 +26,12 @@ func GetToken(host, user, key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return output, nil
+	tokenSplit := strings.Split(output, ":")
+	if len(tokenSplit) != 4 {
+		return "", fmt.Errorf("invalid token")
+	}
+	log.Println(tokenSplit)
+	return tokenSplit[3], nil
 }
 
 // GetKubeconfig gets the k3s kubeconfig.
