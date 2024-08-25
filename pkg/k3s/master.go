@@ -34,16 +34,16 @@ func GetKubeconfig(host, user, key string) (string, error) {
 
 // UninstallMaster uninstalls k3s master.
 func UninstallMaster(host, user, key string) (string, error) {
-	cmd := "sudo /usr/local/bin/k3s-uninstall.sh"
+	cmd := "sudo /usr/local/bin/k3s-uninstall.sh || true"
 	output, err := ssh.Run(cmd, host, key, user)
 	if err != nil {
 		return "", err
 	}
-	output2, err := ssh.Run("sudo rm -rf /etc/rancher/k3s", host, key, user)
+	output2, err := ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user)
 	if err != nil {
 		return "", err
 	}
-	output3, err := ssh.Run("sudo rm -rf /var/lib/rancher", host, key, user)
+	output3, err := ssh.Run("sudo rm -rf /var/lib/rancher || true", host, key, user)
 	if err != nil {
 		return "", err
 	}
@@ -52,16 +52,16 @@ func UninstallMaster(host, user, key string) (string, error) {
 
 // UninstallNode uninstalls k3s node.
 func UninstallNode(host, user, key string) (string, error) {
-	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh"
+	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh || true"
 	output, err := ssh.Run(cmd, host, key, user)
 	if err != nil {
 		return "", err
 	}
-	output2, err := ssh.Run("sudo rm -rf /etc/rancher/k3s", host, key, user)
+	output2, err := ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user)
 	if err != nil {
 		return "", err
 	}
-	output3, err := ssh.Run("sudo rm -rf /var/lib/rancher", host, key, user)
+	output3, err := ssh.Run("sudo rm -rf /var/lib/rancher || true", host, key, user)
 	if err != nil {
 		return "", err
 	}
