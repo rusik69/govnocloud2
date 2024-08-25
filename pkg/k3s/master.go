@@ -30,8 +30,8 @@ func GetToken(host, user, key string) (string, error) {
 	if len(tokenSplit) != 4 {
 		return "", fmt.Errorf("invalid token")
 	}
-	log.Println(tokenSplit)
-	return tokenSplit[3], nil
+	res := tokenSplit[3][:len(tokenSplit[3])-1]
+	return res, nil
 }
 
 // GetKubeconfig gets the k3s kubeconfig.
