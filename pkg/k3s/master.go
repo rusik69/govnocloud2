@@ -30,7 +30,7 @@ func GetToken(host, user, key string) (string, error) {
 	if len(tokenSplit) != 4 {
 		return "", fmt.Errorf("invalid token")
 	}
-	res := tokenSplit[0]
+	res := tokenSplit[3][:len(tokenSplit[3])-1]
 	return res, nil
 }
 
