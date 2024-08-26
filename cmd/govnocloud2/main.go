@@ -36,22 +36,20 @@ var installCmd = &cobra.Command{
 			panic("workers are required")
 		}
 		log.Println("Deploying k3s master on " + masterFlag)
-		out, err := k3s.DeployMaster(masterFlag, userFlag, keyFlag)
+		err := k3s.DeployMaster(masterFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
 		}
-		log.Println(out)
 		token, err := k3s.GetToken(masterFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
 		}
 		for _, worker := range workersSplit {
 			log.Println("Deploying k3s worker on " + worker)
-			out, err := k3s.DeployNode(worker, userFlag, keyFlag, masterFlag, token)
+			err := k3s.DeployNode(worker, userFlag, keyFlag, masterFlag, token)
 			if err != nil {
 				panic(err)
 			}
-			log.Println(out)
 		}
 	},
 }
@@ -74,18 +72,16 @@ var uninstallCmd = &cobra.Command{
 			panic("workers are required")
 		}
 		log.Println("Uninstalling k3s master on " + masterFlag)
-		out, err := k3s.UninstallMaster(masterFlag, userFlag, keyFlag)
+		err := k3s.UninstallMaster(masterFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
 		}
-		log.Println(out)
 		for _, worker := range workersSplit {
 			log.Println("Uninstalling k3s worker on " + worker)
-			out, err := k3s.UninstallNode(worker, userFlag, keyFlag)
+			err := k3s.UninstallNode(worker, userFlag, keyFlag)
 			if err != nil {
 				panic(err)
 			}
-			log.Println(out)
 		}
 	},
 }

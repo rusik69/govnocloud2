@@ -7,12 +7,12 @@ import (
 )
 
 // DeployNode deploys k3s nodes.
-func DeployNode(host, user, key, master, token string) (string, error) {
+func DeployNode(host, user, key, master, token string) error {
 	cmd := "curl -sfL https://get.k3s.io | K3S_URL=https://" + master + ":6443 K3S_TOKEN=" + token + " sh -"
 	log.Println(cmd)
-	output, err := ssh.Run(cmd, host, key, user)
+	_, err := ssh.Run(cmd, host, key, user, true)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return output, nil
+	return nil
 }
