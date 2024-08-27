@@ -2,7 +2,6 @@ package k3s
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 )
