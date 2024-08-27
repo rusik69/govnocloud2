@@ -27,14 +27,5 @@ func InstallKubeVirt() error {
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("error installing KubeVirt CR: %w", err)
 	}
-
-	log.Println("waiting for KubeVirt to be ready")
-	command = exec.Command("kubectl", "-n", "kubevirt", "wait", "--for", "condition=Available", "kv/kubevirt")
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	if err := command.Run(); err != nil {
-		return fmt.Errorf("error waiting for KubeVirt to be ready: %w", err)
-	}
-
 	return nil
 }
