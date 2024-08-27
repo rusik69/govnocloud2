@@ -29,7 +29,7 @@ func InstallKubeVirt() error {
 	}
 
 	log.Println("waiting for KubeVirt to be ready")
-	command = exec.Command("kubectl", "-n", "kubevirt", "wait", "kv", "kubevirt", "--for", "condition=Available")
+	command = exec.Command("kubectl", "-n", "kubevirt", "wait", "--for", "condition=Available", "kv/kubevirt")
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
