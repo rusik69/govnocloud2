@@ -3,6 +3,7 @@ package k3s
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
@@ -42,6 +43,16 @@ func GetKubeconfig(host, user, key string) (string, error) {
 		return "", err
 	}
 	return output, nil
+}
+
+// WriteKubeconfig writes the k3s kubeconfig to the file.
+func WriteKubeConfig(kubeconfig, path string) error {
+    // Write the kubeconfig to the file
+    err := os.WriteFile(path, []byte(kubeconfig), 0644)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 // UninstallMaster uninstalls k3s master.

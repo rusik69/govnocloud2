@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var masterFlag, workersFlag, userFlag, keyFlag string
+var masterFlag, workersFlag, userFlag, keyFlag, kubeConfigPath string
 
 // root command
 var rootCmd = &cobra.Command{
@@ -50,6 +50,14 @@ var installCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
+		}
+		kubeConfigBody, err := k3s.GetKubeconfig(masterFlag, userFlag, keyFlag)
+		if err != nil {
+			panic(err)
+		}
+		err = k3s.WriteKubeConfig(kubeConfigBody, kubeConfigPath)
+		if err != nil {
+			panic(err)
 		}
 	},
 }
@@ -92,6 +100,7 @@ func init() {
 		panic(err)
 	}
 	defaultKeyPath := usr + "/.ssh/id_rsa"
+	defaultKubeConfigPath := usr + "/.kube/config"
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(uninstallCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
@@ -102,6 +111,7 @@ func init() {
 	installCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
 	installCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
 	installCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
+	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "c", defaultKubeConfigPath, "kubeconfig path")
 }
 
 func main() {
