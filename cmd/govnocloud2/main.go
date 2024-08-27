@@ -51,11 +51,17 @@ var installCmd = &cobra.Command{
 				panic(err)
 			}
 		}
+		log.Println("Getting kubeconfig")
 		kubeConfigBody, err := k3s.GetKubeconfig(masterFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
 		}
 		err = k3s.WriteKubeConfig(kubeConfigBody, kubeConfigPath)
+		if err != nil {
+			panic(err)
+		}
+		log.Println("Kubeconfig is written to " + kubeConfigPath)
+		err = k3s.InstallKubeVirt()
 		if err != nil {
 			panic(err)
 		}

@@ -47,35 +47,17 @@ func GetKubeconfig(host, user, key string) (string, error) {
 
 // WriteKubeconfig writes the k3s kubeconfig to the file.
 func WriteKubeConfig(kubeconfig, path string) error {
-    // Write the kubeconfig to the file
-    err := os.WriteFile(path, []byte(kubeconfig), 0644)
-    if err != nil {
-        return err
-    }
-    return nil
-}
-
-// UninstallMaster uninstalls k3s master.
-func UninstallMaster(host, user, key string) error {
-	cmd := "sudo /usr/local/bin/k3s-uninstall.sh || true"
-	_, err := ssh.Run(cmd, host, key, user, true)
-	if err != nil {
-		return err
-	}
-	_, err = ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user, true)
-	if err != nil {
-		return err
-	}
-	_, err = ssh.Run("sudo rm -rf /var/lib/rancher || true", host, key, user, true)
+	// Write the kubeconfig to the file
+	err := os.WriteFile(path, []byte(kubeconfig), 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// UninstallNode uninstalls k3s node.
-func UninstallNode(host, user, key string) error {
-	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh || true"
+// UninstallMaster uninstalls k3s master.
+func UninstallMaster(host, user, key string) error {
+	cmd := "sudo /usr/local/bin/k3s-uninstall.sh || true"
 	_, err := ssh.Run(cmd, host, key, user, true)
 	if err != nil {
 		return err

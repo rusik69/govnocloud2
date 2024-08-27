@@ -13,3 +13,21 @@ func DeployNode(host, user, key, master, token string) error {
 	}
 	return nil
 }
+
+// UninstallNode uninstalls k3s node.
+func UninstallNode(host, user, key string) error {
+	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh || true"
+	_, err := ssh.Run(cmd, host, key, user, true)
+	if err != nil {
+		return err
+	}
+	_, err = ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user, true)
+	if err != nil {
+		return err
+	}
+	_, err = ssh.Run("sudo rm -rf /var/lib/rancher || true", host, key, user, true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
