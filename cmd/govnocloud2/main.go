@@ -61,6 +61,7 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 		log.Println("Kubeconfig is written to " + kubeConfigPath)
+		log.Println("Installing KubeVirt")
 		err = k3s.InstallKubeVirt()
 		if err != nil {
 			panic(err)

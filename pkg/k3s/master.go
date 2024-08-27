@@ -11,7 +11,7 @@ import (
 
 // DeployMaster deploys k3s masters.
 func DeployMaster(host, user, key string) error {
-	cmd := "curl -sfL https://get.k3s.io | sh -"
+	cmd := "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--write-kubeconfig-mode=755' sh -"
 	log.Println(cmd)
 	_, err := ssh.Run(cmd, host, key, user, true)
 	if err != nil {
