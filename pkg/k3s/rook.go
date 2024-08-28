@@ -20,7 +20,7 @@ func InstallRook() error {
 	rookCommon := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/common.yaml"
 	rookCrds := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/crds.yaml"
 	rookOperator := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/operator.yaml"
-	command := exec.Command("kubectl", "apply", "-f", rookOperator, "-f", rookCrds, "-f", rookCommon)
+	command = exec.Command("kubectl", "apply", "-f", rookOperator, "-f", rookCrds, "-f", rookCommon)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
