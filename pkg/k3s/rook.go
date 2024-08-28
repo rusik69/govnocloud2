@@ -18,9 +18,10 @@ func InstallRook() error {
 		return fmt.Errorf("error creating Rook namespace: %w", err)
 	}
 	rookCommon := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/common.yaml"
+	rootToolbox := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/toolbox.yaml"
 	rookCrds := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/crds.yaml"
 	rookOperator := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/operator.yaml"
-	command = exec.Command("kubectl", "apply", "-f", rookOperator, "-f", rookCrds, "-f", rookCommon)
+	command = exec.Command("kubectl", "apply", "-f", rookOperator, "-f", rookCrds, "-f", rookCommon, "-f", rootToolbox)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
