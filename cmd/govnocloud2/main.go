@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/k3s"
+	"github.com/rusik69/govnocloud2/pkg/server"
 	"github.com/spf13/cobra"
 )
 
-var masterFlag, workersFlag, userFlag, keyFlag, kubeConfigPath string
+var masterFlag, workersFlag, userFlag, keyFlag, kubeConfigPath, listenHost, listenPort string
 
 // root command
 var rootCmd = &cobra.Command{
@@ -66,6 +67,11 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		log.Println("Installing rook")
+		err = k3s.InstallRook()
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
@@ -101,6 +107,18 @@ var uninstallCmd = &cobra.Command{
 	},
 }
 
+// server command
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "start govnocloud2 server",
+	Long:  `start govnocloud2 server`,
+	Run: func(cmd *cobra.Command, args []string) {
+		log.Println("listenHost: ", listenHost)
+		log.Println("listenPort: ", listenPort)
+		server.Serve(listenHost, listenPort)
+	},
+}
+
 func init() {
 	usr, err := os.UserHomeDir()
 	if err != nil {
@@ -110,6 +128,7 @@ func init() {
 	defaultKubeConfigPath := usr + "/.kube/config"
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(uninstallCmd)
+	rootCmd.AddCommand(serverCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	uninstallCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
 	uninstallCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
@@ -119,6 +138,8 @@ func init() {
 	installCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
 	installCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "c", defaultKubeConfigPath, "kubeconfig path")
+	serverCmd.Flags().StringVarP(&listenHost, "host", "h", "0.0.0.0", "listen host")
+	serverCmd.Flags().StringVarP(&listenPort, "port", "p", "8080", "listen port")
 }
 
 func main() {
