@@ -10,6 +10,13 @@ const RookVersion = "release-1.15"
 
 // InstallRook installs Rook to k3s cluster.
 func InstallRook() error {
+	// create rook-ceph namespace
+	command := exec.Command("kubectl", "create", "namespace", "rook-ceph")
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	if err := command.Run(); err != nil {
+		return fmt.Errorf("error creating Rook namespace: %w", err)
+	}
 	rookCommon := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/common.yaml"
 	rookCrds := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/crds.yaml"
 	rookOperator := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/operator.yaml"
