@@ -6,12 +6,14 @@ import (
 	"os/exec"
 )
 
-const RookVersion = "v1.15.0"
+const RookVersion = "release-1.15"
 
 // InstallRook installs Rook to k3s cluster.
 func InstallRook() error {
-	rookOperator := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/cluster/examples/kubernetes/ceph/common.yaml"
-	command := exec.Command("kubectl", "apply", "-f", rookOperator)
+	rookCommon := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/common.yaml"
+	rookCrds := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/crds.yaml"
+	rookOperator := "https://raw.githubusercontent.com/rook/rook/" + RookVersion + "/deploy/examples/operator.yaml"
+	command := exec.Command("kubectl", "apply", "-f", rookOperator, "-f", rookCrds, "-f", rookCommon)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
