@@ -29,3 +29,4 @@ var DBTypes = map[string]DBType{
 		Port:  5432,
 	},
 }
+
