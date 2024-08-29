@@ -29,5 +29,9 @@ func UninstallNode(host, user, key string) error {
 	if err != nil {
 		return err
 	}
+	_, err = ssh.Run("sudo rm -rf /var/lib/rook || true", host, key, user, true)
+	if err != nil {
+		return err
+	}
 	return nil
 }
