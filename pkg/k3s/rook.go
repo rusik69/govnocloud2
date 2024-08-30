@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-const RookVersion = "release-1.14"
+const RookVersion = "release-1.15"
 
 // InstallRook installs Rook to k3s cluster.
 func InstallRook() error {
