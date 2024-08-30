@@ -5,7 +5,7 @@ type DB struct {
 	// Name is the name of the database.
 	Name string `json:"name"`
 	// Type is the type of the database.
-	Type DBType `json:"type"`
+	Type string `json:"type"`
 	// Flavor is the flavor of the database.
 	Flavor string `json:"flavor"`
 }
