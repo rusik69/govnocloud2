@@ -43,4 +43,4 @@ jobs:
     #     script: sudo systemctl suspend
     #     password: ubuntu
     #   if: always()
-    timeout-minutes: 20
+    timeout-minutes: 30

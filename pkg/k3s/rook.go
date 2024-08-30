@@ -1,12 +1,10 @@
 package k3s
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
-	"time"
 )
 
 const RookVersion = "release-1.15"
@@ -31,9 +29,7 @@ func InstallRook() error {
 		return fmt.Errorf("error installing Rook operator: %w", err)
 	}
 	log.Println("Waiting for Rook Operator to be in Running state")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	command = exec.CommandContext(ctx, "kubectl", "wait", "--for=condition=available", "deployment/rook-ceph-operator", "-n", "rook-ceph", "--timeout=600s")
+	command = exec.Command("kubectl", "wait", "--for=condition=available", "deployment/rook-ceph-operator", "-n", "rook-ceph", "--timeout=600s")
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
