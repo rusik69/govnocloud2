@@ -31,7 +31,7 @@ func InstallRook() error {
 		return fmt.Errorf("error installing Rook operator: %w", err)
 	}
 	log.Println("Waiting for Rook Operator to be in Running state")
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	command = exec.CommandContext(ctx, "kubectl", "wait", "--for=condition=available", "deployment/rook-ceph-operator", "-n", "rook-ceph", "--timeout=600s")
 	command.Stdout = os.Stdout
