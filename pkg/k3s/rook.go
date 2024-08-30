@@ -2,6 +2,7 @@ package k3s
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -26,6 +27,13 @@ func InstallRook() error {
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("error installing Rook operator: %w", err)
+	}
+	log.Println("Waiting for Rook Operator to be in Running state")
+	command = exec.Command("kubectl", "wait", "--for=condition=available", "deployment/rook-ceph-operator", "-n", "rook-ceph", "--timeout=600s")
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	if err := command.Run(); err != nil {
+		log.Fatalf("error waiting for Rook operator to be in running state: %v", err)
 	}
 	clusterConfig := `
 apiVersion: ceph.rook.io/v1
