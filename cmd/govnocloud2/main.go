@@ -62,6 +62,11 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 		log.Println("Kubeconfig is written to " + kubeConfigPath)
+		log.Println("Installing Helm")
+		err = k3s.InstallHelm()
+		if err != nil {
+			panic(err)
+		}
 		log.Println("Installing KubeVirt")
 		err = k3s.InstallKubeVirt()
 		if err != nil {
@@ -69,11 +74,6 @@ var installCmd = &cobra.Command{
 		}
 		log.Println("Installing rook")
 		err = k3s.InstallRook()
-		if err != nil {
-			panic(err)
-		}
-		log.Println("Installing Helm")
-		err = k3s.InstallHelm()
 		if err != nil {
 			panic(err)
 		}
