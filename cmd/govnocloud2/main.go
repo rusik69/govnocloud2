@@ -72,6 +72,11 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		log.Println("Installing Helm")
+		err = k3s.InstallHelm()
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
