@@ -33,7 +33,7 @@ func init() {
 	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	installCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
-	installCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
+	installCmd.Flags().StringVarP(&userFlag, "user", "u", "root", "ssh user")
 	installCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "c", defaultKubeConfigPath, "kubeconfig path")
 	serverCmd.Flags().StringVarP(&listenHost, "host", "h", "0.0.0.0", "listen host")
