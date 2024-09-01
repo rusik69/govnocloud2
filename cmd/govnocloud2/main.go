@@ -29,7 +29,7 @@ func init() {
 	rootCmd.AddCommand(clientCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	uninstallCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
-	uninstallCmd.Flags().StringVarP(&userFlag, "user", "u", "ubuntu", "ssh user")
+	uninstallCmd.Flags().StringVarP(&userFlag, "user", "u", "root", "ssh user")
 	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&masterFlag, "master", "m", "", "master host")
 	installCmd.Flags().StringVarP(&workersFlag, "workers", "w", "", "workers hosts")
