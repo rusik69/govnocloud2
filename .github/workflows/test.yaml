@@ -19,6 +19,8 @@ jobs:
       run: make uninstall
     - name: install
       run: make install
+    - name: test
+      run: make test
     # - name: Suspend node0
     #   uses: appleboy/ssh-action@master
     #   with:
@@ -43,4 +45,4 @@ jobs:
     #     script: sudo systemctl suspend
     #     password: ubuntu
     #   if: always()
-    timeout-minutes: 20
+    timeout-minutes: 30

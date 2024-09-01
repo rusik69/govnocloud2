@@ -10,5 +10,6 @@ func Serve(addr, port string) {
 	// Start the server
 	r := gin.New()
 	r.Use(cors.Default())
+	r.GET("/version", VersionHandler)
 	r.Run(addr + ":" + port)
 }

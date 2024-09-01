@@ -18,4 +18,7 @@ uninstall:
 wol:
 	bash test/wol.sh
 
+test:
+	go test -v ./...
+
 all: get build
