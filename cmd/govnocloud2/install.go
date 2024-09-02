@@ -62,6 +62,11 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		log.Println("Installing monitoring stack")
+		err = k3s.DeployPrometheus()
+		if err != nil {
+			panic(err)
+		}
 		log.Println("Installing KubeVirt")
 		err = k3s.InstallKubeVirt()
 		if err != nil {
