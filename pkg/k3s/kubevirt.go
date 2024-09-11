@@ -26,5 +26,18 @@ func InstallKubeVirt() error {
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("error installing KubeVirt CR: %w", err)
 	}
+	virtctlURL := "https://github.com/kubevirt/kubevirt/releases/download/" + KubeVirtVersion + "/virtctl-linux-amd64"
+	command = exec.Command("curl", "-L", "-o", "/usr/local/bin/virtctl", virtctlURL)
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	if err := command.Run(); err != nil {
+		return fmt.Errorf("error installing virtctl: %w", err)
+	}
+	command = exec.Command("chmod", "+x", "/usr/local/bin/virtctl")
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	if err := command.Run(); err != nil {
+		return fmt.Errorf("error changing virtctl permissions: %w", err)
+	}
 	return nil
 }

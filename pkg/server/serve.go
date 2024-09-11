@@ -11,5 +11,6 @@ func Serve(addr, port string) {
 	r := gin.New()
 	r.Use(cors.Default())
 	r.GET("/version", VersionHandler)
+	r.POST("/api/v1/vms", CreateVMHandler)
 	r.Run(addr + ":" + port)
 }
