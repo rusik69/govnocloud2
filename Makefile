@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all get build install uninstall test
 
 get:
 	go get -v ./...
