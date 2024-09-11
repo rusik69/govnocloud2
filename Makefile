@@ -21,4 +21,7 @@ wol:
 test:
 	go test -v ./...
 
+logs:
+	ssh root@master.govno.cloud "journalctl -u govnocloud2.service"
+
 all: get build
