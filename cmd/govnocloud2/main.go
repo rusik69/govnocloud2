@@ -36,8 +36,8 @@ func init() {
 	installCmd.Flags().StringVarP(&userFlag, "user", "u", "root", "ssh user")
 	installCmd.Flags().StringVarP(&keyFlag, "key", "k", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "c", defaultKubeConfigPath, "kubeconfig path")
-	serverCmd.Flags().StringVarP(&listenHost, "host", "h", "0.0.0.0", "listen host")
-	serverCmd.Flags().StringVarP(&listenPort, "port", "p", "8080", "listen port")
+	serverCmd.Flags().StringVarP(&listenHost, "host", "s", "0.0.0.0", "listen host")
+	serverCmd.Flags().StringVarP(&listenPort, "port", "l", "8080", "listen port")
 	clientCmd.Flags().StringVarP(&clientHost, "host", "h", "127.0.0.1", "server host")
 	clientCmd.Flags().StringVarP(&clientPort, "port", "p", "8080", "server port")
 }
