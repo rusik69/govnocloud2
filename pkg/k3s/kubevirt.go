@@ -33,7 +33,7 @@ func InstallKubeVirt() error {
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("error installing virtctl: %w", err)
 	}
-	command = exec.Command("chmod", "+x", "/usr/local/bin/virtctl")
+	command = exec.Command("sudo", "chmod", "+x", "/usr/local/bin/virtctl")
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
