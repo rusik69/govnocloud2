@@ -27,7 +27,7 @@ func InstallKubeVirt() error {
 		return fmt.Errorf("error installing KubeVirt CR: %w", err)
 	}
 	virtctlURL := "https://github.com/kubevirt/kubevirt/releases/download/" + KubeVirtVersion + "/virtctl-linux-amd64"
-	command = exec.Command("sudo curl", "-L", "-o", "/usr/local/bin/virtctl", virtctlURL)
+	command = exec.Command("sudo", "curl", "-L", "-o", "/usr/local/bin/virtctl", virtctlURL)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
