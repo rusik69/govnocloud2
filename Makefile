@@ -22,6 +22,6 @@ test:
 	go test -v ./...
 
 logs:
-	ssh root@master.govno.cloud "journalctl -u govnocloud2.service | tail -n 50"
+	ssh root@master.govno.cloud "journalctl -u govnocloud2.service --since 'reboot'"
 
 all: get build
