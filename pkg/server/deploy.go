@@ -52,16 +52,16 @@ User=root
 [Install]
 WantedBy=multi-user.target
 `
-	tempFile, err = os.CreateTemp("", "govnocloud2-web.service")
+	tempFile2, err := os.CreateTemp("", "govnocloud2-web.service")
 	if err != nil {
 		return err
 	}
-	defer tempFile.Close()
-	_, err = tempFile.WriteString(serviceWebBody)
+	defer tempFile2.Close()
+	_, err = tempFile2.WriteString(serviceWebBody)
 	if err != nil {
 		return err
 	}
-	err = ssh.Copy(tempFile.Name(), "/etc/systemd/system/govnocloud2-web.service", host, user, key)
+	err = ssh.Copy(tempFile2.Name(), "/etc/systemd/system/govnocloud2-web.service", host, user, key)
 	if err != nil {
 		return err
 	}
