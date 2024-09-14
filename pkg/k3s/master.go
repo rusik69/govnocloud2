@@ -78,5 +78,17 @@ func UninstallMaster(host, user, key string) error {
 	if err != nil {
 		return err
 	}
+	_, err = =ssh.Run("sudo rm -rf /etc/systemd/system/govnocloud2.service || true", host, key, user, true)
+	if err != nil {
+		return err
+	}
+	_, err = ssh.Run("sudo rm -rf /etc/systemd/system/govnocloud2-web.service || true", host, key, user, true)
+	if err != nil {
+		return err
+	}
+	_, err = ssh.Run("sudo systemctl daemon-reload || true", host, key, user, true)
+	if err != nil {
+		return err
+	}
 	return nil
 }
