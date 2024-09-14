@@ -7,7 +7,7 @@ import (
 )
 
 var masterFlag, workersFlag, userFlag, keyFlag, kubeConfigPath, listenHost, listenPort string
-var clientHost, clientPort string
+var clientHost, clientPort, webHost, webPort string
 
 // root command
 var rootCmd = &cobra.Command{
@@ -38,11 +38,11 @@ func init() {
 	installCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "", defaultKubeConfigPath, "kubeconfig path")
 	serverCmd.Flags().StringVarP(&listenHost, "host", "", "0.0.0.0", "listen host")
-	serverCmd.Flags().StringVarP(&listenPort, "port", "", "8080", "listen port")
+	serverCmd.Flags().StringVarP(&listenPort, "port", "", "6969", "listen port")
 	clientCmd.Flags().StringVarP(&clientHost, "host", "", "127.0.0.1", "server host")
-	clientCmd.Flags().StringVarP(&clientPort, "port", "", "8080", "server port")
-	webCmd.Flags().StringVarP(&clientHost, "host", "", "0.0.0.0", "listen host")
-	webCmd.Flags().StringVarP(&clientPort, "port", "", "8080", "listen port")
+	clientCmd.Flags().StringVarP(&clientPort, "port", "", "6969", "server port")
+	webCmd.Flags().StringVarP(&webHost, "host", "", "0.0.0.0", "listen host")
+	webCmd.Flags().StringVarP(&webPort, "port", "", "8080", "listen port")
 }
 
 func main() {
