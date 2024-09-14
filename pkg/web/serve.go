@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Serve starts the web server.
-func Serve(host, port string) error {
+// Listen starts the web server.
+func Listen(host, port string) error {
 	addr := host + ":" + port
 	r := gin.New()
 	r.Use(cors.Default())
