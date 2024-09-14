@@ -7,7 +7,7 @@ import (
 )
 
 var serverHost = "localhost"
-var serverPort = "8080"
+var serverPort = "6969"
 
 // TestVersion tests the GetServerVersion function.
 func TestVersion(t *testing.T) {

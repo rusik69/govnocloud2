@@ -41,6 +41,30 @@ WantedBy=multi-user.target
 	if err != nil {
 		return err
 	}
+	serviceWebBody := `[Unit]
+Description=govnocloud2 web
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/govnocloud2 web --port 8080 --host ` + host + `
+Restart=on-failure
+User=root
+[Install]
+WantedBy=multi-user.target
+`
+	tempFile, err = os.CreateTemp("", "govnocloud2-web.service")
+	if err != nil {
+		return err
+	}
+	defer tempFile.Close()
+	_, err = tempFile.WriteString(serviceWebBody)
+	if err != nil {
+		return err
+	}
+	err = ssh.Copy(tempFile.Name(), "/etc/systemd/system/govnocloud2-web.service", host, user, key)
+	if err != nil {
+		return err
+	}
 	cmd = "sudo systemctl daemon-reload"
 	_, err = ssh.Run(cmd, host, key, user, true)
 	if err != nil {
@@ -51,7 +75,17 @@ WantedBy=multi-user.target
 	if err != nil {
 		return err
 	}
+	cmd = "sudo systemctl enable govnocloud2-web"
+	_, err = ssh.Run(cmd, host, key, user, true)
+	if err != nil {
+		return err
+	}
 	cmd = "sudo systemctl start govnocloud2"
+	_, err = ssh.Run(cmd, host, key, user, true)
+	if err != nil {
+		return err
+	}
+	cmd = "sudo systemctl start govnocloud2-web"
 	_, err = ssh.Run(cmd, host, key, user, true)
 	if err != nil {
 		return err
