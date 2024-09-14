@@ -22,7 +22,7 @@ Description=govnocloud2 server
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/govnocloud2 server -port ` + port + ` -host ` + host + `
+ExecStart=/usr/local/bin/govnocloud2 server --port ` + port + ` --host ` + host + `
 Restart=on-failure
 User=root
 [Install]
