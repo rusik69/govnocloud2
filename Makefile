@@ -22,6 +22,6 @@ test:
 	go test -v ./...
 
 logs:
-	ssh root@master.govno.cloud "journalctl -u govnocloud2.service --since 'reboot'"
+	journalctl _SYSTEMD_INVOCATION_ID=`systemctl show -p InvocationID --value govnocloud2.service`
 
 all: get build
