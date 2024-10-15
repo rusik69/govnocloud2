@@ -1,0 +1,51 @@
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '*'
+name: test
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: build
+      run: make get build
+    - name: wol
+      run: make wol
+    # - name: uninstall
+    #   run: make uninstall
+    - name: install
+      run: make install
+    - name: test
+      run: make test
+    - name: logs
+      run: make logs
+      if: always()
+    - name: Suspend node0
+      uses: appleboy/ssh-action@master
+      with:
+        host: node0.govno.cloud
+        username: ubuntu
+        script: sudo systemctl suspend
+        password: ubuntu
+      if: always()
+    - name: Suspend node1
+      uses: appleboy/ssh-action@master
+      with:
+        host: node1.govno.cloud
+        username: ubuntu
+        script: sudo systemctl suspend
+        password: ubuntu
+      if: always()
+    - name: Suspend node2
+      uses: appleboy/ssh-action@master
+      with:
+        host: node2.govno.cloud
+        username: ubuntu
+        script: sudo systemctl suspend
+        password: ubuntu
+      if: always()
+    timeout-minutes: 30
