@@ -105,3 +105,14 @@ func Wol(ip string, macs []string) error {
 	}
 	return nil
 }
+
+// Suspend suspends the servers
+func Suspend(ips []string, user, key string) {
+	for _, ip := range ips {
+		cmd := "sudo systemctl suspend"
+		_, err := ssh.Run(cmd, ip, key, user, false)
+		if err != nil {
+			continue
+		}
+	}
+}

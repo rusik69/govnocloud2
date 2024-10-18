@@ -36,7 +36,7 @@ var installCmd = &cobra.Command{
 			panic("workers ips and macs should be the same length")
 		}
 		log.Println("Installing packages")
-		err := server.InstallPackages([]string{"sshpass", "wakeonlan"})
+		err := server.InstallPackages([]string{"sshpass", "wakeonlan", "dnsmasq"})
 		if err != nil {
 			panic(err)
 		}

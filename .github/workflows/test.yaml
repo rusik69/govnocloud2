@@ -25,27 +25,6 @@ jobs:
       run: make logs
       if: always()
     - name: Suspend node0
-      uses: appleboy/ssh-action@master
-      with:
-        host: node0.govno.cloud
-        username: ubuntu
-        script: sudo systemctl suspend
-        password: ubuntu
-      if: always()
-    - name: Suspend node1
-      uses: appleboy/ssh-action@master
-      with:
-        host: node1.govno.cloud
-        username: ubuntu
-        script: sudo systemctl suspend
-        password: ubuntu
-      if: always()
-    - name: Suspend node2
-      uses: appleboy/ssh-action@master
-      with:
-        host: node2.govno.cloud
-        username: ubuntu
-        script: sudo systemctl suspend
-        password: ubuntu
+      run: make suspend
       if: always()
     timeout-minutes: 30

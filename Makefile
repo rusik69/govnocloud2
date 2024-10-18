@@ -10,16 +10,19 @@ buildmac:
 	GOARCH=arm64 GOOS=darwin go build -o bin/govnocloud2-darwin-arm64 cmd/govnocloud2/*.go
 
 install:
-	bin/govnocloud2-linux-amd64 --master master.govno.cloud --workersips 10.0.0.1,10.0.0.2,10.0.0.3 --workersmacs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 install
+	bin/govnocloud2-linux-amd64 --master 10.0.0.1 --workersips 10.0.0.1,10.0.0.2,10.0.0.3 --workersmacs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 install
 
 uninstall:
-	bin/govnocloud2-linux-amd64 --master master.govno.cloud --workersips 10.0.0.1,10.0.0.2,10.0.0.3 uninstall
-
-wol:
-	bash test/wol.sh
+	bin/govnocloud2-linux-amd64 --master 10.0.0.1 --workersips 10.0.0.1,10.0.0.2,10.0.0.3 uninstall
 
 test:
 	go test -v ./...
+
+wol:
+	bin/govnocloud2-linux-amd64 tool wol --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 --iprange 10.0.0.255
+
+suspend:
+	bin/govnocloud2-linux-amd64 tool suspend --ips 10.0.0.1,10.0.0.2,10.0.0.3
 
 logs:
 	journalctl _SYSTEMD_INVOCATION_ID=`systemctl show -p InvocationID --value govnocloud2.service`

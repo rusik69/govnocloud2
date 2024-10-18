@@ -7,7 +7,7 @@ import (
 )
 
 var masterFlag, workersMacs, workersIPs, userFlag, passwordFlag, keyFlag, kubeConfigPath, listenHost, listenPort string
-var clientHost, clientPort, webHost, webPort string
+var clientHost, clientPort, webHost, webPort, ipRange string
 
 // root command
 var rootCmd = &cobra.Command{
@@ -28,13 +28,17 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(webCmd)
+	rootCmd.AddCommand(toolCmd)
+	toolCmd.AddCommand(wolCmd)
+	toolCmd.AddCommand(suspendCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "", "", "master host")
 	uninstallCmd.Flags().StringVarP(&workersIPs, "workersips", "", "", "workers ips")
 	uninstallCmd.Flags().StringVarP(&userFlag, "user", "", "root", "ssh user")
 	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&masterFlag, "master", "", "", "master host")
-	installCmd.Flags().StringVarP(&workersMacs, "workersmacs", "", "", "workers mac addresses")
-	installCmd.Flags().StringVarP(&workersIPs, "workersips", "", "", "workers ip addresses")
+	installCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "workers mac addresses")
+	installCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "workers ip addresses")
+	installCmd.Flags().StringVarP(&ipRange, "workers ip range", "", "10.0.0.0/24", "workers ip range")
 	installCmd.Flags().StringVarP(&userFlag, "user", "", "root", "ssh user")
 	installCmd.Flags().StringVarP(&passwordFlag, "password", "", "ubuntu", "ssh password")
 	installCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
@@ -45,6 +49,11 @@ func init() {
 	clientCmd.Flags().StringVarP(&clientPort, "port", "", "6969", "server port")
 	webCmd.Flags().StringVarP(&webHost, "host", "", "0.0.0.0", "listen host")
 	webCmd.Flags().StringVarP(&webPort, "port", "", "8080", "listen port")
+	wolCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "comma separated mac addresses")
+	wolCmd.Flags().StringVarP(&ipRange, "iprange", "", "", "ip range")
+	suspendCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "comma separated ips")
+	suspendCmd.Flags().StringVarP(&userFlag, "user", "", "root", "ssh user")
+	suspendCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
 }
 
 func main() {
