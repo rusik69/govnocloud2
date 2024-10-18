@@ -97,7 +97,7 @@ WantedBy=multi-user.target
 // Wol wakes on lan.
 func Wol(ip string, macs []string) error {
 	for _, mac := range macs {
-		cmd := []string{"wakeonlan", "-i", ip, mac}
+		cmd := []string{"-i", ip, mac}
 		err := exec.Command("wakeonlan", cmd...).Run()
 		if err != nil {
 			return err
