@@ -24,7 +24,7 @@ jobs:
     - name: logs
       run: make logs
       if: always()
-    - name: Suspend node0
+    - name: Suspend
       run: make suspend
       if: always()
     timeout-minutes: 30
