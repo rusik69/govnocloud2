@@ -26,7 +26,7 @@ func CopySSHKey(user, password, host, keyPath string) error {
 	}
 
 	// Connect to the server
-	conn, err := ssh.Dial("tcp", host, config)
+	conn, err := ssh.Dial("tcp", host+":22", config)
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %v", err)
 	}
