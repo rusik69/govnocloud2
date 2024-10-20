@@ -1,14 +1,53 @@
 package ssh
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+
+	"golang.org/x/crypto/ssh"
 )
 
-// InstallKey installs the key.
-func InstallKey(host, user, password, key string) (string, error) {
-	out, err := exec.Command("sshpass", "-p", password, "ssh-copy-id", "-i", key, user+"@"+host).CombinedOutput()
-	return string(out), err
+// CopySSHKey copies the SSH key to the remote server.
+func CopySSHKey(user, password, host, keyPath string) error {
+	// Read the public key file
+	publicKey, err := os.ReadFile(keyPath)
+	if err != nil {
+		return fmt.Errorf("unable to read public key file: %v", err)
+	}
+
+	// Create SSH client configuration
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(password), // Use password authentication
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // Insecure for demo purposes; use a proper callback in production
+	}
+
+	// Connect to the server
+	conn, err := ssh.Dial("tcp", host, config)
+	if err != nil {
+		return fmt.Errorf("failed to connect to server: %v", err)
+	}
+	defer conn.Close()
+
+	// Create a new session
+	session, err := conn.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create session: %v", err)
+	}
+	defer session.Close()
+
+	// Prepare the command to append the public key to authorized_keys
+	cmd := fmt.Sprintf(`mkdir -p ~/.ssh && echo "%s" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys`, string(publicKey))
+
+	// Run the command on the remote server
+	if err := session.Run(cmd); err != nil {
+		return fmt.Errorf("failed to run command on remote server: %v", err)
+	}
+
+	return nil
 }
 
 // CreateKey creates the key.

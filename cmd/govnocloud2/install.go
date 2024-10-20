@@ -47,19 +47,16 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 		if passwordFlag != "" {
-			log.Println("Installing ssh keys")
 			log.Println("Installing key on " + masterFlag)
-			out, err := ssh.InstallKey(masterFlag, userFlag, passwordFlag, keyFlag)
+			err := ssh.CopySSHKey(masterFlag, userFlag, passwordFlag, keyFlag)
 			if err != nil {
-				log.Println(out)
 				panic(err)
 			}
 		}
 		for _, worker := range workersIPsSplit {
 			log.Println("Installing key on " + worker)
-			out, err := ssh.InstallKey(worker, userFlag, passwordFlag, keyFlag)
+			err := ssh.CopySSHKey(worker, userFlag, passwordFlag, keyFlag)
 			if err != nil {
-				log.Println(out)
 				panic(err)
 			}
 		}
