@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"os"
 	"os/exec"
 
@@ -109,8 +110,10 @@ func Wol(ip string, macs []string) error {
 // Suspend suspends the servers
 func Suspend(ips []string, user, key string) {
 	for _, ip := range ips {
+		log.Println("Suspending server: ", ip)
 		cmd := "sudo systemctl suspend"
-		_, err := ssh.Run(cmd, ip, key, user, false)
+		out, err := ssh.Run(cmd, ip, key, user, false)
+		log.Println(out)
 		if err != nil {
 			continue
 		}
