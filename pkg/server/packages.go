@@ -7,17 +7,14 @@ import (
 
 // InstallPackages installs the packages.
 func InstallPackages(packages []string) (string, error) {
-	cmd := exec.Command("apt-get", "update")
-	err := cmd.Run()
+	out, err := exec.Command("apt-get", "update").CombinedOutput()
 	if err != nil {
-		return "", err
+		return string(out), err
 	}
 	command := []string{"install", "-y"}
 	command = append(command, packages...)
-	cmd = exec.Command("apt-get", command...)
-	err = cmd.Run()
+	out, err = exec.Command("apt-get", command...).CombinedOutput()
 	if err != nil {
-		out, _ := cmd.CombinedOutput()
 		return string(out), err
 	}
 	return "", nil

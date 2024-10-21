@@ -73,23 +73,23 @@ WantedBy=multi-user.target
 	if err != nil {
 		return err
 	}
-	err = exec.Command("sudo", "systemctl", "daemon-reload").Run()
+	err = exec.Command("systemctl", "daemon-reload").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("sudo", "systemctl", "enable", "govnocloud2").Run()
+	err = exec.Command("systemctl", "enable", "govnocloud2").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("sudo", "systemctl", "enable", "govnocloud2-web").Run()
+	err = exec.Command("systemctl", "enable", "govnocloud2-web").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("sudo", "systemctl", "start", "govnocloud2").Run()
+	err = exec.Command("systemctl", "start", "govnocloud2").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("sudo", "systemctl", "start", "govnocloud2-web").Run()
+	err = exec.Command("systemctl", "start", "govnocloud2-web").Run()
 	if err != nil {
 		return err
 	}
