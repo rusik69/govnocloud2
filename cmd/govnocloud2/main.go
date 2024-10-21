@@ -33,7 +33,7 @@ func init() {
 	toolCmd.AddCommand(suspendCmd)
 	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "", "", "master host")
 	uninstallCmd.Flags().StringVarP(&workersIPs, "workersips", "", "", "workers ips")
-	uninstallCmd.Flags().StringVarP(&userFlag, "user", "", "root", "ssh user")
+	uninstallCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
 	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&masterFlag, "master", "", "", "master host")
 	installCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "workers mac addresses")
