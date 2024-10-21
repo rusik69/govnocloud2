@@ -26,13 +26,13 @@ var uninstallCmd = &cobra.Command{
 			panic("workers are required")
 		}
 		log.Println("Uninstalling k3s master on " + masterFlag)
-		err := k3s.UninstallMaster(masterFlag, userFlag, keyFlag)
+		err := k3s.UninstallMaster(masterFlag, userFlag, keyFlag, passwordFlag)
 		if err != nil {
 			panic(err)
 		}
 		for _, worker := range workersSplit {
 			log.Println("Uninstalling k3s worker on " + worker)
-			err := k3s.UninstallNode(worker, userFlag, keyFlag)
+			err := k3s.UninstallNode(worker, userFlag, keyFlag, passwordFlag)
 			if err != nil {
 				panic(err)
 			}

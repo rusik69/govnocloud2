@@ -41,6 +41,6 @@ var suspendCmd = &cobra.Command{
 		if len(ipsSplit) == 0 {
 			panic("ips are required")
 		}
-		server.Suspend(ipsSplit, userFlag, keyFlag)
+		server.Suspend(ipsSplit, userFlag, passwordFlag, keyFlag)
 	},
 }

@@ -9,13 +9,13 @@ import (
 )
 
 // Deploy deploys the server.
-func Deploy(host, port, user, key string) error {
+func Deploy(host, port, user, password, key string) error {
 	err := ssh.Copy("bin/govnocloud2-linux-amd64", "/usr/local/bin/govnocloud2", host, user, key)
 	if err != nil {
 		return err
 	}
 	cmd := "sudo chmod +x /usr/local/bin/govnocloud2"
-	_, err = ssh.Run(cmd, host, key, user, true)
+	_, err = ssh.Run(cmd, host, key, user, password, true)
 	if err != nil {
 		return err
 	}
@@ -54,41 +54,32 @@ User=root
 [Install]
 WantedBy=multi-user.target
 `
-	tempFile2, err := os.CreateTemp("", "govnocloud2-web.service")
+	file, err := os.Create("/etc/systemd/system/govnocloud2-web.service")
 	if err != nil {
 		return err
 	}
-	defer tempFile2.Close()
-	_, err = tempFile2.WriteString(serviceWebBody)
+	defer file.Close()
+	_, err = file.WriteString(serviceWebBody)
 	if err != nil {
 		return err
 	}
-	err = ssh.Copy(tempFile2.Name(), "/etc/systemd/system/govnocloud2-web.service", host, user, key)
+	err = exec.Command("sudo", "systemctl", "daemon-reload").Run()
 	if err != nil {
 		return err
 	}
-	cmd = "sudo systemctl daemon-reload"
-	_, err = ssh.Run(cmd, host, key, user, true)
+	err = exec.Command("sudo", "systemctl", "enable", "govnocloud2").Run()
 	if err != nil {
 		return err
 	}
-	cmd = "sudo systemctl enable govnocloud2"
-	_, err = ssh.Run(cmd, host, key, user, true)
+	err = exec.Command("sudo", "systemctl", "enable", "govnocloud2-web").Run()
 	if err != nil {
 		return err
 	}
-	cmd = "sudo systemctl enable govnocloud2-web"
-	_, err = ssh.Run(cmd, host, key, user, true)
+	err = exec.Command("sudo", "systemctl", "start", "govnocloud2").Run()
 	if err != nil {
 		return err
 	}
-	cmd = "sudo systemctl start govnocloud2"
-	_, err = ssh.Run(cmd, host, key, user, true)
-	if err != nil {
-		return err
-	}
-	cmd = "sudo systemctl start govnocloud2-web"
-	_, err = ssh.Run(cmd, host, key, user, true)
+	err = exec.Command("sudo", "systemctl", "start", "govnocloud2-web").Run()
 	if err != nil {
 		return err
 	}
@@ -108,11 +99,11 @@ func Wol(ip string, macs []string) error {
 }
 
 // Suspend suspends the servers
-func Suspend(ips []string, user, key string) {
+func Suspend(ips []string, user, password, key string) {
 	for _, ip := range ips {
 		log.Println("Suspending server: ", ip)
 		cmd := "sudo systemctl suspend"
-		out, err := ssh.Run(cmd, ip, key, user, false)
+		out, err := ssh.Run(cmd, ip, key, user, password, false)
 		log.Println(out)
 		if err != nil {
 			continue

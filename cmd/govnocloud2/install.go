@@ -41,6 +41,11 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
+		out, err = server.ConfigurePackages(workersMacsSplit, workersIPsSplit)
+		if err != nil {
+			log.Println(out)
+			panic(err)
+		}
 		log.Println("Creating ssh key")
 		_, err = ssh.CreateKey(keyFlag)
 		if err != nil {
@@ -61,7 +66,7 @@ var installCmd = &cobra.Command{
 			}
 		}
 		log.Println("Deploying server on " + masterFlag)
-		err = server.Deploy(masterFlag, listenPort, userFlag, keyFlag)
+		err = server.Deploy(masterFlag, listenPort, userFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
 		}
@@ -76,7 +81,7 @@ var installCmd = &cobra.Command{
 		}
 		for _, worker := range workersIPsSplit {
 			log.Println("Deploying k3s worker on " + worker)
-			err := k3s.DeployNode(worker, userFlag, keyFlag, masterFlag, token)
+			err := k3s.DeployNode(worker, userFlag, keyFlag, passwordFlag, masterFlag, token)
 			if err != nil {
 				panic(err)
 			}

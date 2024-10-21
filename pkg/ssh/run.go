@@ -9,24 +9,35 @@ import (
 )
 
 // Run runs the command on the remote host and streams the output.
-func Run(cmd, host, key, user string, stream bool) (string, error) {
-	// Read the private key file
-	keyBody, err := os.ReadFile(key)
-	if err != nil {
-		return "", err
-	}
-	// Parse the private key
-	signer, err := ssh.ParsePrivateKey(keyBody)
-	if err != nil {
-		return "", err
-	}
+func Run(cmd, host, key, user, password string, stream bool) (string, error) {
 	// Configure the SSH client
-	config := &ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	var config *ssh.ClientConfig
+	if password != "" {
+		config = &ssh.ClientConfig{
+			User: user,
+			Auth: []ssh.AuthMethod{
+				ssh.Password(password),
+			},
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
+	} else {
+		// Read the private key file
+		keyBody, err := os.ReadFile(key)
+		if err != nil {
+			return "", err
+		}
+		// Parse the private key
+		signer, err := ssh.ParsePrivateKey(keyBody)
+		if err != nil {
+			return "", err
+		}
+		config = &ssh.ClientConfig{
+			User: user,
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(signer),
+			},
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
 	}
 	// Connect to the remote host
 	client, err := ssh.Dial("tcp", host+":22", config)
