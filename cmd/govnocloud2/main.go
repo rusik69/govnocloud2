@@ -52,7 +52,7 @@ func init() {
 	wolCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "comma separated mac addresses")
 	wolCmd.Flags().StringVarP(&ipRange, "iprange", "", "", "ip range")
 	suspendCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "comma separated ips")
-	suspendCmd.Flags().StringVarP(&userFlag, "user", "", "root", "ssh user")
+	suspendCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
 	suspendCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
 }
 
