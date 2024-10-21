@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -10,12 +11,21 @@ import (
 
 // Deploy deploys the server.
 func Deploy(host, port, user, password, key string) error {
-	err := ssh.Copy("bin/govnocloud2-linux-amd64", "/usr/local/bin/govnocloud2", host, user, key)
+	from, err := os.Open("bin/govnocloud2-linux-amd64")
 	if err != nil {
 		return err
 	}
-	cmd := "sudo chmod +x /usr/local/bin/govnocloud2"
-	_, err = ssh.Run(cmd, host, key, user, password, true)
+	defer from.Close()
+	to, err := os.Create("/usr/local/bin/govnocloud2")
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+	_, err = io.Copy(to, from)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod("/usr/local/bin/govnocloud2", os.FileMode(0755))
 	if err != nil {
 		return err
 	}
