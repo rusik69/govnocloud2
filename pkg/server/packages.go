@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"os"
 	"os/exec"
 )
@@ -9,12 +10,14 @@ import (
 func InstallPackages(packages []string) (string, error) {
 	out, err := exec.Command("apt-get", "update").CombinedOutput()
 	if err != nil {
+		log.Println("1")
 		return string(out), err
 	}
 	command := []string{"install", "-y"}
 	command = append(command, packages...)
 	out, err = exec.Command("apt-get", command...).CombinedOutput()
 	if err != nil {
+		log.Println("2")
 		return string(out), err
 	}
 	return "", nil
