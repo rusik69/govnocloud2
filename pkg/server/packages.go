@@ -40,7 +40,7 @@ enable-tftp
 tftp-root=/srv/tftp
 server=8.8.8.8
 `
-	err := os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqConfig), 0644)
+	err = os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqConfig), 0644)
 	if err != nil {
 		return "", err
 	}
