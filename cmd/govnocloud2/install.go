@@ -41,6 +41,7 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
+		log.Println("Configuring packages")
 		out, err = server.ConfigurePackages(workersMacsSplit, workersIPsSplit)
 		if err != nil {
 			log.Println(out)

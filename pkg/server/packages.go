@@ -10,14 +10,12 @@ import (
 func InstallPackages(packages []string) (string, error) {
 	out, err := exec.Command("apt-get", "update").CombinedOutput()
 	if err != nil {
-		log.Println("1")
 		return string(out), err
 	}
 	command := []string{"install", "-y"}
 	command = append(command, packages...)
 	out, err = exec.Command("apt-get", command...).CombinedOutput()
 	if err != nil {
-		log.Println("2")
 		return string(out), err
 	}
 	return "", nil
@@ -41,14 +39,17 @@ server=8.8.8.8
 `
 	err := os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqConfig), 0644)
 	if err != nil {
+		log.Println("1")
 		return "", err
 	}
 	err = exec.Command("sudo", "systemctl", "enable", "dnsmasq").Run()
 	if err != nil {
+		log.Println("2")
 		return "", err
 	}
 	err = exec.Command("sudo", "systemctl", "restart", "dnsmasq").Run()
 	if err != nil {
+		log.Println("3")
 		return "", err
 	}
 	return "", nil
