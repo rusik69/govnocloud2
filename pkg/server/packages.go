@@ -22,10 +22,7 @@ func InstallPackages(packages []string) (string, error) {
 
 // ConfigurePackages configures the packages.
 func ConfigurePackages(macs, ips []string) (string, error) {
-	err := os.Mkdir("/srv/tftp", 0755)
-	if err != nil {
-		return "", err
-	}
+	os.Mkdir("/srv/tftp", 0755)
 	dnsmasqConfig := `interface=enp7s0
 bind-interfaces
 dhcp-range=enp0s31f6,10.0.0.10,10.0.0.200,255.255.255.0
@@ -40,7 +37,7 @@ enable-tftp
 tftp-root=/srv/tftp
 server=8.8.8.8
 `
-	err = os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqConfig), 0644)
+	err := os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqConfig), 0644)
 	if err != nil {
 		return "", err
 	}
