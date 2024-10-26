@@ -72,8 +72,9 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 		log.Println("Deploying k3s master on " + masterFlag)
-		err = k3s.DeployMaster(masterFlag, userFlag, keyFlag)
+		out, err = k3s.DeployMaster(masterFlag, userFlag, keyFlag)
 		if err != nil {
+			log.Println(out)
 			panic(err)
 		}
 		token, err := k3s.GetToken(masterFlag, userFlag, keyFlag)

@@ -8,12 +8,12 @@ import (
 )
 
 // DeployMaster deploys k3s masters.
-func DeployMaster(host, user, key string) error {
-	err := exec.Command("curl", "-sfL", "https://get.k3s.io", "|", "INSTALL_K3S_EXEC='--write-kubeconfig-mode=755'", "sh", "-").Run()
+func DeployMaster(host, user, key string) (string, error) {
+	out, err := exec.Command("curl", "-sfL", "https://get.k3s.io", "|", "INSTALL_K3S_EXEC='--write-kubeconfig-mode=755'", "sh", "-").CombinedOutput()
 	if err != nil {
-		return err
+		return string(out), err
 	}
-	return nil
+	return "", nil
 }
 
 // GetToken gets the k3s token.
