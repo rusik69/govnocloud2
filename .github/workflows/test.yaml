@@ -15,8 +15,8 @@ jobs:
       run: make get build
     - name: wol
       run: make wol
-    # - name: uninstall
-    #   run: make uninstall
+    - name: uninstall
+      run: make uninstall
     - name: install
       run: make install
     - name: test
