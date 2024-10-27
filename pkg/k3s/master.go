@@ -83,5 +83,6 @@ func UninstallMaster(host, user, key, password string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	err = os.Remove("/usr/local/bin/govnocloud2")
+	return err
 }
