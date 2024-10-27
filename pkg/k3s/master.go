@@ -2,6 +2,7 @@ package k3s
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -50,39 +51,41 @@ func WriteKubeConfig(kubeconfig, path string) error {
 }
 
 // UninstallMaster uninstalls k3s master.
-func UninstallMaster(host, user, key, password string) error {
+func UninstallMaster(host, user, key, password string) {
 	out, err := exec.Command("/usr/local/bin/k3s-uninstall.sh", "||", "true").CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("error: %s, output: %s", err, out)
+		log.Println("error: %s, output: %s", err, out)
 	}
 	_, err = exec.Command("rm", "-rf", "/etc/rancher/k3s", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	_, err = exec.Command("rm", "-rf", "/var/lib/rancher", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	_, err = exec.Command("rm", "-rf", "/var/lib/rook", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	_, err = exec.Command("rm", "-rf", "/usr/local/bin/virtctl", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	_, err = exec.Command("rm", "-rf", "/etc/systemd/system/govnocloud2.service", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	_, err = exec.Command("rm", "-rf", "/etc/systemd/system/govnocloud2-web.service", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	_, err = exec.Command("systemctl", "daemon-reload", "||", "true").CombinedOutput()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	err = os.Remove("/usr/local/bin/govnocloud2")
-	return err
+	if err != nil {
+		log.Println(err)
+	}
 }
