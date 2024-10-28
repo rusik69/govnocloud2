@@ -13,7 +13,7 @@ install:
 	sudo bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3,10.0.0.4 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 install
 
 uninstall:
-	bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3,10.0.0.4 uninstall
+	sudo bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3,10.0.0.4 uninstall
 
 test:
 	go test -v ./...
