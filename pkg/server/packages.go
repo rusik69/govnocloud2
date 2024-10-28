@@ -2,18 +2,17 @@ package server
 
 import (
 	"os"
-	"os/exec"
+
+	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
 // InstallPackages installs the packages.
-func InstallPackages(packages []string) (string, error) {
-	out, err := exec.Command("apt-get", "update").CombinedOutput()
+func InstallPackages(master, user, key string, packages string) (string, error) {
+	out, err := ssh.Run("sudo apt-get update", master, key, user, "", false)
 	if err != nil {
 		return string(out), err
 	}
-	command := []string{"install", "-y"}
-	command = append(command, packages...)
-	out, err = exec.Command("apt-get", command...).CombinedOutput()
+	out, err = ssh.Run("sudo apt-get install -y "+packages, master, key, user, "", false)
 	if err != nil {
 		return string(out), err
 	}
@@ -21,8 +20,11 @@ func InstallPackages(packages []string) (string, error) {
 }
 
 // ConfigurePackages configures the packages.
-func ConfigurePackages(macs, ips []string) (string, error) {
-	os.Mkdir("/srv/tftp", 0755)
+func ConfigurePackages(master, user, key string, macs, ips []string) (string, error) {
+	out, err := ssh.Run("mkdir /srv/tftp", master, key, user, "", false)
+	if err != nil {
+		return string(out), err
+	}
 	dnsmasqConfig := `interface=enp7s0
 bind-interfaces
 dhcp-range=enp0s31f6,10.0.0.10,10.0.0.200,255.255.255.0
@@ -37,17 +39,27 @@ enable-tftp
 tftp-root=/srv/tftp
 server=8.8.8.8
 `
-	err := os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqConfig), 0644)
+	tempFile, err := os.CreateTemp("", "dnsmasq")
 	if err != nil {
 		return "", err
 	}
-	err = exec.Command("sudo", "systemctl", "enable", "dnsmasq").Run()
+	defer tempFile.Close()
+	defer os.Remove(tempFile.Name())
+	_, err = tempFile.WriteString(dnsmasqConfig)
 	if err != nil {
 		return "", err
 	}
-	err = exec.Command("sudo", "systemctl", "restart", "dnsmasq").Run()
+	err = ssh.Copy(tempFile.Name(), "/etc/dnsmasq.conf", master, user, key)
 	if err != nil {
-		out, err := exec.Command("sudo", "systemctl", "status", "dnsmasq").CombinedOutput()
+		return "", err
+	}
+	out, err = ssh.Run("sudo systemctl enable dnsmasq", master, key, user, "", false)
+	if err != nil {
+		return string(out), err
+	}
+	_, err = ssh.Run("sudo systemctl restart dnsmasq", master, key, user, "", false)
+	if err != nil {
+		out, err := ssh.Run("sudo systemctl status dnsmasq", master, key, user, "", false)
 		if err != nil {
 			return string(out), err
 		}
