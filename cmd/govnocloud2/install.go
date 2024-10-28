@@ -35,13 +35,13 @@ var installCmd = &cobra.Command{
 		if len(workersIPsSplit) != len(workersMacsSplit) {
 			panic("workers ips and macs should be the same length")
 		}
-		log.Println("Installing packages")
+		log.Println("Installing packages on " + masterFlag)
 		out, err := server.InstallPackages(masterFlag, userFlag, keyFlag, "sshpass wakeonlan dnsmasq")
 		if err != nil {
 			log.Println(out)
 			panic(err)
 		}
-		log.Println("Configuring packages")
+		log.Println("Configuring packages on " + masterFlag)
 		out, err = server.ConfigurePackages(masterFlag, userFlag, keyFlag, workersMacsSplit, workersIPsSplit)
 		if err != nil {
 			log.Println(out)
