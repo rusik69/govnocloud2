@@ -9,9 +9,9 @@ import (
 )
 
 // CopySSHKey copies the SSH key to the remote server.
-func CopySSHKey(host, user, password, keyPath string) error {
+func CopySSHKey(host, user, password, pubKeyPath string) error {
 	// Read the public key file
-	publicKey, err := os.ReadFile(keyPath)
+	publicKey, err := os.ReadFile(pubKeyPath)
 	if err != nil {
 		return fmt.Errorf("unable to read public key file: %v", err)
 	}

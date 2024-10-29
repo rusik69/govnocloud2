@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var masterFlag, workersMacs, workersIPs, userFlag, passwordFlag, keyFlag, kubeConfigPath, listenHost, listenPort string
+var masterFlag, workersMacs, workersIPs, userFlag, passwordFlag, pubKeyPath, keyFlag, kubeConfigPath, listenHost, listenPort string
 var clientHost, clientPort, webHost, webPort, ipRange string
 
 // root command
@@ -22,6 +22,7 @@ func init() {
 		panic(err)
 	}
 	defaultKeyPath := usr + "/.ssh/id_rsa"
+	defaultPubKeyPath := usr + "/.ssh/id_rsa.pub"
 	defaultKubeConfigPath := usr + "/.kube/config"
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(uninstallCmd)
@@ -42,6 +43,7 @@ func init() {
 	installCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
 	installCmd.Flags().StringVarP(&passwordFlag, "password", "", "ubuntu", "ssh password")
 	installCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
+	installCmd.Flags().StringVarP(&pubKeyPath, "pubkey", "", defaultPubKeyPath, "ssh public key")
 	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "", defaultKubeConfigPath, "kubeconfig path")
 	serverCmd.Flags().StringVarP(&listenHost, "host", "", "0.0.0.0", "listen host")
 	serverCmd.Flags().StringVarP(&listenPort, "port", "", "6969", "listen port")
