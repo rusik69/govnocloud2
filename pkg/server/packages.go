@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
@@ -8,11 +10,13 @@ import (
 
 // InstallPackages installs the packages.
 func InstallPackages(master, user, key string, packages string) (string, error) {
-	out, err := ssh.Run("sudo apt-get update", master, key, user, "", false)
+	command := "sudo apt-get update"
+	log.Println(command)
+	out, err := ssh.Run(command, master, key, user, "", false)
 	if err != nil {
-		return string(out), err
+		return string(out), nil
 	}
-	out, err = ssh.Run("sudo apt-get install -y "+packages, master, key, user, "", false)
+	out, err = ssh.Run(fmt.Sprintf("sudo apt-get install -y %s", packages), master, key, user, "", false)
 	if err != nil {
 		return string(out), err
 	}
@@ -59,11 +63,11 @@ server=8.8.8.8
 	}
 	_, err = ssh.Run("sudo systemctl restart dnsmasq", master, key, user, "", false)
 	if err != nil {
-		out, err := ssh.Run("sudo systemctl status dnsmasq", master, key, user, "", false)
-		if err != nil {
-			return string(out), err
+		statusOut, statusErr := ssh.Run("sudo systemctl status dnsmasq", master, key, user, "", false)
+		if statusErr != nil {
+			return string(statusOut), statusErr
 		}
-		return string(out), err
+		return string(statusOut), err
 	}
 	return "", nil
 }
