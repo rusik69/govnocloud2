@@ -25,7 +25,9 @@ func InstallPackages(master, user, key string, packages string) (string, error) 
 
 // ConfigurePackages configures the packages.
 func ConfigurePackages(master, user, key string, macs, ips []string) (string, error) {
-	out, err := ssh.Run("mkdir /srv/tftp", master, key, user, "", false)
+	cmd := "mkdir /srv/tftp"
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, master, key, user, "", false)
 	if err != nil {
 		return string(out), err
 	}
@@ -43,6 +45,7 @@ enable-tftp
 tftp-root=/srv/tftp
 server=8.8.8.8
 `
+	log.Println(dnsmasqConfig)
 	tempFile, err := os.CreateTemp("", "dnsmasq")
 	if err != nil {
 		return "", err
@@ -57,11 +60,15 @@ server=8.8.8.8
 	if err != nil {
 		return "", err
 	}
-	out, err = ssh.Run("sudo systemctl enable dnsmasq", master, key, user, "", false)
+	cmd = "sudo systemctl enable dnsmasq"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, master, key, user, "", false)
 	if err != nil {
 		return string(out), err
 	}
-	_, err = ssh.Run("sudo systemctl restart dnsmasq", master, key, user, "", false)
+	cmd = "sudo systemctl restart dnsmasq"
+	log.Println(cmd)
+	_, err = ssh.Run(cmd, master, key, user, "", false)
 	if err != nil {
 		statusOut, statusErr := ssh.Run("sudo systemctl status dnsmasq", master, key, user, "", false)
 		if statusErr != nil {
