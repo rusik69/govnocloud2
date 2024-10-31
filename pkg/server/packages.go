@@ -25,7 +25,7 @@ func InstallPackages(master, user, key string, packages string) (string, error) 
 
 // ConfigurePackages configures the packages.
 func ConfigurePackages(master, user, key string, macs, ips []string) (string, error) {
-	cmd := "sudo mkdir /srv/tftp"
+	cmd := "sudo mkdir /srv/tftp || true"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, master, key, user, "", false)
 	if err != nil {
