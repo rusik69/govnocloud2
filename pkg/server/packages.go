@@ -56,9 +56,15 @@ server=8.8.8.8
 	if err != nil {
 		return "", err
 	}
-	err = ssh.Copy(tempFile.Name(), "/etc/dnsmasq.conf", master, user, key)
+	err = ssh.Copy(tempFile.Name(), "/tmp/dnsmasq.conf", master, user, key)
 	if err != nil {
 		return "", err
+	}
+	cmd = "sudo mv /tmp/dnsmasq.conf /etc/dnsmasq.conf"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, master, key, user, "", false)
+	if err != nil {
+		return string(out), err
 	}
 	cmd = "sudo systemctl enable dnsmasq"
 	log.Println(cmd)
