@@ -16,7 +16,7 @@ func DeployMaster(host, user, key string) (string, error) {
 	if err != nil {
 		return string(out), err
 	}
-	return "", nil
+	return string(out), nil
 }
 
 // GetToken gets the k3s token.
