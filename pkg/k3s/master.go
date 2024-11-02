@@ -35,7 +35,7 @@ func GetToken(host, user, key string) (string, error) {
 
 // GetKubeconfig gets the k3s kubeconfig.
 func GetKubeconfig(host, user, key string) (string, error) {
-	output, err := ssh.Run("cat /etc/rancher/k3s/k3s.yaml", host, key, user, "", false)
+	output, err := ssh.Run("sudo cat /etc/rancher/k3s/k3s.yaml", host, key, user, "", false)
 	if err != nil {
 		return "", err
 	}
