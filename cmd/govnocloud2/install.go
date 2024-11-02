@@ -77,6 +77,7 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
+		log.Println("Getting k3s token")
 		token, err := k3s.GetToken(masterFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
