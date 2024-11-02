@@ -21,7 +21,7 @@ func DeployMaster(host, user, key string) (string, error) {
 
 // GetToken gets the k3s token.
 func GetToken(host, user, key string) (string, error) {
-	output, err := ssh.Run("cat /var/lib/rancher/k3s/server/node-token", host, key, user, "", false)
+	output, err := ssh.Run("sudo cat /var/lib/rancher/k3s/server/node-token", host, key, user, "", false)
 	if err != nil {
 		return "", err
 	}
