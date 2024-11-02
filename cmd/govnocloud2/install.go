@@ -95,11 +95,11 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		log.Println("Writing kubeconfig")
 		err = k3s.WriteKubeConfig(kubeConfigBody, kubeConfigPath)
 		if err != nil {
 			panic(err)
 		}
-		log.Println("Kubeconfig is written to " + kubeConfigPath)
 		log.Println("Installing Helm")
 		err = k3s.InstallHelm()
 		if err != nil {
