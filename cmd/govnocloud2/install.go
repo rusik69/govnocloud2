@@ -85,10 +85,12 @@ var installCmd = &cobra.Command{
 		}
 		for _, worker := range workersIPsSplit {
 			log.Println("Deploying k3s worker on " + worker)
-			err := k3s.DeployNode(worker, userFlag, keyFlag, passwordFlag, masterFlag, token)
+			out, err := k3s.DeployNode(worker, userFlag, keyFlag, passwordFlag, masterFlag, token)
 			if err != nil {
+				log.Println(out)
 				panic(err)
 			}
+			log.Println(out)
 		}
 		log.Println("Getting kubeconfig")
 		kubeConfigBody, err := k3s.GetKubeconfig(masterFlag, userFlag, keyFlag)
