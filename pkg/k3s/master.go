@@ -45,6 +45,15 @@ func GetKubeconfig(host, user, key string) (string, error) {
 // WriteKubeconfig writes the k3s kubeconfig to the file.
 func WriteKubeConfig(kubeconfig, path string) error {
 	// Write the kubeconfig to the file
+	// get dir from path
+	dir := path[:strings.LastIndex(path, "/")]
+	// create dir if not exists
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return err
+		}
+	}
 	err := os.WriteFile(path, []byte(kubeconfig), 0644)
 	if err != nil {
 		return err
