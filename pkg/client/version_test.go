@@ -6,7 +6,7 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/client"
 )
 
-var serverHost = "localhost"
+var serverHost = "10.0.0.1"
 var serverPort = "6969"
 
 // TestVersion tests the GetServerVersion function.
