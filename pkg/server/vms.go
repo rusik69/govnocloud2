@@ -41,7 +41,7 @@ spec:
               resources:
                 requests:
                   memory: %dM
-	cpu: %d
+                  cpu: %d
       networks:
 	  - name: default
 	  	pod: {}
