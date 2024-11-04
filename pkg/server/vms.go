@@ -35,13 +35,13 @@ spec:
             - name: containerdisk
               disk:
                 bus: virtio
-              interfaces:
-              - name: default
+          interfaces:
+            - name: default
                 masquerade: {}
-              resources:
-                requests:
-                  memory: %dM
-                  cpu: %d
+          resources:
+            requests:
+              memory: %dM
+              cpu: %d
       networks:
       - name: default
         pod: {}
