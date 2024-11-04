@@ -43,15 +43,15 @@ spec:
                   memory: %dM
                   cpu: %d
       networks:
-	  - name: default
-	  	pod: {}
-	  volumes:
-	  - name: containerdisk
-	    containerDisk:
-		  image: %s
-	  - name: cloudinitdisk
-	    cloudInitNoCloud:
-		  userDataBase64: SGkuXG4=
+      - name: default
+        pod: {}
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: %s
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userDataBase64: SGkuXG4=
 `, vm.Name, vm.Size, vm.Name, types.VMSizes[vm.Size].RAM, types.VMSizes[vm.Size].CPU, vm.Image)
 	vmFile, err := os.CreateTemp("", "vm.yaml")
 	if err != nil {
