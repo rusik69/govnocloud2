@@ -65,7 +65,8 @@ func WriteKubeConfig(kubeconfig, path string) error {
 func UninstallMaster(host, user, key, password string) {
 	out, err := ssh.Run("sudo /usr/local/bin/k3s-uninstall.sh || true", host, key, user, password, false)
 	if err != nil {
-		log.Println("error: %s, output: %s", err, out)
+		log.Println(out)
+		log.Println(err)
 	}
 	_, err = ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user, password, false)
 	if err != nil {
