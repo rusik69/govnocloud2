@@ -38,10 +38,10 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
-          resources:
-            requests:
-              memory: %dM
-              cpu: %d
+        resources:
+          requests:
+            memory: %dM
+            cpu: %d
       networks:
       - name: default
         pod: {}
