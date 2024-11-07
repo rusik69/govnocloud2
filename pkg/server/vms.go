@@ -37,7 +37,7 @@ spec:
                 bus: virtio
           interfaces:
             - name: default
-                masquerade: {}
+              masquerade: {}
           resources:
             requests:
               memory: %dM
