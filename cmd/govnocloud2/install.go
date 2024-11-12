@@ -92,16 +92,6 @@ var installCmd = &cobra.Command{
 			}
 			log.Println(out)
 		}
-		log.Println("Getting kubeconfig")
-		kubeConfigBody, err := k3s.GetKubeconfig(masterFlag, userFlag, keyFlag)
-		if err != nil {
-			panic(err)
-		}
-		log.Println("Writing kubeconfig")
-		err = k3s.WriteKubeConfig(kubeConfigBody, kubeConfigPath)
-		if err != nil {
-			panic(err)
-		}
 		log.Println("Installing Helm")
 		err = k3s.InstallHelm()
 		if err != nil {

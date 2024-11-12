@@ -73,3 +73,39 @@ spec:
 	}
 	c.JSON(200, gin.H{"message": "VM created"})
 }
+
+// ListVMsHandler lists all VMs.
+func ListVMsHandler(c *gin.Context) {
+	command := exec.Command("kubectl", "get", "VirtualMachines", "-o", "jsonpath={.items[*].metadata.name}")
+	output, err := command.Output()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"vms": string(output)})
+}
+
+// GetVMHandler gets a VM.
+func GetVMHandler(c *gin.Context) {
+	id := c.Param("id")
+	command := exec.Command("kubectl", "get", "VirtualMachine", id, "-o", "json")
+	output, err := command.Output()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"vm": string(output)})
+}
+
+// DeleteVMHandler deletes a VM.
+func DeleteVMHandler(c *gin.Context) {
+	name := c.Param("name")
+	command := exec.Command("kubectl", "delete", "VirtualMachine", name)
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	if err := command.Run(); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "VM deleted"})
+}

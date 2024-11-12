@@ -27,7 +27,7 @@ var wolCmd = &cobra.Command{
 		if len(macsSplit) == 0 {
 			panic("macs are required")
 		}
-		server.Wol(ipRange, macsSplit)
+		server.Wol(masterFlag, userFlag, keyFlag, ipRange, macsSplit)
 	},
 }
 
