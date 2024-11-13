@@ -40,7 +40,7 @@ func CopySSHKey(host, user, password, pubKeyPath string) error {
 	defer session.Close()
 
 	// Prepare the command to append the public key to authorized_keys
-	cmd := fmt.Sprintf(`mkdir -p ~/.ssh && echo "%s" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys`, string(publicKey))
+	cmd := fmt.Sprintf(`mkdir -p ~/.ssh && echo "%s" > ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys`, string(publicKey))
 
 	// Run the command on the remote server
 	if err := session.Run(cmd); err != nil {
