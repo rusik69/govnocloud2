@@ -1,10 +1,14 @@
 package web
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 // RootHandler handles the root route.
 func RootHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "govnocloud2 web",
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"title": "Govnocloud2",
 	})
 }

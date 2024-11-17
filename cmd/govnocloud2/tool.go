@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rusik69/govnocloud2/pkg/server"
+	"github.com/rusik69/govnocloud2/pkg/k3s"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ var wolCmd = &cobra.Command{
 		if len(macsSplit) == 0 {
 			panic("macs are required")
 		}
-		server.Wol(masterFlag, userFlag, keyFlag, ipRange, macsSplit)
+		k3s.Wol(masterFlag, userFlag, keyFlag, ipRange, macsSplit)
 	},
 }
 
@@ -41,6 +41,6 @@ var suspendCmd = &cobra.Command{
 		if len(ipsSplit) == 0 {
 			panic("ips are required")
 		}
-		server.Suspend(ipsSplit, userFlag, passwordFlag, keyFlag)
+		k3s.Suspend(ipsSplit, userFlag, passwordFlag, keyFlag)
 	},
 }

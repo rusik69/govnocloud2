@@ -1,4 +1,4 @@
-package server
+package k3s
 
 import (
 	"errors"

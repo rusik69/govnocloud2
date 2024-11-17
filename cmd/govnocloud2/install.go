@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/k3s"
-	"github.com/rusik69/govnocloud2/pkg/server"
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 	"github.com/spf13/cobra"
 )
@@ -55,19 +54,19 @@ var installCmd = &cobra.Command{
 			}
 		}
 		log.Println("Installing packages on " + masterFlag)
-		out, err := server.InstallPackages(masterFlag, userFlag, keyFlag, "sshpass wakeonlan dnsmasq")
+		out, err := k3s.InstallPackages(masterFlag, userFlag, keyFlag, "sshpass wakeonlan dnsmasq")
 		if err != nil {
 			log.Println(out)
 			panic(err)
 		}
 		log.Println("Configuring packages on " + masterFlag)
-		out, err = server.ConfigurePackages(masterFlag, userFlag, keyFlag, workersMacsSplit, workersIPsSplit)
+		out, err = k3s.ConfigurePackages(masterFlag, userFlag, keyFlag, interfaceName, workersMacsSplit, workersIPsSplit)
 		if err != nil {
 			log.Println(out)
 			panic(err)
 		}
 		log.Println("Deploying server on " + masterFlag)
-		err = server.Deploy(masterFlag, listenPort, userFlag, userFlag, keyFlag)
+		err = k3s.Deploy(masterFlag, listenPort, userFlag, userFlag, keyFlag)
 		if err != nil {
 			panic(err)
 		}

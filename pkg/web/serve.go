@@ -9,6 +9,7 @@ import (
 func Listen(host, port string) error {
 	addr := host + ":" + port
 	r := gin.New()
+	r.LoadHTMLGlob("templates/*")
 	r.Use(cors.Default())
 	r.GET("/", RootHandler)
 	r.Run(addr)

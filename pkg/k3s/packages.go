@@ -1,4 +1,4 @@
-package server
+package k3s
 
 import (
 	"fmt"
@@ -24,14 +24,14 @@ func InstallPackages(master, user, key string, packages string) (string, error) 
 }
 
 // ConfigurePackages configures the packages.
-func ConfigurePackages(master, user, key string, macs, ips []string) (string, error) {
+func ConfigurePackages(master, user, key string, interfaceName string, macs, ips []string) (string, error) {
 	cmd := "sudo mkdir /srv/tftp || true"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, master, key, user, "", false)
 	if err != nil {
 		return string(out), err
 	}
-	dnsmasqConfig := `interface=enp7s0
+	dnsmasqConfig := `interface=` + interfaceName + `
 bind-interfaces
 dhcp-range=enp0s31f6,10.0.0.10,10.0.0.200,255.255.255.0
 `

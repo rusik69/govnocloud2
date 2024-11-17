@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var masterFlag, workersMacs, workersIPs, userFlag, passwordFlag, pubKeyPath, keyFlag, kubeConfigPath, listenHost, listenPort string
+var masterFlag, interfaceName, workersMacs, workersIPs, userFlag, passwordFlag, pubKeyPath, keyFlag, kubeConfigPath, listenHost, listenPort string
 var clientHost, clientPort, webHost, webPort, ipRange string
 
 // root command
@@ -45,6 +45,7 @@ func init() {
 	installCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
 	installCmd.Flags().StringVarP(&pubKeyPath, "pubkey", "", defaultPubKeyPath, "ssh public key")
 	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "", defaultKubeConfigPath, "kubeconfig path")
+	installCmd.Flags().StringVarP(&interfaceName, "interface", "", "enp0s25", "interface name")
 	serverCmd.Flags().StringVarP(&listenHost, "host", "", "0.0.0.0", "listen host")
 	serverCmd.Flags().StringVarP(&listenPort, "port", "", "6969", "listen port")
 	clientCmd.Flags().StringVarP(&clientHost, "host", "", "127.0.0.1", "server host")
@@ -53,6 +54,7 @@ func init() {
 	webCmd.Flags().StringVarP(&webPort, "port", "", "8080", "listen port")
 	wolCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "comma separated mac addresses")
 	wolCmd.Flags().StringVarP(&ipRange, "iprange", "", "", "ip range")
+	wolCmd.Flags().StringVarP(&userFlag, "master", "", "localhost", "master host")
 	suspendCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "comma separated ips")
 	suspendCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
 	suspendCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")

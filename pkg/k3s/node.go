@@ -15,8 +15,8 @@ func DeployNode(host, user, key, password, master, token string) (string, error)
 }
 
 // UninstallNode uninstalls k3s node.
-func UninstallNode(host, user, key, password string) error {
-	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh || true"
+func UninstallNode(master, host, user, key, password string) error {
+	cmd := "ssh " + user + "@" + host + " 'sudo /usr/local/bin/k3s-agent-uninstall.sh || true'"
 	_, err := ssh.Run(cmd, host, key, user, password, true)
 	if err != nil {
 		return err
