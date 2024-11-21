@@ -34,8 +34,20 @@ var installCmd = &cobra.Command{
 		if len(workersIPsSplit) != len(workersMacsSplit) {
 			panic("workers ips and macs should be the same length")
 		}
+		log.Println("Installing packages on " + masterFlag)
+		out, err := k3s.InstallPackages(masterFlag, userFlag, keyFlag, "sshpass wakeonlan dnsmasq")
+		if err != nil {
+			log.Println(out)
+			panic(err)
+		}
+		log.Println("Configuring packages on " + masterFlag)
+		out, err = k3s.ConfigurePackages(masterFlag, userFlag, keyFlag, interfaceName, workersMacsSplit, workersIPsSplit)
+		if err != nil {
+			log.Println(out)
+			panic(err)
+		}
 		log.Println("Creating ssh key")
-		_, err := ssh.CreateKey(keyFlag)
+		_, err = ssh.CreateKey(keyFlag)
 		if err != nil {
 			panic(err)
 		}
@@ -52,18 +64,6 @@ var installCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
-		}
-		log.Println("Installing packages on " + masterFlag)
-		out, err := k3s.InstallPackages(masterFlag, userFlag, keyFlag, "sshpass wakeonlan dnsmasq")
-		if err != nil {
-			log.Println(out)
-			panic(err)
-		}
-		log.Println("Configuring packages on " + masterFlag)
-		out, err = k3s.ConfigurePackages(masterFlag, userFlag, keyFlag, interfaceName, workersMacsSplit, workersIPsSplit)
-		if err != nil {
-			log.Println(out)
-			panic(err)
 		}
 		log.Println("Deploying server on " + masterFlag)
 		err = k3s.Deploy(masterFlag, listenPort, userFlag, userFlag, keyFlag)
