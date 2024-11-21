@@ -46,7 +46,11 @@ func CopySSHKey(host, user, password, pubKeyPath string) error {
 	if err := session.Run(cmd); err != nil {
 		return fmt.Errorf("failed to run command on remote server: %v", err)
 	}
-
+	session, err = conn.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create session: %v", err)
+	}
+	defer session.Close()
 	// Copy the public key to the root user's authorized_keys file
 	cmd = "sudo cp ~/.ssh/authorized_keys /root/.ssh/authorized_keys"
 	if err := session.Run(cmd); err != nil {
