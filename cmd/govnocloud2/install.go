@@ -34,6 +34,18 @@ var installCmd = &cobra.Command{
 		if len(workersIPsSplit) != len(workersMacsSplit) {
 			panic("workers ips and macs should be the same length")
 		}
+		log.Println("Creating ssh key")
+		_, err := ssh.CreateKey(masterFlag, masterKeyPath, userFlag, keyFlag)
+		if err != nil {
+			panic(err)
+		}
+		if passwordFlag != "" {
+			log.Println("Installing key on " + masterFlag)
+			err := ssh.CopySSHKey(masterFlag, userFlag, passwordFlag, pubKeyPath, "")
+			if err != nil {
+				panic(err)
+			}
+		}
 		log.Println("Installing packages on " + masterFlag)
 		out, err := k3s.InstallPackages(masterFlag, userFlag, keyFlag, "sshpass wakeonlan dnsmasq")
 		if err != nil {
@@ -46,21 +58,9 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
-		log.Println("Creating ssh key")
-		_, err = ssh.CreateKey(keyFlag)
-		if err != nil {
-			panic(err)
-		}
-		if passwordFlag != "" {
-			log.Println("Installing key on " + masterFlag)
-			err := ssh.CopySSHKey(masterFlag, userFlag, passwordFlag, pubKeyPath)
-			if err != nil {
-				panic(err)
-			}
-		}
 		for _, worker := range workersIPsSplit {
 			log.Println("Installing key on " + worker)
-			err := ssh.CopySSHKey(worker, userFlag, passwordFlag, pubKeyPath)
+			err := ssh.CopySSHKey(worker, userFlag, passwordFlag, pubKeyPath, masterFlag)
 			if err != nil {
 				panic(err)
 			}

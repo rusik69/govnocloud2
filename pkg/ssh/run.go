@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
 
 // Run runs the command on the remote host and streams the output.
-func Run(cmd, host, key, user, password string, stream bool) (string, error) {
+func Run(cmd, host, key, user, password string, stream bool, timeout int) (string, error) {
 	// Configure the SSH client
 	var config *ssh.ClientConfig
 	if password != "" {
@@ -19,6 +20,7 @@ func Run(cmd, host, key, user, password string, stream bool) (string, error) {
 				ssh.Password(password),
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Timeout:         time.Duration(timeout) * time.Second,
 		}
 	} else {
 		// Read the private key file
@@ -37,6 +39,7 @@ func Run(cmd, host, key, user, password string, stream bool) (string, error) {
 				ssh.PublicKeys(signer),
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Timeout:         time.Duration(timeout) * time.Second,
 		}
 	}
 	// Connect to the remote host

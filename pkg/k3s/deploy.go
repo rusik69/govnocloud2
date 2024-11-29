@@ -2,6 +2,7 @@ package k3s
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 
@@ -10,11 +11,14 @@ import (
 
 // Deploy deploys the server.
 func Deploy(host, port, user, password, key string) error {
+	log.Println("Copying govnocloud2 to ", host)
 	err := ssh.Copy("bin/govnocloud2-linux-amd64", "/usr/local/bin/govnocloud2", host, "root", key)
 	if err != nil {
 		return err
 	}
-	out, err := ssh.Run("chmod +x /usr/local/bin/govnocloud2", host, key, "root", password, false)
+	cmd := "sudo chmod +x /usr/local/bin/govnocloud2"
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, host, key, user, password, false, 5)
 	if err != nil {
 		return errors.New(string(out))
 	}
@@ -29,6 +33,7 @@ User=root
 [Install]
 WantedBy=multi-user.target
 `
+	log.Println(serviceBody)
 	file, err := os.CreateTemp("", "govnocloud2.service")
 	if err != nil {
 		return err
@@ -39,6 +44,7 @@ WantedBy=multi-user.target
 	if err != nil {
 		return err
 	}
+	log.Println("Copying govnocloud2 service to ", host)
 	err = ssh.Copy(file.Name(), "/etc/systemd/system/govnocloud2.service", host, "root", key)
 	if err != nil {
 		return err
@@ -54,6 +60,7 @@ User=root
 [Install]
 WantedBy=multi-user.target
 `
+	log.Println(serviceWebBody)
 	file, err = os.CreateTemp("", "govnocloud2-web.service")
 	if err != nil {
 		return err
@@ -64,19 +71,26 @@ WantedBy=multi-user.target
 	if err != nil {
 		return err
 	}
+	log.Println("Copying govnocloud2-web service to ", host)
 	err = ssh.Copy(file.Name(), "/etc/systemd/system/govnocloud2-web.service", host, "root", key)
 	if err != nil {
 		return err
 	}
-	out, err = ssh.Run("sudo systemctl daemon-reload", host, key, user, password, false)
+	cmd = "sudo systemctl daemon-reload"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, host, key, user, password, false, 5)
 	if err != nil {
 		return errors.New(string(out))
 	}
-	out, err = ssh.Run("sudo systemctl enable --now govnocloud2", host, key, user, password, false)
+	cmd = "sudo systemctl enable --now govnocloud2"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, host, key, user, password, false, 5)
 	if err != nil {
 		return errors.New(string(out))
 	}
-	out, err = ssh.Run("sudo systemctl enable --now govnocloud2-web", host, key, user, password, false)
+	cmd = "sudo systemctl enable --now govnocloud2-web"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, host, key, user, password, false, 5)
 	if err != nil {
 		return errors.New(string(out))
 	}
@@ -87,20 +101,23 @@ WantedBy=multi-user.target
 func Wol(master, user, key, ip string, macs []string) error {
 	for _, mac := range macs {
 		cmd := "wakeonlan -i " + ip + " " + mac
-		out, err := ssh.Run(cmd, master, key, user, "", false)
+		log.Println(cmd)
+		out, err := ssh.Run(cmd, master, key, user, "", false, 5)
 		if err != nil {
-			return errors.New(string(out))
+			log.Println(err)
 		}
+		log.Println(out)
 	}
 	return nil
 }
 
 // Suspend suspends the servers
-func Suspend(ips []string, user, password, key string) {
+func Suspend(ips []string, master, user, password, key string) {
 	for _, ip := range ips {
 		log.Println("Suspending server: ", ip)
-		cmd := "sudo systemctl suspend"
-		out, err := ssh.Run(cmd, ip, key, user, password, false)
+		cmd := fmt.Sprintf("ssh %s@%s 'sudo systemctl suspend'", user, ip)
+		log.Println(cmd)
+		out, err := ssh.Run(cmd, master, key, user, password, false, 5)
 		log.Println(out)
 		if err != nil {
 			continue

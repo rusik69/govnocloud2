@@ -12,7 +12,7 @@ import (
 // DeployMaster deploys k3s masters.
 func DeployMaster(host, user, key string) (string, error) {
 	cmd := "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--write-kubeconfig-mode=755' sh - || true"
-	out, err := ssh.Run(cmd, host, key, user, "", true)
+	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
 		return string(out), err
 	}
@@ -21,7 +21,7 @@ func DeployMaster(host, user, key string) (string, error) {
 
 // GetToken gets the k3s token.
 func GetToken(host, user, key string) (string, error) {
-	output, err := ssh.Run("sudo cat /var/lib/rancher/k3s/server/node-token", host, key, user, "", false)
+	output, err := ssh.Run("sudo cat /var/lib/rancher/k3s/server/node-token", host, key, user, "", false, 5)
 	if err != nil {
 		return "", err
 	}
@@ -35,7 +35,7 @@ func GetToken(host, user, key string) (string, error) {
 
 // GetKubeconfig gets the k3s kubeconfig.
 func GetKubeconfig(host, user, key string) (string, error) {
-	output, err := ssh.Run("sudo cat /etc/rancher/k3s/k3s.yaml", host, key, user, "", false)
+	output, err := ssh.Run("sudo cat /etc/rancher/k3s/k3s.yaml", host, key, user, "", false, 5)
 	if err != nil {
 		return "", err
 	}
@@ -63,52 +63,52 @@ func WriteKubeConfig(kubeconfig, path string) error {
 
 // UninstallMaster uninstalls k3s master.
 func UninstallMaster(host, user, key, password string) {
-	out, err := ssh.Run("sudo /usr/local/bin/k3s-uninstall.sh || true", host, key, user, password, false)
+	out, err := ssh.Run("sudo /usr/local/bin/k3s-uninstall.sh || true", host, key, user, password, false, 600)
 	if err != nil {
 		log.Println(out)
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /etc/rancher/k3s || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /var/lib/rancher || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /var/lib/rancher || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /var/lib/kubelet || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /var/lib/kubelet || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /var/lib/cni || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /var/lib/cni || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /var/lib/kubelet || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /var/lib/kubelet || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo systemctl stop govnocloud2.service", host, key, user, password, false)
+	_, err = ssh.Run("sudo systemctl stop govnocloud2.service", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo systemctl stop govnocloud2-web.service", host, key, user, password, false)
+	_, err = ssh.Run("sudo systemctl stop govnocloud2-web.service", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /etc/systemd/system/govnocloud2-web.service || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /etc/systemd/system/govnocloud2-web.service || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /etc/systemd/system/govnocloud2.service || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /etc/systemd/system/govnocloud2.service || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo systemctl daemon-reload || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo systemctl daemon-reload || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = ssh.Run("sudo rm -rf /usr/local/bin/govnocloud2 || true", host, key, user, password, false)
+	_, err = ssh.Run("sudo rm -rf /usr/local/bin/govnocloud2 || true", host, key, user, password, false, 10)
 	if err != nil {
 		log.Println(err)
 	}

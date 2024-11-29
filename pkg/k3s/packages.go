@@ -1,7 +1,6 @@
 package k3s
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -12,11 +11,13 @@ import (
 func InstallPackages(master, user, key string, packages string) (string, error) {
 	command := "sudo apt-get update"
 	log.Println(command)
-	out, err := ssh.Run(command, master, key, user, "", false)
+	out, err := ssh.Run(command, master, key, user, "", false, 600)
 	if err != nil {
 		return string(out), nil
 	}
-	out, err = ssh.Run(fmt.Sprintf("sudo apt-get install -y %s", packages), master, key, user, "", false)
+	command = "sudo apt-get install -y " + packages
+	log.Println(command)
+	out, err = ssh.Run(command, master, key, user, "", false, 600)
 	if err != nil {
 		return string(out), err
 	}
@@ -27,7 +28,7 @@ func InstallPackages(master, user, key string, packages string) (string, error) 
 func ConfigurePackages(master, user, key string, interfaceName string, macs, ips []string) (string, error) {
 	cmd := "sudo mkdir /srv/tftp || true"
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, master, key, user, "", false)
+	out, err := ssh.Run(cmd, master, key, user, "", false, 10)
 	if err != nil {
 		return string(out), err
 	}
@@ -62,21 +63,21 @@ server=8.8.8.8
 	}
 	cmd = "sudo mv /tmp/dnsmasq.conf /etc/dnsmasq.conf"
 	log.Println(cmd)
-	out, err = ssh.Run(cmd, master, key, user, "", false)
+	out, err = ssh.Run(cmd, master, key, user, "", false, 10)
 	if err != nil {
 		return string(out), err
 	}
 	cmd = "sudo systemctl enable dnsmasq"
 	log.Println(cmd)
-	out, err = ssh.Run(cmd, master, key, user, "", false)
+	out, err = ssh.Run(cmd, master, key, user, "", false, 10)
 	if err != nil {
 		return string(out), err
 	}
 	cmd = "sudo systemctl restart dnsmasq"
 	log.Println(cmd)
-	_, err = ssh.Run(cmd, master, key, user, "", false)
+	_, err = ssh.Run(cmd, master, key, user, "", false, 10)
 	if err != nil {
-		statusOut, statusErr := ssh.Run("sudo systemctl status dnsmasq", master, key, user, "", false)
+		statusOut, statusErr := ssh.Run("sudo systemctl status dnsmasq", master, key, user, "", false, 10)
 		if statusErr != nil {
 			return string(statusOut), statusErr
 		}
