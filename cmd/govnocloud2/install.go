@@ -91,6 +91,14 @@ var installCmd = &cobra.Command{
 			}
 			log.Println(out)
 		}
+		command := "sudo k3s kubectl get nodes"
+		out, err = ssh.Run(command, masterFlag, keyFlag, userFlag, "", false, 600)
+		if err != nil {
+			log.Println(out)
+			panic(err)
+		}
+		log.Println("Nodes:")
+		log.Println(out)
 		log.Println("Installing Helm")
 		err = k3s.InstallHelm()
 		if err != nil {
