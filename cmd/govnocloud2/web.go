@@ -13,7 +13,7 @@ var webCmd = &cobra.Command{
 	Short: "start govnocloud2 web",
 	Long:  `start govnocloud2 web`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("starting web server")
-		web.Listen(webHost, webPort)
+		log.Println("starting web server on", cfg.Web.Host+":"+cfg.Web.Port)
+		web.Listen(cfg.Web.Host, cfg.Web.Port)
 	},
 }

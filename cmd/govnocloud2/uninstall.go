@@ -14,22 +14,37 @@ var uninstallCmd = &cobra.Command{
 	Short: "uninstall govnocloud2 cluster",
 	Long:  `uninstall govnocloud2 cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("master: ", masterFlag)
-		log.Println("workersips: ", workersIPs)
-		log.Println("user: ", userFlag)
-		log.Println("key: ", keyFlag)
-		if masterFlag == "" {
+		log.Println("master: ", cfg.Master.Host)
+		log.Println("workersips: ", cfg.Worker.IPs)
+		log.Println("user: ", cfg.SSH.User)
+		log.Println("key: ", cfg.SSH.KeyPath)
+
+		if cfg.Master.Host == "" {
 			panic("master is required")
 		}
-		workersSplit := strings.Split(workersIPs, ",")
+
+		workersSplit := strings.Split(cfg.Worker.IPs, ",")
 		if len(workersSplit) == 0 {
 			panic("workers are required")
 		}
-		log.Println("Uninstalling k3s master on " + masterFlag)
-		k3s.UninstallMaster(masterFlag, userFlag, keyFlag, passwordFlag)
+
+		log.Println("Uninstalling k3s master on " + cfg.Master.Host)
+		k3s.UninstallMaster(
+			cfg.Master.Host,
+			cfg.SSH.User,
+			cfg.SSH.KeyPath,
+			cfg.SSH.Password,
+		)
+
 		for _, worker := range workersSplit {
 			log.Println("Uninstalling k3s worker on " + worker)
-			err := k3s.UninstallNode(masterFlag, worker, userFlag, keyFlag, passwordFlag)
+			err := k3s.UninstallNode(
+				cfg.Master.Host,
+				worker,
+				cfg.SSH.User,
+				cfg.SSH.KeyPath,
+				cfg.SSH.Password,
+			)
 			if err != nil {
 				log.Println(err)
 			}

@@ -13,8 +13,8 @@ var serverCmd = &cobra.Command{
 	Short: "start govnocloud2 server",
 	Long:  `start govnocloud2 server`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("listenHost: ", listenHost)
-		log.Println("listenPort: ", listenPort)
-		server.Serve(listenHost, listenPort)
+		log.Println("listenHost: ", cfg.Server.Host)
+		log.Println("listenPort: ", cfg.Server.Port)
+		server.Serve(cfg.Server.Host, cfg.Server.Port)
 	},
 }

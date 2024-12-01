@@ -2,72 +2,253 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
 
-var masterFlag, interfaceName, workersMacs, workersIPs, userFlag, passwordFlag, pubKeyPath, keyFlag, kubeConfigPath, listenHost, listenPort string
-var clientHost, clientPort, webHost, webPort, ipRange, masterKeyPath, masterPubKeyPath string
+// Config holds all command line flags
+type Config struct {
+	Master MasterConfig
+	Worker WorkerConfig
+	SSH    SSHConfig
+	Kube   KubeConfig
+	Server ServerConfig
+	Web    WebConfig
+	Client ClientConfig
+	Install InstallConfig
+}
 
-// root command
-var rootCmd = &cobra.Command{
-	Use:   "govnocloud2 [install | uninstall | server | client | web | tool]",
-	Short: "govnocloud2 is a shitty cloud 2",
-	Long:  `govnocloud2 is a shitty cloud 2`,
+type MasterConfig struct {
+	Host      string
+	KeyPath   string
+	PubKeyPath string
+}
+
+type WorkerConfig struct {
+	MACs      string
+	IPs       string
+	IPRange   string
+	Interface string
+}
+
+type SSHConfig struct {
+	User      string
+	Password  string
+	KeyPath   string
+	PubKeyPath string
+}
+
+type KubeConfig struct {
+	ConfigPath string
+}
+
+type ServerConfig struct {
+	Host string
+	Port string
+}
+
+type WebConfig struct {
+	Host string
+	Port string
+}
+
+type ClientConfig struct {
+	Host string
+	Port string
+}
+
+type InstallConfig struct {
+	Master struct {
+		Host     string
+		KeyPath  string
+		PubKeyPath string
+	}
+	Workers struct {
+		IPs       string
+		MACs      string
+		IPRange   string
+		Interface string
+	}
+	SSH struct {
+		User     string
+		Password string
+		KeyPath  string
+		PubKeyPath string
+	}
+	Server struct {
+		Port string
+	}
+}
+
+var (
+	cfg    Config
+	rootCmd = &cobra.Command{
+		Use:   "govnocloud2 [install | uninstall | server | client | web | tool]",
+		Short: "govnocloud2 is a shitty cloud 2",
+		Long:  `govnocloud2 is a shitty cloud 2`,
+	}
+)
+
+func initConfig() error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	cfg = Config{
+		SSH: SSHConfig{
+			KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
+			PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
+			User:       "ubuntu",
+			Password:   "ubuntu",
+		},
+		Master: MasterConfig{
+			KeyPath:    "~/.ssh/id_rsa",
+			PubKeyPath: "~/.ssh/id_rsa.pub",
+			Host:       "localhost",
+		},
+		Kube: KubeConfig{
+			ConfigPath: filepath.Join(homeDir, ".kube/config"),
+		},
+		Worker: WorkerConfig{
+			IPRange:   "10.0.0.0/24",
+			Interface: "enp0s25",
+		},
+		Server: ServerConfig{
+			Host: "0.0.0.0",
+			Port: "6969",
+		},
+		Web: WebConfig{
+			Host: "0.0.0.0",
+			Port: "8080",
+		},
+		Client: ClientConfig{
+			Host: "127.0.0.1",
+			Port: "6969",
+		},
+		Install: InstallConfig{
+			Master: struct {
+				Host      string
+				KeyPath   string
+				PubKeyPath string
+			}{
+				KeyPath:    "~/.ssh/id_rsa",
+				PubKeyPath: "~/.ssh/id_rsa.pub",
+			},
+			Workers: struct {
+				IPs       string
+				MACs      string
+				IPRange   string
+				Interface string
+			}{
+				IPRange:   "10.0.0.0/24",
+				Interface: "enp0s25",
+			},
+			SSH: struct {
+				User     string
+				Password string
+				KeyPath  string
+				PubKeyPath string
+			}{
+				User:      "ubuntu",
+				Password:  "ubuntu",
+				KeyPath:   filepath.Join(homeDir, ".ssh/id_rsa"),
+				PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
+			},
+		},
+	}
+
+	return nil
+}
+
+func setupCommands() {
+	commands := []*cobra.Command{
+		installCmd,
+		uninstallCmd,
+		serverCmd,
+		clientCmd,
+		webCmd,
+		toolCmd,
+	}
+
+	for _, cmd := range commands {
+		rootCmd.AddCommand(cmd)
+	}
+
+	toolCmd.AddCommand(wolCmd, suspendCmd)
+}
+
+func setupInstallFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.StringVarP(&cfg.Install.Master.Host, "master", "", "", "master host")
+	flags.StringVarP(&cfg.Install.Workers.MACs, "macs", "", "", "workers mac addresses")
+	flags.StringVarP(&cfg.Install.Workers.IPs, "ips", "", "", "workers ip addresses")
+	flags.StringVarP(&cfg.Install.Workers.IPRange, "iprange", "", cfg.Install.Workers.IPRange, "workers ip range")
+	flags.StringVarP(&cfg.Install.SSH.User, "user", "", cfg.Install.SSH.User, "ssh user")
+	flags.StringVarP(&cfg.Install.SSH.Password, "password", "", cfg.Install.SSH.Password, "ssh password")
+	flags.StringVarP(&cfg.Install.SSH.KeyPath, "key", "", cfg.Install.SSH.KeyPath, "ssh key")
+	flags.StringVarP(&cfg.Install.SSH.PubKeyPath, "pubkey", "", cfg.Install.SSH.PubKeyPath, "ssh public key")
+	flags.StringVarP(&cfg.Install.Master.PubKeyPath, "masterpubkey", "", cfg.Install.Master.PubKeyPath, "master public key path")
+	flags.StringVarP(&cfg.Install.Master.KeyPath, "masterkey", "", cfg.Install.Master.KeyPath, "master key path")
+	flags.StringVarP(&cfg.Install.Workers.Interface, "interface", "", cfg.Install.Workers.Interface, "interface name")
+}
+
+func setupUninstallFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.StringVarP(&cfg.Master.Host, "master", "", "", "master host")
+	flags.StringVarP(&cfg.Worker.IPs, "ips", "", "", "workers ips")
+	flags.StringVarP(&cfg.SSH.User, "user", "", cfg.SSH.User, "ssh user")
+	flags.StringVarP(&cfg.SSH.KeyPath, "key", "", cfg.SSH.KeyPath, "ssh key")
+}
+
+func setupServerFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.StringVarP(&cfg.Server.Host, "host", "", cfg.Server.Host, "listen host")
+	flags.StringVarP(&cfg.Server.Port, "port", "", cfg.Server.Port, "listen port")
+}
+
+func setupClientFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.StringVarP(&cfg.Client.Host, "host", "", cfg.Client.Host, "server host")
+	flags.StringVarP(&cfg.Client.Port, "port", "", cfg.Client.Port, "server port")
+}
+
+func setupWebFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.StringVarP(&cfg.Web.Host, "host", "", cfg.Web.Host, "listen host")
+	flags.StringVarP(&cfg.Web.Port, "port", "", cfg.Web.Port, "listen port")
+}
+
+func setupToolFlags() {
+	wolFlags := wolCmd.Flags()
+	wolFlags.StringVarP(&cfg.Worker.MACs, "macs", "", "", "comma separated mac addresses")
+	wolFlags.StringVarP(&cfg.Worker.IPRange, "iprange", "", "", "ip range")
+	wolFlags.StringVarP(&cfg.Master.Host, "master", "", cfg.Master.Host, "master host")
+
+	suspendFlags := suspendCmd.Flags()
+	suspendFlags.StringVarP(&cfg.Worker.IPs, "ips", "", "", "comma separated ips")
+	suspendFlags.StringVarP(&cfg.SSH.User, "user", "", cfg.SSH.User, "ssh user")
+	suspendFlags.StringVarP(&cfg.SSH.KeyPath, "key", "", cfg.SSH.KeyPath, "ssh key")
+	suspendFlags.StringVarP(&cfg.Master.Host, "master", "", cfg.Master.Host, "master host")
 }
 
 func init() {
-	usr, err := os.UserHomeDir()
-	if err != nil {
+	if err := initConfig(); err != nil {
 		panic(err)
 	}
-	defaultKeyPath := usr + "/.ssh/id_rsa"
-	defaultPubKeyPath := usr + "/.ssh/id_rsa.pub"
-	defaultMasterKeyPath := "~/.ssh/id_rsa"
-	defaultMasterPubKeyPath := "~/.ssh/id_rsa.pub"
-	defaultKubeConfigPath := usr + "/.kube/config"
-	rootCmd.AddCommand(installCmd)
-	rootCmd.AddCommand(uninstallCmd)
-	rootCmd.AddCommand(serverCmd)
-	rootCmd.AddCommand(clientCmd)
-	rootCmd.AddCommand(webCmd)
-	rootCmd.AddCommand(toolCmd)
-	toolCmd.AddCommand(wolCmd)
-	toolCmd.AddCommand(suspendCmd)
-	uninstallCmd.Flags().StringVarP(&masterFlag, "master", "", "", "master host")
-	uninstallCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "workers ips")
-	uninstallCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
-	uninstallCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
-	installCmd.Flags().StringVarP(&masterFlag, "master", "", "", "master host")
-	installCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "workers mac addresses")
-	installCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "workers ip addresses")
-	installCmd.Flags().StringVarP(&ipRange, "iprange", "", "10.0.0.0/24", "workers ip range")
-	installCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
-	installCmd.Flags().StringVarP(&passwordFlag, "password", "", "ubuntu", "ssh password")
-	installCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
-	installCmd.Flags().StringVarP(&pubKeyPath, "pubkey", "", defaultPubKeyPath, "ssh public key")
-	installCmd.Flags().StringVarP(&masterPubKeyPath, "masterpubkey", "", defaultMasterPubKeyPath, "master public key path")
-	installCmd.Flags().StringVarP(&masterKeyPath, "masterkey", "", defaultMasterKeyPath, "master key path")
-	installCmd.Flags().StringVarP(&kubeConfigPath, "kubeconfig", "", defaultKubeConfigPath, "kubeconfig path")
-	installCmd.Flags().StringVarP(&interfaceName, "interface", "", "enp0s25", "interface name")
-	serverCmd.Flags().StringVarP(&listenHost, "host", "", "0.0.0.0", "listen host")
-	serverCmd.Flags().StringVarP(&listenPort, "port", "", "6969", "listen port")
-	clientCmd.Flags().StringVarP(&clientHost, "host", "", "127.0.0.1", "server host")
-	clientCmd.Flags().StringVarP(&clientPort, "port", "", "6969", "server port")
-	webCmd.Flags().StringVarP(&webHost, "host", "", "0.0.0.0", "listen host")
-	webCmd.Flags().StringVarP(&webPort, "port", "", "8080", "listen port")
-	wolCmd.Flags().StringVarP(&workersMacs, "macs", "", "", "comma separated mac addresses")
-	wolCmd.Flags().StringVarP(&ipRange, "iprange", "", "", "ip range")
-	wolCmd.Flags().StringVarP(&masterFlag, "master", "", "localhost", "master host")
-	suspendCmd.Flags().StringVarP(&workersIPs, "ips", "", "", "comma separated ips")
-	suspendCmd.Flags().StringVarP(&userFlag, "user", "", "ubuntu", "ssh user")
-	suspendCmd.Flags().StringVarP(&keyFlag, "key", "", defaultKeyPath, "ssh key")
-	suspendCmd.Flags().StringVarP(&masterFlag, "master", "", "localhost", "master host")
+
+	setupCommands()
+	setupInstallFlags(installCmd)
+	setupUninstallFlags(uninstallCmd)
+	setupServerFlags(serverCmd)
+	setupClientFlags(clientCmd)
+	setupWebFlags(webCmd)
+	setupToolFlags()
 }
 
 func main() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}
 }

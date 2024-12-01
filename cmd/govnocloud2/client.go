@@ -18,12 +18,11 @@ var clientCmd = &cobra.Command{
 		}
 		if args[0] == "version" {
 			fmt.Println("govnocloud2 client v0.0.1")
-			serverVer, err := client.GetServerVersion(clientHost, clientPort)
+			serverVer, err := client.GetServerVersion(cfg.Client.Host, cfg.Client.Port)
 			if err != nil {
 				panic(err)
 			}
 			fmt.Println("server version: " + serverVer)
 		}
-
 	},
 }

@@ -23,15 +23,21 @@ var wolCmd = &cobra.Command{
 	Short: "wake on lan",
 	Long:  `wake on lan`,
 	Run: func(cmd *cobra.Command, args []string) {
-		macsSplit := strings.Split(workersMacs, ",")
+		macsSplit := strings.Split(cfg.Worker.MACs, ",")
 		if len(macsSplit) == 0 {
 			panic("macs are required")
 		}
-		if masterFlag == "" {
+		if cfg.Master.Host == "" {
 			panic("master is required")
 		}
-		log.Println("running WOL on host ", masterFlag, " macs ", macsSplit)
-		k3s.Wol(masterFlag, userFlag, keyFlag, ipRange, macsSplit)
+		log.Println("running WOL on host ", cfg.Master.Host, " macs ", macsSplit)
+		k3s.Wol(
+			cfg.Master.Host,
+			cfg.SSH.User,
+			cfg.SSH.KeyPath,
+			cfg.Worker.IPRange,
+			macsSplit,
+		)
 	},
 }
 
@@ -41,14 +47,20 @@ var suspendCmd = &cobra.Command{
 	Long:  `suspend`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("suspend")
-		ipsSplit := strings.Split(workersIPs, ",")
+		ipsSplit := strings.Split(cfg.Worker.IPs, ",")
 		if len(ipsSplit) == 0 {
 			panic("ips are required")
 		}
-		if masterFlag == "" {
+		if cfg.Master.Host == "" {
 			panic("master is required")
 		}
-		log.Println("master: " + masterFlag)
-		k3s.Suspend(ipsSplit, masterFlag, userFlag, passwordFlag, keyFlag)
+		log.Println("master: " + cfg.Master.Host)
+		k3s.Suspend(
+			ipsSplit,
+			cfg.Master.Host,
+			cfg.SSH.User,
+			cfg.SSH.Password,
+			cfg.SSH.KeyPath,
+		)
 	},
 }
