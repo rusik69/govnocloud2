@@ -4,78 +4,179 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/crypto/ssh"
 )
 
-// CopySSHKey copies the SSH key to the remote server.
-func CopySSHKey(host, user, password, pubKeyPath, master string) error {
-	if master == "" {
-		// Read the public key file
-		publicKey, err := os.ReadFile(pubKeyPath)
-		if err != nil {
-			return fmt.Errorf("unable to read public key file: %v", err)
-		}
+// KeyConfig holds configuration for SSH key operations
+type KeyConfig struct {
+	Host       string
+	User       string
+	Password   string
+	PublicKey  string
+	MasterHost string
+	KeyPath    string
+	Port       int
+	Timeout    int
+}
 
-		// Create SSH client configuration
-		config := &ssh.ClientConfig{
-			User: user,
-			Auth: []ssh.AuthMethod{
-				ssh.Password(password), // Use password authentication
-			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // Insecure for demo purposes; use a proper callback in production
-		}
-
-		// Connect to the server
-		conn, err := ssh.Dial("tcp", host+":22", config)
-		if err != nil {
-			return fmt.Errorf("failed to connect to server: %v", err)
-		}
-		defer conn.Close()
-
-		// Create a new session
-		session, err := conn.NewSession()
-		if err != nil {
-			return fmt.Errorf("failed to create session: %v", err)
-		}
-		defer session.Close()
-
-		// Prepare the command to append the public key to authorized_keys
-		cmd := fmt.Sprintf(`mkdir -p ~/.ssh && echo "%s" >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys`, string(publicKey))
-
-		// Run the command on the remote server
-		if err := session.Run(cmd); err != nil {
-			return fmt.Errorf("failed to run command on remote server: %v", err)
-		}
-		session, err = conn.NewSession()
-		if err != nil {
-			return fmt.Errorf("failed to create session: %v", err)
-		}
-		defer session.Close()
-		// Copy the public key to the root user's authorized_keys file
-		cmd = "sudo cp ~/.ssh/authorized_keys /root/.ssh/authorized_keys"
-		if err := session.Run(cmd); err != nil {
-			return fmt.Errorf("failed to run command on remote server: %v", err)
-		}
-	} else {
-		cmd := fmt.Sprintf(`sshpass -p %s ssh-copy-id %s@%s`, password, user, host)
-		log.Println(cmd)
-		out, err := Run(cmd, master, pubKeyPath, user, password, false, 10)
-		if err != nil {
-			return fmt.Errorf("failed to copy ssh key: %v, %v", string(out), err)
-		}
+// NewKeyConfig creates a new key configuration with defaults
+func NewKeyConfig(host, user, password, pubKeyPath, master string) *KeyConfig {
+	return &KeyConfig{
+		Host:       host,
+		User:       user,
+		Password:   password,
+		PublicKey:  pubKeyPath,
+		MasterHost: master,
+		Port:       22,
+		Timeout:    10,
 	}
+}
+
+// CopySSHKey copies the SSH key to the remote server
+func CopySSHKey(host, user, password, pubKeyPath, master string) error {
+	cfg := NewKeyConfig(host, user, password, pubKeyPath, master)
+	return cfg.CopyKey()
+}
+
+// CopyKey performs the key copy operation
+func (k *KeyConfig) CopyKey() error {
+	if k.MasterHost == "" {
+		return k.copyKeyDirect()
+	}
+	return k.copyKeyViaMaster()
+}
+
+// copyKeyDirect copies the key directly to the target host
+func (k *KeyConfig) copyKeyDirect() error {
+	// Read the public key file
+	publicKey, err := os.ReadFile(k.PublicKey)
+	if err != nil {
+		return fmt.Errorf("failed to read public key file: %w", err)
+	}
+
+	// Create SSH client
+	client, err := k.createSSHClient()
+	if err != nil {
+		return fmt.Errorf("failed to create SSH client: %w", err)
+	}
+	defer client.Close()
+
+	// Setup authorized keys
+	if err := k.setupAuthorizedKeys(client, string(publicKey)); err != nil {
+		return err
+	}
+
+	// Copy to root user
+	if err := k.copyToRoot(client); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// CreateKey creates the key.
-func CreateKey(host, path, user, key string) (string, error) {
-	// check if key exists on the host and create if not
-	cmd := fmt.Sprintf(`if [ ! -f %s ]; then ssh-keygen -t rsa -b 4096 -C "%s" -f %s -N ""; fi`, path, user, path)
-	log.Println(cmd)
-	out, err := Run(cmd, host, key, user, "", false, 10)
-	if err != nil {
-		return string(out), err
+// createSSHClient creates a new SSH client using password authentication
+func (k *KeyConfig) createSSHClient() (*ssh.Client, error) {
+	config := &ssh.ClientConfig{
+		User: k.User,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(k.Password),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
+
+	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", k.Host, k.Port), config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to server: %w", err)
+	}
+
+	return client, nil
+}
+
+// setupAuthorizedKeys sets up the authorized_keys file
+func (k *KeyConfig) setupAuthorizedKeys(client *ssh.Client, publicKey string) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create session: %w", err)
+	}
+	defer session.Close()
+
+	cmd := fmt.Sprintf(
+		"mkdir -p ~/.ssh && echo %q >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys",
+		publicKey,
+	)
+
+	if err := session.Run(cmd); err != nil {
+		return fmt.Errorf("failed to setup authorized_keys: %w", err)
+	}
+
+	return nil
+}
+
+// copyToRoot copies the authorized_keys file to root user
+func (k *KeyConfig) copyToRoot(client *ssh.Client) error {
+	session, err := client.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create session: %w", err)
+	}
+	defer session.Close()
+
+	cmd := "sudo mkdir -p /root/.ssh && sudo cp ~/.ssh/authorized_keys /root/.ssh/authorized_keys"
+	if err := session.Run(cmd); err != nil {
+		return fmt.Errorf("failed to copy keys to root: %w", err)
+	}
+
+	return nil
+}
+
+// copyKeyViaMaster copies the key through a master host
+func (k *KeyConfig) copyKeyViaMaster() error {
+	cmd := fmt.Sprintf("sshpass -p %s ssh-copy-id %s@%s", k.Password, k.User, k.Host)
+	log.Printf("Running: %s", cmd)
+
+	out, err := Run(cmd, k.MasterHost, k.PublicKey, k.User, k.Password, false, k.Timeout)
+	if err != nil {
+		return fmt.Errorf("failed to copy SSH key via master: %s: %w", out, err)
+	}
+
+	return nil
+}
+
+// CreateKey creates an SSH key pair if it doesn't exist
+func CreateKey(host, path, user, key string) (string, error) {
+	cfg := &KeyConfig{
+		Host:    host,
+		KeyPath: path,
+		User:    user,
+		Timeout: 10,
+	}
+	return cfg.CreateKeyPair()
+}
+
+// CreateKeyPair creates a new SSH key pair
+func (k *KeyConfig) CreateKeyPair() (string, error) {
+	cmd := fmt.Sprintf(
+		`if [ ! -f %s ]; then ssh-keygen -t rsa -b 4096 -C %q -f %s -N ""; fi`,
+		k.KeyPath,
+		k.User,
+		k.KeyPath,
+	)
+	log.Printf("Running: %s", cmd)
+
+	out, err := Run(cmd, k.Host, k.KeyPath, k.User, "", false, k.Timeout)
+	if err != nil {
+		return string(out), fmt.Errorf("failed to create SSH key pair: %w", err)
+	}
+
 	return "", nil
+}
+
+// ensureKeyDirectory ensures the SSH key directory exists
+func (k *KeyConfig) ensureKeyDirectory() error {
+	dir := filepath.Dir(k.KeyPath)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create key directory: %w", err)
+	}
+	return nil
 }

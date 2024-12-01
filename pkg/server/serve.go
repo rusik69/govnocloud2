@@ -56,6 +56,13 @@ func (s *Server) setupRoutes() {
 			nodes.GET("/:name", GetNodeHandler)
 			nodes.DELETE("/:name", DeleteNodeHandler)
 		}
+		dbs := v0.Group("/dbs")
+		{
+			dbs.GET("", ListDBsHandler)
+			dbs.POST("", CreateDBHandler)
+			dbs.GET("/:name", GetDBHandler)
+			dbs.DELETE("/:name", DeleteDBHandler)
+		}
 	}
 
 	// Version endpoint
