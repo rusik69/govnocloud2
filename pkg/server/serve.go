@@ -119,17 +119,17 @@ func respondWithSuccess(c *gin.Context, data interface{}) {
 	})
 }
 
-// MiddlewareFunc represents a Gin middleware function
-type MiddlewareFunc func(*gin.Context)
+// MiddlewareFunc is an alias for gin.HandlerFunc for better readability
+type MiddlewareFunc = gin.HandlerFunc
 
 // withMiddleware adds middleware to a route group
-func withMiddleware(group *gin.RouterGroup, middleware ...MiddlewareFunc) {
+func withMiddleware(group *gin.RouterGroup, middleware ...gin.HandlerFunc) {
 	for _, m := range middleware {
 		group.Use(m)
 	}
 }
 
-// LoggingMiddleware logs request details
+// LoggingMiddleware creates a middleware for request logging
 func LoggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
@@ -149,7 +149,7 @@ func LoggingMiddleware() gin.HandlerFunc {
 	}
 }
 
-// ErrorMiddleware handles panics and errors
+// ErrorMiddleware creates a middleware for error handling
 func ErrorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

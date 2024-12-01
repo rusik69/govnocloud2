@@ -43,22 +43,8 @@ func renderTemplate(c *gin.Context, template string, data interface{}) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.Header("X-Content-Type-Options", "nosniff")
 
-	if err := c.HTML(http.StatusOK, template, data); err != nil {
-		handleTemplateError(c, err)
-	}
-}
-
-// handleTemplateError handles template rendering errors
-func handleTemplateError(c *gin.Context, err error) {
-	// Log the error
-	logger := GetLogger()
-	logger.Error("Template rendering error", "error", err)
-
-	// Return a generic error page
-	c.HTML(http.StatusInternalServerError, "error.html", gin.H{
-		"title": "Error",
-		"error": "An error occurred while rendering the page",
-	})
+	// Gin's HTML method doesn't return an error, so we can call it directly
+	c.HTML(http.StatusOK, template, data)
 }
 
 // GetVersion returns the current version

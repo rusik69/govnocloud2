@@ -49,6 +49,9 @@ func NewWebServer(config *WebServerConfig) *WebServer {
 	// Add recovery middleware
 	router.Use(gin.Recovery())
 
+	// Add CORS middleware
+	router.Use(cors.Default())
+
 	return &WebServer{
 		config: config,
 		router: router,
@@ -70,9 +73,8 @@ func (s *WebServer) setupMiddleware() {
 
 // setupTemplates configures template rendering
 func (s *WebServer) setupTemplates() error {
-	if err := s.router.LoadHTMLGlob(s.config.TemplatePath); err != nil {
-		return fmt.Errorf("failed to load templates: %w", err)
-	}
+	// Load HTML templates from the configured path
+	s.router.LoadHTMLGlob(s.config.TemplatePath)
 	return nil
 }
 
