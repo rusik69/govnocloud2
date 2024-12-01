@@ -25,7 +25,7 @@ test:
 	go test -v ./...
 
 wol:
-	bin/govnocloud2-linux-amd64 tool wol --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab --iprange 10.0.0.255 --master 192.168.0.69
+	bin/govnocloud2-linux-amd64 tool wol --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab --iprange 10.0.0.255 --master 10.0.0.1
 	sleep 5
 
 wolmac:
