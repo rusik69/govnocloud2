@@ -19,7 +19,7 @@ jobs:
         with:
           version: latest
           args: --timeout=5m
-          
+          skip-go-installation: true
   test:
     needs: lint
     runs-on: self-hosted
