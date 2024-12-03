@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -170,13 +169,4 @@ func (k *KeyConfig) CreateKeyPair() (string, error) {
 	}
 
 	return "", nil
-}
-
-// ensureKeyDirectory ensures the SSH key directory exists
-func (k *KeyConfig) ensureKeyDirectory() error {
-	dir := filepath.Dir(k.KeyPath)
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return fmt.Errorf("failed to create key directory: %w", err)
-	}
-	return nil
 }

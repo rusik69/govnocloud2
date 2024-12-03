@@ -120,7 +120,7 @@ func Deploy(host, port, user, password, key string) error {
 }
 
 // Wol wakes on lan.
-func Wol(master, user, key, ip string, macs []string) error {
+func Wol(master, user, key, ip string, macs []string) {
 	for _, mac := range macs {
 		cmd := fmt.Sprintf("wakeonlan -i %s %s", ip, mac)
 		log.Println(cmd)
@@ -130,11 +130,10 @@ func Wol(master, user, key, ip string, macs []string) error {
 			continue
 		}
 	}
-	return nil
 }
 
 // Suspend suspends the servers
-func Suspend(ips []string, master, user, password, key string) error {
+func Suspend(ips []string, master, user, password, key string) {
 	for _, ip := range ips {
 		log.Printf("Suspending server: %s", ip)
 		cmd := fmt.Sprintf("ssh %s@%s 'sudo systemctl suspend'", user, ip)
@@ -145,5 +144,4 @@ func Suspend(ips []string, master, user, password, key string) error {
 			continue
 		}
 	}
-	return nil
 }
