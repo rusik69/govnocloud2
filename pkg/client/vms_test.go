@@ -12,7 +12,7 @@ import (
 
 func setupTestServer(t *testing.T, handler http.HandlerFunc) (*httptest.Server, *client.Client) {
 	server := httptest.NewServer(handler)
-	
+
 	// Extract host and port from test server URL
 	host := server.URL[7:] // Remove "http://"
 	var port string
@@ -23,7 +23,7 @@ func setupTestServer(t *testing.T, handler http.HandlerFunc) (*httptest.Server, 
 			break
 		}
 	}
-	
+
 	return server, client.NewClient(host, port)
 }
 
@@ -115,7 +115,10 @@ func TestListVMs(t *testing.T) {
 				}
 				w.WriteHeader(tt.statusCode)
 				if tt.statusCode == http.StatusOK {
-					json.NewEncoder(w).Encode(tt.vms)
+					err := json.NewEncoder(w).Encode(tt.vms)
+					if err != nil {
+						t.Errorf("failed to encode response: %v", err)
+					}
 				}
 			})
 			defer server.Close()
@@ -171,7 +174,10 @@ func TestGetVM(t *testing.T) {
 				}
 				w.WriteHeader(tt.statusCode)
 				if tt.statusCode == http.StatusOK {
-					json.NewEncoder(w).Encode(tt.vm)
+					err := json.NewEncoder(w).Encode(tt.vm)
+					if err != nil {
+						t.Errorf("failed to encode response: %v", err)
+					}
 				}
 			})
 			defer server.Close()

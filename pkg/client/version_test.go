@@ -51,7 +51,10 @@ func TestGetServerVersion(t *testing.T) {
 
 				// Write response
 				if tt.statusCode == http.StatusOK {
-					json.NewEncoder(w).Encode(tt.serverResponse)
+					err := json.NewEncoder(w).Encode(tt.serverResponse)
+					if err != nil {
+						t.Errorf("failed to encode response: %v", err)
+					}
 				}
 			}))
 			defer server.Close()
