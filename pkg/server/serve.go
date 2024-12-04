@@ -122,13 +122,6 @@ func respondWithSuccess(c *gin.Context, data interface{}) {
 // MiddlewareFunc is an alias for gin.HandlerFunc for better readability
 type MiddlewareFunc = gin.HandlerFunc
 
-// withMiddleware adds middleware to a route group
-func withMiddleware(group *gin.RouterGroup, middleware ...gin.HandlerFunc) {
-	for _, m := range middleware {
-		group.Use(m)
-	}
-}
-
 // LoggingMiddleware creates a middleware for request logging
 func LoggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

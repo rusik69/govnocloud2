@@ -14,6 +14,9 @@ var webCmd = &cobra.Command{
 	Long:  `start govnocloud2 web`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("starting web server on", cfg.Web.Host+":"+cfg.Web.Port)
-		web.Listen(cfg.Web.Host, cfg.Web.Port)
+		err := web.Listen(cfg.Web.Host, cfg.Web.Port)
+		if err != nil {
+			log.Fatalf("failed to start web server: %v", err)
+		}
 	},
 }
