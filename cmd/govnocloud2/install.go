@@ -39,31 +39,6 @@ var installCmd = &cobra.Command{
 			panic("workers ips and macs should be the same length")
 		}
 
-		log.Println("Creating ssh key")
-		_, err := ssh.CreateKey(
-			cfg.Install.Master.Host,
-			cfg.Install.Master.KeyPath,
-			cfg.Install.SSH.User,
-			cfg.Install.SSH.KeyPath,
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		if cfg.Install.SSH.Password != "" {
-			log.Println("Installing key on " + cfg.Install.Master.Host)
-			err := ssh.CopySSHKey(
-				cfg.Install.Master.Host,
-				cfg.Install.SSH.User,
-				cfg.Install.SSH.Password,
-				cfg.Install.SSH.PubKeyPath,
-				"",
-			)
-			if err != nil {
-				panic(err)
-			}
-		}
-
 		log.Println("Installing packages on " + cfg.Install.Master.Host)
 		out, err := k3s.InstallPackages(
 			cfg.Install.Master.Host,
@@ -88,20 +63,6 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			log.Println(out)
 			panic(err)
-		}
-
-		for _, worker := range workersIPsSplit {
-			log.Println("Installing key on " + worker)
-			err := ssh.CopySSHKey(
-				worker,
-				cfg.Install.SSH.User,
-				cfg.Install.SSH.Password,
-				cfg.Install.SSH.PubKeyPath,
-				cfg.Install.Master.Host,
-			)
-			if err != nil {
-				panic(err)
-			}
 		}
 
 		log.Println("Deploying server on " + cfg.Install.Master.Host)
