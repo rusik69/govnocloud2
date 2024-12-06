@@ -97,7 +97,7 @@ func deployMonitoringStack(cfg *MonitoringConfig) error {
 		return err
 	}
 
-	if err := updateHelmRepos(); err != nil {
+	if err := updateHelmRepos(cfg); err != nil {
 		return err
 	}
 
