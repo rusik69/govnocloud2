@@ -43,7 +43,8 @@ func DeployMaster(host, user, key string) error {
 
 // Deploy installs k3s on the master node
 func (m *MasterConfig) Deploy() error {
-	cmd := "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--write-kubeconfig-mode=755' sh - || true"
+	cmd := "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--write-kubeconfig-mode=755' sh -"
+	log.Println(cmd)
 	out, err := ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
 	log.Println(out)
 	if err != nil {
