@@ -2,8 +2,11 @@ package k3s
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+
+	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
 // MonitoringConfig holds configuration for monitoring deployment
@@ -18,6 +21,10 @@ type MonitoringConfig struct {
 		Namespace string
 	}
 	Values MonitoringValues
+	Host   string
+	Port   string
+	User   string
+	Key    string
 }
 
 // MonitoringValues represents the Helm values for monitoring
@@ -42,7 +49,7 @@ type MonitoringServiceConfig struct {
 }
 
 // NewMonitoringConfig creates a default monitoring configuration
-func NewMonitoringConfig() *MonitoringConfig {
+func NewMonitoringConfig(host, port, user, key string) *MonitoringConfig {
 	return &MonitoringConfig{
 		HelmRepo: struct {
 			Name string
@@ -71,12 +78,16 @@ func NewMonitoringConfig() *MonitoringConfig {
 				},
 			},
 		},
+		Host: host,
+		Port: port,
+		User: user,
+		Key:  key,
 	}
 }
 
 // DeployPrometheus deploys Prometheus to k3s cluster.
-func DeployPrometheus() error {
-	cfg := NewMonitoringConfig()
+func DeployPrometheus(host, port, user, key string) error {
+	cfg := NewMonitoringConfig(host, port, user, key)
 	return deployMonitoringStack(cfg)
 }
 
@@ -101,26 +112,24 @@ func deployMonitoringStack(cfg *MonitoringConfig) error {
 
 // addHelmRepo adds the Prometheus Helm repository
 func addHelmRepo(cfg *MonitoringConfig) error {
-	cmd := exec.Command("helm", "repo", "add", cfg.HelmRepo.Name, cfg.HelmRepo.URL)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	cmd := fmt.Sprintf("helm repo add %s %s", cfg.HelmRepo.Name, cfg.HelmRepo.URL)
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to add Helm repository: %w", err)
 	}
+	log.Println(out)
 
 	return nil
 }
 
 // updateHelmRepos updates all Helm repositories
-func updateHelmRepos() error {
-	cmd := exec.Command("helm", "repo", "update")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+func updateHelmRepos(cfg *MonitoringConfig) error {
+	cmd := "helm repo update"
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to update Helm repositories: %w", err)
 	}
+	log.Println(out)
 
 	return nil
 }
