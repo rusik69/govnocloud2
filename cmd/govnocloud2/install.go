@@ -78,7 +78,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Deploying k3s master on " + cfg.Install.Master.Host)
-		out, err = k3s.DeployMaster(
+		err = k3s.DeployMaster(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -87,8 +87,6 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
-		log.Println(out)
-
 		log.Println("Getting k3s token")
 		token, err := k3s.GetToken(
 			cfg.Install.Master.Host,
@@ -101,7 +99,7 @@ var installCmd = &cobra.Command{
 
 		for _, worker := range workersIPsSplit {
 			log.Println("Deploying k3s worker on " + worker)
-			out, err := k3s.DeployNode(
+			err = k3s.DeployNode(
 				worker,
 				cfg.Install.SSH.User,
 				cfg.Install.SSH.KeyPath,
@@ -110,10 +108,8 @@ var installCmd = &cobra.Command{
 				token,
 			)
 			if err != nil {
-				log.Println(out)
 				panic(err)
 			}
-			log.Println(out)
 		}
 
 		command := "sudo k3s kubectl get nodes"

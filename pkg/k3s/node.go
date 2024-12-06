@@ -32,13 +32,13 @@ func NewNodeConfig(host, user, key, password, master, token string) *NodeConfig 
 }
 
 // DeployNode deploys k3s nodes.
-func DeployNode(host, user, key, password, master, token string) (string, error) {
+func DeployNode(host, user, key, password, master, token string) error {
 	cfg := NewNodeConfig(host, user, key, password, master, token)
 	return cfg.Deploy()
 }
 
 // Deploy installs k3s on the node
-func (n *NodeConfig) Deploy() (string, error) {
+func (n *NodeConfig) Deploy() error {
 	cmd := fmt.Sprintf(
 		"curl -sfL https://get.k3s.io | K3S_URL=https://%s:6443 K3S_TOKEN=%s INSTALL_K3S_EXEC='--node-name=%s' sh -",
 		n.Master,
@@ -46,13 +46,12 @@ func (n *NodeConfig) Deploy() (string, error) {
 		n.Host,
 	)
 	log.Println(cmd)
-
 	out, err := ssh.Run(cmd, n.Host, n.Key, n.User, n.Password, false, n.Timeout)
 	if err != nil {
-		return "", fmt.Errorf("failed to deploy k3s node: %w", err)
+		return fmt.Errorf("failed to deploy k3s node: %w", err)
 	}
-
-	return out, nil
+	log.Println(out)
+	return nil
 }
 
 // UninstallNode uninstalls k3s node.

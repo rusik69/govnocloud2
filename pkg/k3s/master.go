@@ -36,19 +36,20 @@ func NewMasterConfig(host, user, key string) *MasterConfig {
 }
 
 // DeployMaster deploys k3s master.
-func DeployMaster(host, user, key string) (string, error) {
+func DeployMaster(host, user, key string) error {
 	cfg := NewMasterConfig(host, user, key)
 	return cfg.Deploy()
 }
 
 // Deploy installs k3s on the master node
-func (m *MasterConfig) Deploy() (string, error) {
+func (m *MasterConfig) Deploy() error {
 	cmd := "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--write-kubeconfig-mode=755' sh - || true"
 	out, err := ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
+	log.Println(out)
 	if err != nil {
-		return string(out), fmt.Errorf("failed to deploy k3s master: %w", err)
+		return fmt.Errorf("failed to deploy k3s master: %w", err)
 	}
-	return "", nil
+	return nil
 }
 
 // GetToken gets the k3s token.
