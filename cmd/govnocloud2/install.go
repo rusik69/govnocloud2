@@ -120,7 +120,7 @@ var installCmd = &cobra.Command{
 			cfg.Install.SSH.User,
 			"",
 			false,
-			600,
+			60,
 		)
 		if err != nil {
 			log.Println(out)
@@ -130,7 +130,12 @@ var installCmd = &cobra.Command{
 		log.Println(out)
 
 		log.Println("Installing Helm")
-		err = k3s.InstallHelm()
+		err = k3s.InstallHelm(
+			cfg.Install.Master.Host,
+			cfg.Install.Server.Port,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
 		if err != nil {
 			panic(err)
 		}

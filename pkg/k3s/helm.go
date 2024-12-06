@@ -2,18 +2,23 @@ package k3s
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
+	"log"
+
+	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
 // HelmConfig holds Helm installation configuration
 type HelmConfig struct {
 	ScriptURL string
 	Shell     string
+	Host      string
+	Port      string
+	User      string
+	Key       string
 }
 
 // NewHelmConfig creates a default Helm configuration
-func NewHelmConfig() *HelmConfig {
+func NewHelmConfig(host, port, user, key string) *HelmConfig {
 	return &HelmConfig{
 		ScriptURL: "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3",
 		Shell:     "bash",
@@ -21,23 +26,18 @@ func NewHelmConfig() *HelmConfig {
 }
 
 // InstallHelm installs Helm to k3s cluster.
-func InstallHelm() error {
-	cfg := NewHelmConfig()
+func InstallHelm(host, port, user, key string) error {
+	cfg := NewHelmConfig(host, port, user, key)
 	return installHelmWithConfig(cfg)
 }
 
 // installHelmWithConfig handles the actual Helm installation
 func installHelmWithConfig(cfg *HelmConfig) error {
 	cmd := fmt.Sprintf("curl -sfL %s | %s", cfg.ScriptURL, cfg.Shell)
-	command := exec.Command(cfg.Shell, "-c", cmd)
-	
-	// Set up command output
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	
-	if err := command.Run(); err != nil {
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("error installing Helm: %w", err)
 	}
-	
+	log.Println(out)
 	return nil
 }
