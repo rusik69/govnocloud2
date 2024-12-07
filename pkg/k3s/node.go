@@ -14,26 +14,24 @@ type NodeConfig struct {
 	Key      string
 	Password string
 	Master   string
-	Token    string
 	Timeout  int
 }
 
 // NewNodeConfig creates a new node configuration with defaults
-func NewNodeConfig(host, user, key, password, master, token string) *NodeConfig {
+func NewNodeConfig(host, user, key, password, master string) *NodeConfig {
 	return &NodeConfig{
 		Host:     host,
 		User:     user,
 		Key:      key,
 		Password: password,
 		Master:   master,
-		Token:    token,
 		Timeout:  600,
 	}
 }
 
 // DeployNode deploys k3s nodes.
-func DeployNode(host, user, key, password, master, token string) error {
-	cfg := NewNodeConfig(host, user, key, password, master, token)
+func DeployNode(host, user, key, password, master string) error {
+	cfg := NewNodeConfig(host, user, key, password, master)
 	return cfg.Deploy()
 }
 
@@ -51,7 +49,7 @@ func (n *NodeConfig) Deploy() error {
 
 // UninstallNode uninstalls k3s node.
 func UninstallNode(master, host, user, key, password string) error {
-	cfg := NewNodeConfig(host, user, key, password, master, "")
+	cfg := NewNodeConfig(host, user, key, password, master)
 	return cfg.Uninstall()
 }
 

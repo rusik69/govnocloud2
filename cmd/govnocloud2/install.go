@@ -87,15 +87,6 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
-		log.Println("Getting k3s token")
-		token, err := k3s.GetToken(
-			cfg.Install.Master.Host,
-			cfg.Install.SSH.User,
-			cfg.Install.SSH.KeyPath,
-		)
-		if err != nil {
-			panic(err)
-		}
 
 		for _, worker := range workersIPsSplit {
 			log.Println("Deploying k3s worker on " + worker)
@@ -105,7 +96,6 @@ var installCmd = &cobra.Command{
 				cfg.Install.SSH.KeyPath,
 				cfg.Install.SSH.Password,
 				cfg.Install.Master.Host,
-				token,
 			)
 			if err != nil {
 				panic(err)
