@@ -41,8 +41,8 @@ func DeployNode(host, user, key, password, master, token string) error {
 func (n *NodeConfig) Deploy() error {
 	cmd := fmt.Sprintf(
 		"ssh %s@%s `curl -sfL https://get.k3s.io | K3S_URL=https://%s:6443 K3S_TOKEN=%s INSTALL_K3S_EXEC=' agent--node-name=%s' sh -s -`",
+		n.User,
 		n.Master,
-		n.Host,
 		n.Master,
 		n.Token,
 		n.Host,
