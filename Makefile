@@ -10,7 +10,7 @@ buildmac:
 	GOARCH=arm64 GOOS=darwin go build -o bin/govnocloud2-darwin-arm64 cmd/govnocloud2/*.go
 
 install:
-	sudo bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab install
+	bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab install
 
 installmac:
 	bin/govnocloud2-darwin-arm64 --master 192.168.0.69 --ips 10.0.0.2,10.0.0.3 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab install
