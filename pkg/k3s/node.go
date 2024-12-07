@@ -42,13 +42,13 @@ func (n *NodeConfig) Deploy() error {
 	cmd := fmt.Sprintf(
 		"ssh %s@%s `curl -sfL https://get.k3s.io | K3S_URL=https://%s:6443 K3S_TOKEN=%s INSTALL_K3S_EXEC=' agent--node-name=%s' sh -s -`",
 		n.User,
-		n.Master,
+		n.Host,
 		n.Master,
 		n.Token,
 		n.Host,
 	)
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, n.Host, n.Key, n.User, n.Password, false, n.Timeout)
+	out, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, false, n.Timeout)
 	if err != nil {
 		return fmt.Errorf("failed to deploy k3s node: %w", err)
 	}
