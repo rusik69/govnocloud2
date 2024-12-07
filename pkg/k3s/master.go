@@ -38,8 +38,8 @@ func DeployMaster(host, user, key string) error {
 	return cfg.Deploy()
 }
 
-// InstallK3sUpgrades installs k3sup tool.
-func (m *MasterConfig) InstallK3sUpgrades() error {
+// InstallK3sUp installs k3sup tool.
+func (m *MasterConfig) InstallK3sUp() error {
 	cmd := "curl -sLS https://get.k3sup.dev | sh && sudo install k3sup /usr/local/bin/"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
@@ -48,6 +48,12 @@ func (m *MasterConfig) InstallK3sUpgrades() error {
 		return fmt.Errorf("failed to install k3sup: %w", err)
 	}
 	return nil
+}
+
+// InstallK3sUp upgrades k3s up tool
+func InstallK3sUp(host, user, key string) error {
+	cfg := NewMasterConfig(host, user, key)
+	return cfg.InstallK3sUp()
 }
 
 // Deploy deploys k3s master.

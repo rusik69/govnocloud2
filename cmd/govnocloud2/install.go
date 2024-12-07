@@ -77,6 +77,17 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
+		// Install k3sup tool
+		log.Println("Installing k3sup tool on " + cfg.Install.Master.Host)
+		err = k3s.InstallK3sUp(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
+
 		log.Println("Deploying k3s master on " + cfg.Install.Master.Host)
 		err = k3s.DeployMaster(
 			cfg.Install.Master.Host,
