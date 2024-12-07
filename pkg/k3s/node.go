@@ -39,13 +39,7 @@ func DeployNode(host, user, key, password, master, token string) error {
 
 // Deploy installs k3s on the node
 func (n *NodeConfig) Deploy() error {
-	cmd := fmt.Sprintf(
-		"ssh %s@%s 'curl -sfL https://get.k3s.io | K3S_URL=https://%s:6443 K3S_TOKEN=%s sh -s -'",
-		n.User,
-		n.Host,
-		n.Master,
-		n.Token,
-	)
+	cmd := fmt.Sprintf("k3sup join --ip %s --user %s --ssh-key %s --sudo --server-ip %s --server-user %s", n.Host, n.User, n.Key, n.Master, n.User)
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, false, n.Timeout)
 	if err != nil {

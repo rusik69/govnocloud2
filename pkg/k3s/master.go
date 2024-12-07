@@ -3,9 +3,6 @@ package k3s
 import (
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
@@ -41,65 +38,27 @@ func DeployMaster(host, user, key string) error {
 	return cfg.Deploy()
 }
 
-// Deploy installs k3s on the master node
+// InstallK3sUpgrades installs k3sup tool.
+func (m *MasterConfig) InstallK3sUpgrades() error {
+	cmd := "curl -sLS https://get.k3sup.dev | sh && sudo install k3sup /usr/local/bin/"
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
+	log.Println(out)
+	if err != nil {
+		return fmt.Errorf("failed to install k3sup: %w", err)
+	}
+	return nil
+}
+
+// Deploy deploys k3s master.
 func (m *MasterConfig) Deploy() error {
-	cmd := "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--write-kubeconfig-mode=755' sh -"
+	cmd := fmt.Sprintf("k3sup install --ip %s --user %s --ssh-key %s --sudo", m.Host, m.User, m.Key)
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
 	log.Println(out)
 	if err != nil {
 		return fmt.Errorf("failed to deploy k3s master: %w", err)
 	}
-	return nil
-}
-
-// GetToken gets the k3s token.
-func GetToken(host, user, key string) (string, error) {
-	cfg := NewMasterConfig(host, user, key)
-	return cfg.GetToken()
-}
-
-// GetToken retrieves the node token from the master
-func (m *MasterConfig) GetToken() (string, error) {
-	output, err := ssh.Run("sudo cat /var/lib/rancher/k3s/server/node-token", m.Host, m.Key, m.User, "", false, 5)
-	if err != nil {
-		return "", fmt.Errorf("failed to get node token: %w", err)
-	}
-
-	tokenSplit := strings.Split(string(output), ":")
-	if len(tokenSplit) != 4 {
-		return "", fmt.Errorf("invalid token format")
-	}
-
-	return strings.TrimSpace(tokenSplit[3]), nil
-}
-
-// GetKubeconfig gets the k3s kubeconfig.
-func GetKubeconfig(host, user, key string) (string, error) {
-	cfg := NewMasterConfig(host, user, key)
-	return cfg.GetKubeconfig()
-}
-
-// GetKubeconfig retrieves the kubeconfig from the master
-func (m *MasterConfig) GetKubeconfig() (string, error) {
-	output, err := ssh.Run("sudo cat /etc/rancher/k3s/k3s.yaml", m.Host, m.Key, m.User, "", false, 5)
-	if err != nil {
-		return "", fmt.Errorf("failed to get kubeconfig: %w", err)
-	}
-	return output, nil
-}
-
-// WriteKubeconfig writes the kubeconfig to a file
-func WriteKubeConfig(kubeconfig, path string) error {
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("failed to create kubeconfig directory: %w", err)
-	}
-
-	if err := os.WriteFile(path, []byte(kubeconfig), 0644); err != nil {
-		return fmt.Errorf("failed to write kubeconfig file: %w", err)
-	}
-
 	return nil
 }
 
