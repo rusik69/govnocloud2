@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
@@ -159,17 +158,12 @@ grafana:
 
 // installMonitoringChart installs the Prometheus chart using Helm
 func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
-	cmd := exec.Command("helm", "upgrade", "--install",
-		cfg.Release.Name,
-		cfg.Release.Chart,
-		"--values", valuesFile,
-	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	cmd := fmt.Sprintf("helm upgrade --install %s %s --values %s", cfg.Release.Name, cfg.Release.Chart, valuesFile)
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to install monitoring stack: %w", err)
 	}
+	log.Println(out)
 
 	return nil
 }
