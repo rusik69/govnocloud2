@@ -36,20 +36,33 @@ func DeployNode(host, user, key, password, master string) error {
 	return cfg.Deploy()
 }
 
-// generateNodeName generates a node name
+// generateNodeName generates a node name from the host
 func (n *NodeConfig) generateNodeName() string {
-	// replace . with -
-	return strings.ReplaceAll(n.Host, ".", "-")
+	// Replace dots with dashes to create valid node name
+	nodeName := strings.ReplaceAll(n.Host, ".", "-")
+	// Add worker prefix
+	return fmt.Sprintf("node-%s", nodeName)
 }
 
 // Deploy installs k3s on the node
 func (n *NodeConfig) Deploy() error {
-	cmd := fmt.Sprintf("k3sup join --ip %s --user %s --ssh-key %s --sudo --server-ip %s --server-user %s --node-name %s", n.Host, n.User, n.Key, n.Master, n.User, n.generateNodeName())
-	log.Println(cmd)
-	_, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
+	nodeName := n.generateNodeName()
+	cmd := fmt.Sprintf(
+		"k3sup join --ip %s --user %s --ssh-key %s --server-ip %s --server-user %s --k3s-extra-args '--node-name %s' --sudo",
+		n.Host,
+		n.User,
+		n.Key,
+		n.Master,
+		n.User,
+		nodeName,
+	)
+	log.Printf("Running: %s", cmd)
+
+	out, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
 	if err != nil {
-		return fmt.Errorf("failed to deploy k3s node: %w", err)
+		return fmt.Errorf("failed to deploy k3s node: %s: %w", out, err)
 	}
+	log.Printf("Node deployment output: %s", out)
 	return nil
 }
 
