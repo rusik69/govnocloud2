@@ -133,7 +133,6 @@ var installCmd = &cobra.Command{
 		log.Println("Installing Helm")
 		err = k3s.InstallHelm(
 			cfg.Install.Master.Host,
-			cfg.Install.Server.Port,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
 		)
