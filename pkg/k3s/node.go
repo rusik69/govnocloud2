@@ -63,7 +63,7 @@ func (n *NodeConfig) Uninstall() error {
 			desc: "uninstall k3s agent",
 		},
 		{
-			cmd:  fmt.Sprintf("ssh %s@%s 'sudo rm -rf /etc/rancher/k3s || true'", n.User, n.Host),
+			cmd:  fmt.Sprintf("ssh %s@%s 'sudo rm -rf /etc/rancher || true'", n.User, n.Host),
 			desc: "remove k3s config",
 		},
 		{
