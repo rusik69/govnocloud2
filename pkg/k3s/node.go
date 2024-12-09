@@ -44,8 +44,7 @@ func (n *NodeConfig) generateNodeName() string {
 
 // Deploy installs k3s on the node
 func (n *NodeConfig) Deploy() error {
-	n.generateNodeName()
-	cmd := fmt.Sprintf("k3sup join --ip %s --user %s --ssh-key %s --sudo --server-ip %s --server-user %s", n.Host, n.User, n.Key, n.Master, n.User)
+	cmd := fmt.Sprintf("k3sup join --ip %s --user %s --ssh-key %s --sudo --server-ip %s --server-user %s --node-name %s", n.Host, n.User, n.Key, n.Master, n.User, n.generateNodeName())
 	log.Println(cmd)
 	_, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
 	if err != nil {
