@@ -39,11 +39,10 @@ func DeployNode(host, user, key, password, master string) error {
 func (n *NodeConfig) Deploy() error {
 	cmd := fmt.Sprintf("K3S_DEBUG=true k3sup join --ip %s --user %s --ssh-key %s --sudo --server-ip %s --server-user %s --k3s-extra-args '--debug'", n.Host, n.User, n.Key, n.Master, n.User)
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, false, n.Timeout)
+	_, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
 	if err != nil {
 		return fmt.Errorf("failed to deploy k3s node: %w", err)
 	}
-	log.Println(out)
 	return nil
 }
 
