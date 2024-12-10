@@ -143,7 +143,6 @@ var installCmd = &cobra.Command{
 		log.Println("Installing monitoring stack")
 		err = k3s.DeployPrometheus(
 			cfg.Install.Master.Host,
-			cfg.Install.Server.Port,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
 		)
@@ -152,7 +151,11 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing KubeVirt")
-		err = k3s.InstallKubeVirt()
+		err = k3s.InstallKubeVirt(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
 		if err != nil {
 			panic(err)
 		}

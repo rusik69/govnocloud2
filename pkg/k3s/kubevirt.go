@@ -2,8 +2,9 @@ package k3s
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
+	"log"
+
+	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
 // KubeVirtConfig holds KubeVirt installation configuration
@@ -12,23 +13,29 @@ type KubeVirtConfig struct {
 	BaseURL     string
 	BinaryPath  string
 	Permissions string
+	Host        string
+	User        string
+	Key         string
 }
 
 // NewKubeVirtConfig creates a default KubeVirt configuration
-func NewKubeVirtConfig() *KubeVirtConfig {
+func NewKubeVirtConfig(host, user, key string) *KubeVirtConfig {
 	const version = "v1.3.1"
 	return &KubeVirtConfig{
 		Version:     version,
 		BaseURL:     fmt.Sprintf("https://github.com/kubevirt/kubevirt/releases/download/%s", version),
 		BinaryPath:  "/usr/local/bin/virtctl",
 		Permissions: "+x",
+		Host:        host,
+		User:        user,
+		Key:         key,
 	}
 }
 
 // InstallKubeVirt installs KubeVirt to k3s cluster.
-func InstallKubeVirt() error {
-	cfg := NewKubeVirtConfig()
-	
+func InstallKubeVirt(host, user, key string) error {
+	cfg := NewKubeVirtConfig(host, user, key)
+
 	// Install operator
 	if err := applyKubeVirtManifest(cfg, "kubevirt-operator.yaml"); err != nil {
 		return fmt.Errorf("failed to install KubeVirt operator: %w", err)
@@ -50,15 +57,14 @@ func InstallKubeVirt() error {
 // applyKubeVirtManifest applies a KubeVirt manifest using kubectl
 func applyKubeVirtManifest(cfg *KubeVirtConfig, manifest string) error {
 	url := fmt.Sprintf("%s/%s", cfg.BaseURL, manifest)
-	
-	cmd := exec.Command("kubectl", "apply", "-f", url)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error applying manifest %s: %w", manifest, err)
+
+	cmd := fmt.Sprintf("kubectl apply -f %s", url)
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
+		return fmt.Errorf("failed to apply KubeVirt manifest: %w", err)
 	}
-	
+	log.Println(out)
+
 	return nil
 }
 
@@ -66,22 +72,11 @@ func applyKubeVirtManifest(cfg *KubeVirtConfig, manifest string) error {
 func installVirtctl(cfg *KubeVirtConfig) error {
 	// Download virtctl
 	virtctlURL := fmt.Sprintf("%s/virtctl-linux-amd64", cfg.BaseURL)
-	downloadCmd := exec.Command("sudo", "curl", "-L", "-o", cfg.BinaryPath, virtctlURL)
-	downloadCmd.Stdout = os.Stdout
-	downloadCmd.Stderr = os.Stderr
-	
-	if err := downloadCmd.Run(); err != nil {
-		return fmt.Errorf("error downloading virtctl: %w", err)
+	cmd := fmt.Sprintf("sudo curl -L -o %s %s; sudo chmod +x %s", cfg.BinaryPath, virtctlURL, cfg.BinaryPath)
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
+		return fmt.Errorf("failed to download virtctl: %w", err)
 	}
-
-	// Make virtctl executable
-	chmodCmd := exec.Command("sudo", "chmod", cfg.Permissions, cfg.BinaryPath)
-	chmodCmd.Stdout = os.Stdout
-	chmodCmd.Stderr = os.Stderr
-	
-	if err := chmodCmd.Run(); err != nil {
-		return fmt.Errorf("error setting virtctl permissions: %w", err)
-	}
-
+	log.Println(out)
 	return nil
 }

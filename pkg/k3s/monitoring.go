@@ -21,7 +21,6 @@ type MonitoringConfig struct {
 	}
 	Values MonitoringValues
 	Host   string
-	Port   string
 	User   string
 	Key    string
 }
@@ -48,7 +47,7 @@ type MonitoringServiceConfig struct {
 }
 
 // NewMonitoringConfig creates a default monitoring configuration
-func NewMonitoringConfig(host, port, user, key string) *MonitoringConfig {
+func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 	return &MonitoringConfig{
 		HelmRepo: struct {
 			Name string
@@ -78,15 +77,14 @@ func NewMonitoringConfig(host, port, user, key string) *MonitoringConfig {
 			},
 		},
 		Host: host,
-		Port: port,
 		User: user,
 		Key:  key,
 	}
 }
 
 // DeployPrometheus deploys Prometheus to k3s cluster.
-func DeployPrometheus(host, port, user, key string) error {
-	cfg := NewMonitoringConfig(host, port, user, key)
+func DeployPrometheus(host, user, key string) error {
+	cfg := NewMonitoringConfig(host, user, key)
 	return deployMonitoringStack(cfg)
 }
 
