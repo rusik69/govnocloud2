@@ -9,19 +9,19 @@ import (
 
 // Config holds all command line flags
 type Config struct {
-	Master MasterConfig
-	Worker WorkerConfig
-	SSH    SSHConfig
-	Kube   KubeConfig
-	Server ServerConfig
-	Web    WebConfig
-	Client ClientConfig
+	Master  MasterConfig
+	Worker  WorkerConfig
+	SSH     SSHConfig
+	Kube    KubeConfig
+	Server  ServerConfig
+	Web     WebConfig
+	Client  ClientConfig
 	Install InstallConfig
 }
 
 type MasterConfig struct {
-	Host      string
-	KeyPath   string
+	Host       string
+	KeyPath    string
 	PubKeyPath string
 }
 
@@ -33,9 +33,9 @@ type WorkerConfig struct {
 }
 
 type SSHConfig struct {
-	User      string
-	Password  string
-	KeyPath   string
+	User       string
+	Password   string
+	KeyPath    string
 	PubKeyPath string
 }
 
@@ -60,8 +60,8 @@ type ClientConfig struct {
 
 type InstallConfig struct {
 	Master struct {
-		Host     string
-		KeyPath  string
+		Host       string
+		KeyPath    string
 		PubKeyPath string
 	}
 	Workers struct {
@@ -71,9 +71,9 @@ type InstallConfig struct {
 		Interface string
 	}
 	SSH struct {
-		User     string
-		Password string
-		KeyPath  string
+		User       string
+		Password   string
+		KeyPath    string
 		PubKeyPath string
 	}
 	Server struct {
@@ -82,7 +82,7 @@ type InstallConfig struct {
 }
 
 var (
-	cfg    Config
+	cfg     Config
 	rootCmd = &cobra.Command{
 		Use:   "govnocloud2 [install | uninstall | server | client | web | tool]",
 		Short: "govnocloud2 is a shitty cloud 2",
@@ -129,8 +129,8 @@ func initConfig() error {
 		},
 		Install: InstallConfig{
 			Master: struct {
-				Host      string
-				KeyPath   string
+				Host       string
+				KeyPath    string
 				PubKeyPath string
 			}{
 				KeyPath:    "~/.ssh/id_rsa",
@@ -146,14 +146,14 @@ func initConfig() error {
 				Interface: "enp0s25",
 			},
 			SSH: struct {
-				User     string
-				Password string
-				KeyPath  string
+				User       string
+				Password   string
+				KeyPath    string
 				PubKeyPath string
 			}{
-				User:      "ubuntu",
-				Password:  "ubuntu",
-				KeyPath:   filepath.Join(homeDir, ".ssh/id_rsa"),
+				User:       "ubuntu",
+				Password:   "ubuntu",
+				KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
 				PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
 			},
 		},
