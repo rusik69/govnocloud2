@@ -161,7 +161,11 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing rook")
-		err = k3s.InstallRook()
+		err = k3s.InstallRook(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
 		if err != nil {
 			panic(err)
 		}
