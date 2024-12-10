@@ -251,11 +251,11 @@ func (r *RookConfig) deployCluster() error {
 	if err := os.WriteFile(configPath, []byte(clusterConfig), 0644); err != nil {
 		return fmt.Errorf("failed to write cluster config: %w", err)
 	}
-	err := ssh.Copy(configPath, configPath, r.Host, r.User, r.Key)
+	err := ssh.Copy(configPath, "new-"+configPath, r.Host, r.User, r.Key)
 	if err != nil {
 		return fmt.Errorf("failed to copy cluster config: %w", err)
 	}
-	cmd := fmt.Sprintf("kubectl apply -f %s", configPath)
+	cmd := fmt.Sprintf("kubectl apply -f %s", "new-"+configPath)
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, r.Host, r.Key, r.User, "", true, 60)
 	if err != nil {
