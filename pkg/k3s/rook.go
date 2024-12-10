@@ -246,7 +246,7 @@ func (r *RookConfig) waitForOperator() error {
 // deployCluster deploys the Ceph cluster
 func (r *RookConfig) deployCluster() error {
 	clusterConfig := r.generateClusterConfig()
-
+	log.Println(clusterConfig)
 	configPath := "/tmp/rook-cluster.yaml"
 	if err := os.WriteFile(configPath, []byte(clusterConfig), 0644); err != nil {
 		return fmt.Errorf("failed to write cluster config: %w", err)
