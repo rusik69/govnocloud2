@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
+	"strings"
+
+	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
 // RookConfig holds configuration for Rook installation
@@ -14,6 +16,9 @@ type RookConfig struct {
 	BaseURL     string
 	Manifests   []string
 	ClusterSpec ClusterSpec
+	Host        string
+	User        string
+	Key         string
 }
 
 // ClusterSpec holds Ceph cluster configuration
@@ -91,7 +96,7 @@ type ResourceList struct {
 }
 
 // NewRookConfig creates a default Rook configuration
-func NewRookConfig() *RookConfig {
+func NewRookConfig(host, user, key string) *RookConfig {
 	const version = "release-1.15"
 	baseURL := fmt.Sprintf("https://raw.githubusercontent.com/rook/rook/%s/deploy/examples", version)
 
@@ -105,6 +110,9 @@ func NewRookConfig() *RookConfig {
 			"common.yaml",
 			"toolbox.yaml",
 		},
+		Host: host,
+		User: user,
+		Key:  key,
 	}
 
 	// Initialize cluster specification
@@ -172,8 +180,8 @@ func NewRookConfig() *RookConfig {
 }
 
 // InstallRook installs Rook to k3s cluster.
-func InstallRook() error {
-	cfg := NewRookConfig()
+func InstallRook(host, user, key string) error {
+	cfg := NewRookConfig(host, user, key)
 	return cfg.Install()
 }
 
@@ -196,14 +204,13 @@ func (r *RookConfig) Install() error {
 
 // createNamespace creates the Rook namespace
 func (r *RookConfig) createNamespace() error {
-	cmd := exec.Command("kubectl", "create", "namespace", r.Namespace)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to create namespace %s: %w", r.Namespace, err)
+	cmd := fmt.Sprintf("kubectl create namespace %s", r.Namespace)
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, r.Host, r.Key, r.User, "", true, 60)
+	if err != nil {
+		return fmt.Errorf("failed to create namespace: %w", err)
 	}
-
+	log.Println(out)
 	return nil
 }
 
@@ -213,31 +220,26 @@ func (r *RookConfig) applyManifests() error {
 	for _, manifest := range r.Manifests {
 		urls = append(urls, fmt.Sprintf(" -f %s/%s", r.BaseURL, manifest))
 	}
-
-	cmd := exec.Command("kubectl", append([]string{"apply", "-f"}, urls...)...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	cmd := fmt.Sprintf("kubectl apply -f %s", strings.Join(urls, " "))
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, r.Host, r.Key, r.User, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to apply manifests: %w", err)
 	}
-
+	log.Println(out)
 	return nil
 }
 
 // waitForOperator waits for the Rook operator to be ready
 func (r *RookConfig) waitForOperator() error {
 	log.Println("Waiting for Rook Operator to be in Running state")
-
-	cmd := exec.Command("kubectl", "wait", "--for=condition=available",
-		"deployment/rook-ceph-operator", "-n", r.Namespace, "--timeout=600s")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("timeout waiting for operator: %w", err)
+	cmd := fmt.Sprintf("kubectl wait --for=condition=available deployment/rook-ceph-operator -n %s --timeout=600s", r.Namespace)
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, r.Host, r.Key, r.User, "", true, 600)
+	if err != nil {
+		return fmt.Errorf("failed to wait for operator: %w", err)
 	}
-
+	log.Println(out)
 	return nil
 }
 
@@ -249,15 +251,17 @@ func (r *RookConfig) deployCluster() error {
 	if err := os.WriteFile(configPath, []byte(clusterConfig), 0644); err != nil {
 		return fmt.Errorf("failed to write cluster config: %w", err)
 	}
-
-	cmd := exec.Command("kubectl", "apply", "-f", configPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	err := ssh.Copy(configPath, configPath, r.Host, r.User, r.Key)
+	if err != nil {
+		return fmt.Errorf("failed to copy cluster config: %w", err)
+	}
+	cmd := fmt.Sprintf("kubectl apply -f %s", configPath)
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, r.Host, r.Key, r.User, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to deploy cluster: %w", err)
 	}
-
+	log.Println(out)
 	return nil
 }
 
