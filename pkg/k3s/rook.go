@@ -22,15 +22,15 @@ type ClusterSpec struct {
 		Image string
 	}
 	DataDirHostPath string
-	Mon            MonConfig
-	Dashboard      DashboardConfig
-	Storage        StorageConfig
-	Placement      PlacementConfig
-	Resources      ResourceRequirements
+	Mon             MonConfig
+	Dashboard       DashboardConfig
+	Storage         StorageConfig
+	Placement       PlacementConfig
+	Resources       ResourceRequirements
 }
 
 type MonConfig struct {
-	Count               int
+	Count                int
 	AllowMultiplePerNode bool
 }
 
@@ -39,10 +39,10 @@ type DashboardConfig struct {
 }
 
 type StorageConfig struct {
-	UseAllNodes    bool
-	UseAllDevices  bool
-	Config         map[string]string
-	Nodes          []StorageNode
+	UseAllNodes   bool
+	UseAllDevices bool
+	Config        map[string]string
+	Nodes         []StorageNode
 }
 
 type StorageNode struct {
@@ -114,7 +114,7 @@ func NewRookConfig() *RookConfig {
 		},
 		DataDirHostPath: "/var/lib/rook",
 		Mon: MonConfig{
-			Count:               1,
+			Count:                1,
 			AllowMultiplePerNode: false,
 		},
 		Dashboard: DashboardConfig{
@@ -211,7 +211,7 @@ func (r *RookConfig) createNamespace() error {
 func (r *RookConfig) applyManifests() error {
 	var urls []string
 	for _, manifest := range r.Manifests {
-		urls = append(urls, fmt.Sprintf("%s/%s", r.BaseURL, manifest))
+		urls = append(urls, fmt.Sprintf(" -f %s/%s", r.BaseURL, manifest))
 	}
 
 	cmd := exec.Command("kubectl", append([]string{"apply", "-f"}, urls...)...)
@@ -228,7 +228,7 @@ func (r *RookConfig) applyManifests() error {
 // waitForOperator waits for the Rook operator to be ready
 func (r *RookConfig) waitForOperator() error {
 	log.Println("Waiting for Rook Operator to be in Running state")
-	
+
 	cmd := exec.Command("kubectl", "wait", "--for=condition=available",
 		"deployment/rook-ceph-operator", "-n", r.Namespace, "--timeout=600s")
 	cmd.Stdout = os.Stdout
@@ -244,7 +244,7 @@ func (r *RookConfig) waitForOperator() error {
 // deployCluster deploys the Ceph cluster
 func (r *RookConfig) deployCluster() error {
 	clusterConfig := r.generateClusterConfig()
-	
+
 	configPath := "/tmp/rook-cluster.yaml"
 	if err := os.WriteFile(configPath, []byte(clusterConfig), 0644); err != nil {
 		return fmt.Errorf("failed to write cluster config: %w", err)
