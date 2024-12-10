@@ -220,7 +220,7 @@ func (r *RookConfig) applyManifests() error {
 	for _, manifest := range r.Manifests {
 		urls = append(urls, fmt.Sprintf(" -f %s/%s", r.BaseURL, manifest))
 	}
-	cmd := fmt.Sprintf("kubectl apply -f %s", strings.Join(urls, " "))
+	cmd := fmt.Sprintf("kubectl apply %s", strings.Join(urls, " "))
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, r.Host, r.Key, r.User, "", true, 60)
 	if err != nil {
