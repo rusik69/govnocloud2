@@ -65,7 +65,7 @@ func (m *MasterConfig) Deploy() error {
 	if err != nil {
 		return fmt.Errorf("failed to deploy k3s master: %w", err)
 	}
-	cmd = fmt.Sprintf("sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config; sudo chown %s ~/.kube/config", m.User)
+	cmd = fmt.Sprintf("sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config; sudo chown %s ~/.kube/config ; sudo chown %s /etc/rancher/k3s/k3s.yaml", m.User, m.User)
 	out, err = ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
 	log.Println(out)
 	if err != nil {
