@@ -204,8 +204,8 @@ func setupUninstallFlags(cmd *cobra.Command) {
 
 func setupServerFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
-	flags.StringVarP(&cfg.Server.Host, "host", "", cfg.Server.Host, "listen host")
-	flags.StringVarP(&cfg.Server.Port, "port", "", cfg.Server.Port, "listen port")
+	flags.StringVarP(&cfg.Server.Host, "host", "", "0.0.0.0", "listen host")
+	flags.StringVarP(&cfg.Server.Port, "port", "", "6969", "listen port")
 }
 
 func setupClientFlags(cmd *cobra.Command) {
