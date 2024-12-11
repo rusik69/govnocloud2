@@ -9,21 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // DBManager handles database operations
 type DBManager struct {
-	registry *types.DatabaseRegistry
-	kubectl  KubectlRunner
+	kubectl KubectlRunner
 }
 
 // NewDBManager creates a new database manager instance
 func NewDBManager() *DBManager {
 	return &DBManager{
-		registry: types.NewDatabaseRegistry(),
-		kubectl:  &DefaultKubectlRunner{},
+		kubectl: &DefaultKubectlRunner{},
 	}
 }
 
@@ -97,9 +95,13 @@ func DeleteDBHandler(c *gin.Context) {
 
 // generatePodManifest generates a Pod manifest for the database
 func (m *DBManager) generatePodManifest(db *types.DB) (*corev1.Pod, error) {
-	imageName, err := m.registry.GetImageName(db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get image name: %w", err)
+	dbType, ok := types.DBTypes[db.Type]
+	if !ok {
+		return nil, fmt.Errorf("failed to get db image: %s", db.Type)
+	}
+	dbSize, ok := types.DBSizes[db.Size]
+	if !ok {
+		return nil, fmt.Errorf("failed to get db size: %s", db.Size)
 	}
 
 	pod := &corev1.Pod{
@@ -108,6 +110,8 @@ func (m *DBManager) generatePodManifest(db *types.DB) (*corev1.Pod, error) {
 			Labels: map[string]string{
 				"app":  db.Name,
 				"type": "database",
+				"dbtype": db.Type,
+				"dbsize": db.Size,
 				"db":   db.Type,
 			},
 		},
@@ -115,27 +119,21 @@ func (m *DBManager) generatePodManifest(db *types.DB) (*corev1.Pod, error) {
 			Containers: []corev1.Container{
 				{
 					Name:  db.Name,
-					Image: imageName,
+					Image: dbType.Image,
 					Ports: []corev1.ContainerPort{
 						{
-							ContainerPort: int32(db.Port),
+							ContainerPort: int32(dbType.Port),
 							Protocol:      corev1.ProtocolTCP,
 						},
 					},
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(db.Resources.CPU),
-							corev1.ResourceMemory: resource.MustParse(db.Resources.Memory),
+							corev1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%d", dbSize.CPU)),
+							corev1.ResourceMemory: resource.MustParse(fmt.Sprintf("%dMi", dbSize.RAM)),
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(db.Resources.CPU),
-							corev1.ResourceMemory: resource.MustParse(db.Resources.Memory),
-						},
-					},
-					Env: []corev1.EnvVar{
-						{
-							Name:  "MYSQL_ROOT_PASSWORD",
-							Value: "password", // This should be handled securely in production
+							corev1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%d", dbSize.CPU)),
+							corev1.ResourceMemory: resource.MustParse(fmt.Sprintf("%dMi", dbSize.RAM)),
 						},
 					},
 				},
@@ -161,13 +159,10 @@ func (m *DBManager) ListDBs() ([]types.DB, error) {
 	dbs := make([]types.DB, 0, len(podList.Items))
 	for _, pod := range podList.Items {
 		db := types.DB{
-			Name:  pod.Name,
-			Type:  pod.Labels["db"],
-			Port:  int(pod.Spec.Containers[0].Ports[0].ContainerPort),
-			Resources: types.ResourceConfig{
-				CPU:    pod.Spec.Containers[0].Resources.Requests.Cpu().String(),
-				Memory: pod.Spec.Containers[0].Resources.Requests.Memory().String(),
-			},
+			Name: pod.Name,
+			Type: pod.Labels["dbtype"],
+			Size: pod.Labels["dbsize"],
+			Namespace: pod.Namespace,
 		}
 		dbs = append(dbs, db)
 	}
@@ -177,8 +172,14 @@ func (m *DBManager) ListDBs() ([]types.DB, error) {
 
 // CreateDB creates a new database
 func (m *DBManager) CreateDB(db *types.DB) error {
-	if err := m.registry.ValidateDB(db); err != nil {
-		return fmt.Errorf("invalid database configuration: %w", err)
+	// Validate DB type exists
+	if _, ok := types.DBTypes[db.Type]; !ok {
+		return fmt.Errorf("invalid database type: %s", db.Type)
+	}
+	
+	// Validate DB size exists
+	if _, ok := types.DBSizes[db.Size]; !ok {
+		return fmt.Errorf("invalid database size: %s", db.Size)
 	}
 
 	pod, err := m.generatePodManifest(db)
@@ -221,13 +222,10 @@ func (m *DBManager) GetDB(name string) (*types.DB, error) {
 	}
 
 	db := &types.DB{
-		Name:  pod.Name,
-		Type:  pod.Labels["db"],
-		Port:  int(pod.Spec.Containers[0].Ports[0].ContainerPort),
-		Resources: types.ResourceConfig{
-			CPU:    pod.Spec.Containers[0].Resources.Requests.Cpu().String(),
-			Memory: pod.Spec.Containers[0].Resources.Requests.Memory().String(),
-		},
+		Name: pod.Name,
+		Type: pod.Labels["dbtype"],
+		Size: pod.Labels["dbsize"],
+		Namespace: pod.Namespace,
 	}
 
 	return db, nil

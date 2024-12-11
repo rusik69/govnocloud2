@@ -63,6 +63,13 @@ func (s *Server) setupRoutes() {
 			dbs.GET("/:name", GetDBHandler)
 			dbs.DELETE("/:name", DeleteDBHandler)
 		}
+		containers := v0.Group("/containers")
+		{
+			containers.GET("", ListContainersHandler)
+			containers.POST("", CreateContainerHandler)
+			containers.GET("/:name", GetContainerHandler)
+			containers.DELETE("/:name", DeleteContainerHandler)
+		}
 	}
 
 	// Version endpoint

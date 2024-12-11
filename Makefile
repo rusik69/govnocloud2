@@ -1,4 +1,4 @@
-.PHONY: all get build install uninstall test
+.PHONY: all get build install uninstall test update-deps
 
 get:
 	go get -v ./...
@@ -44,5 +44,10 @@ deploymac:
 	make get buildmac wolmac uninstallmac installmac test
 	-make logs
 	-make suspend
+
+update-deps:
+	go get -u ./...
+	go mod tidy
+	go mod verify
 
 all: get build

@@ -9,11 +9,23 @@ type VM struct {
 	// Size is the size of the virtual machine.
 	Size string `json:"size"`
 	// Ports is the ports of the virtual machine.
-	Ports []int `json:"ports"`
+	Ports []VMPort `json:"ports"`
 	// Namespace is the namespace of the virtual machine.
 	Namespace string `json:"namespace"`
 	// Disk is the disk of the virtual machine.
 	Disk string `json:"disk"`
+	// Status is the status of the virtual machine.
+	Status string `json:"status"`
+}
+
+// VMPort is a virtual machine port.
+type VMPort struct {
+	// Name is the name of the virtual machine port.
+	Name string `json:"name"`
+	// SourcePort is the port of the virtual machine.
+	SourcePort int `json:"port"`
+	// DestinationPort is the port of the LB.
+	DestinationPort int `json:"destinationPort"`
 }
 
 // VMSize is a virtual machine size.
@@ -58,3 +70,22 @@ type VMDisk struct {
 	Size int `json:"size"`
 }
 
+// VMImage is a virtual machine image.
+type VMImage struct {
+	// Name is the name of the virtual machine image.
+	Name string `json:"name"`
+	// URL is the URL of the virtual machine image.
+	URL string `json:"url"`
+}
+
+// VMImages is a map of virtual machine images.
+var VMImages = map[string]VMImage{
+	"ubuntu:24.04": VMImage{
+		Name: "ubuntu:24.04",
+		URL:  "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img",
+	},
+	"ubuntu:22.04": VMImage{
+		Name: "ubuntu:22.04",
+		URL:  "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img",
+	},
+}
