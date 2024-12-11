@@ -17,6 +17,7 @@ type GovnocloudServiceConfig struct {
 
 // createSystemdService creates a systemd service file
 func createSystemdService(config GovnocloudServiceConfig) (string, error) {
+	log.Println("Generating service file")
 	serviceBody := fmt.Sprintf(`[Unit]
 Description=%s
 After=network.target
@@ -75,7 +76,7 @@ func Deploy(host, port, user, password, key string) error {
 	}
 	defer os.Remove(serverServicePath)
 
-	log.Printf("Copying govnocloud2 service to %s", host)
+	log.Printf("Copying govnocloud2 service from %s to %s", serverServicePath, host)
 	if err := ssh.Copy(serverServicePath, "/etc/systemd/system/govnocloud2.service", host, "root", key); err != nil {
 		return fmt.Errorf("failed to copy server service: %w", err)
 	}
@@ -94,7 +95,7 @@ func Deploy(host, port, user, password, key string) error {
 	}
 	defer os.Remove(webServicePath)
 
-	log.Printf("Copying govnocloud2-web service to %s", host)
+	log.Printf("Copying govnocloud2-web service from %s to %s", webServicePath, host)
 	if err := ssh.Copy(webServicePath, "/etc/systemd/system/govnocloud2-web.service", host, "root", key); err != nil {
 		return fmt.Errorf("failed to copy web service: %w", err)
 	}
