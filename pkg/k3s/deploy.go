@@ -28,7 +28,7 @@ User=%s
 [Install]
 WantedBy=multi-user.target
 `, config.Description, config.ExecStart, config.User)
-
+	log.Println(serviceBody)
 	file, err := os.CreateTemp("", config.Name+".service")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
