@@ -3,9 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .title }}</title>
+    <title>{{ .Title }}</title>
+    <style>
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+        }
+
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        .tab button.active {
+            background-color: #ccc;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        .tabcontent.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <h1>{{ .message }}</h1>
+    <h1>{{ .Title }}</h1>
+    <p>{{ .Description }}</p>
+    <p>Version: {{ .Version }}</p>
+
+    <div class="tab">
+        <button class="tablinks active" onclick="openFeature(event, 'vms')">VMs</button>
+        <button class="tablinks" onclick="openFeature(event, 'containers')">Containers</button>
+        <button class="tablinks" onclick="openFeature(event, 'databases')">Databases</button>
+        <button class="tablinks" onclick="openFeature(event, 'nodes')">Nodes</button>
+    </div>
+
+    <div id="vms" class="tabcontent active">
+        <h3>Virtual Machines</h3>
+        <p>Manage your virtual machines with ease:</p>
+        <ul>
+            <li>Create and delete VMs</li>
+            <li>Start and stop instances</li>
+            <li>Monitor VM status</li>
+            <li>Configure resources</li>
+        </ul>
+    </div>
+
+    <div id="containers" class="tabcontent">
+        <h3>Containers</h3>
+        <p>Container management features:</p>
+        <ul>
+            <li>Deploy containers</li>
+            <li>Manage container lifecycle</li>
+            <li>Configure environment variables</li>
+            <li>Handle container networking</li>
+        </ul>
+    </div>
+
+    <div id="databases" class="tabcontent">
+        <h3>Databases</h3>
+        <p>Database management capabilities:</p>
+        <ul>
+            <li>Deploy database instances</li>
+            <li>Configure database settings</li>
+            <li>Manage database users</li>
+            <li>Monitor database health</li>
+        </ul>
+    </div>
+
+    <div id="nodes" class="tabcontent">
+        <h3>Nodes</h3>
+        <p>Node management features:</p>
+        <ul>
+            <li>Add and remove nodes</li>
+            <li>Monitor node health</li>
+            <li>Configure node resources</li>
+            <li>Handle node maintenance</li>
+        </ul>
+    </div>
+
+    <script>
+        function openFeature(evt, featureName) {
+            var i, tabcontent, tablinks;
+            
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            document.getElementById(featureName).style.display = "block";
+            document.getElementById(featureName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
 </body>
 </html>

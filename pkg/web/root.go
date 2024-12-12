@@ -31,6 +31,7 @@ func RootHandler(c *gin.Context) {
 	// Add any additional data needed for the root page
 	data.Data["features"] = []string{
 		"VM Management",
+		"Container Management",
 		"Database Management",
 		"Node Management",
 	}
