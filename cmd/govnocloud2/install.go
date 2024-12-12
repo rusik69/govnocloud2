@@ -68,9 +68,10 @@ var installCmd = &cobra.Command{
 		log.Println("Deploying server on " + cfg.Install.Master.Host)
 		err = k3s.Deploy(
 			cfg.Install.Master.Host,
-			cfg.Install.Server.Port,
+			cfg.Server.Port,
+			cfg.Web.Port,
 			cfg.Install.SSH.User,
-			cfg.Install.SSH.User,
+			cfg.Install.SSH.Password,
 			cfg.Install.SSH.KeyPath,
 		)
 		if err != nil {
