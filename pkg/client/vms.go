@@ -20,7 +20,7 @@ type Client struct {
 // NewClient creates a new VM client
 func NewClient(host, port string) *Client {
 	return &Client{
-		baseURL: fmt.Sprintf("http://%s:%s/api/v1", host, port),
+		baseURL: fmt.Sprintf("http://%s:%s/api/v0", host, port),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},

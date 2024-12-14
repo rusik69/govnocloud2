@@ -2,9 +2,10 @@ package web
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"path/filepath"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -133,15 +134,38 @@ func (s *WebServer) Start() error {
 
 // Listen starts the web server with the given configuration
 func Listen(host, port string) error {
-	config := NewWebServerConfig(host, port)
-	server := NewWebServer(config)
-
-	if err := server.Start(); err != nil {
-		log.Printf("Failed to start web server: %v", err)
-		return err
+	// Set Gin mode based on environment
+	if os.Getenv("DEBUG") == "true" {
+		gin.SetMode(gin.DebugMode)
+		log.Println("Running in debug mode")
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+		log.Println("Running in release mode")
 	}
 
-	return nil
+	router := gin.New()
+
+	// Add debug middleware in debug mode
+	if gin.Mode() == gin.DebugMode {
+		router.Use(gin.Logger())   // Detailed request logging
+		router.Use(gin.Recovery()) // Panic recovery
+	}
+
+	// CORS configuration
+	router.Use(cors.Default())
+
+	// Load HTML templates
+	router.LoadHTMLGlob("pkg/web/templates/*")
+
+	// Setup routes
+	router.GET("/", RootHandler)
+	router.GET("/health", HealthHandler)
+	router.NoRoute(NotFoundHandler)
+
+	// Start server
+	addr := fmt.Sprintf("%s:%s", host, port)
+	log.Printf("Web server listening on %s", addr)
+	return router.Run(addr)
 }
 
 // LoggingMiddleware creates a middleware for request logging

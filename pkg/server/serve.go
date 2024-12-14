@@ -27,6 +27,7 @@ func NewServer(config ServerConfig) *Server {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(cors.Default())
+	router.Use(LoggingMiddleware())
 
 	return &Server{
 		config: config,
