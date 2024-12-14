@@ -32,7 +32,7 @@ wolmac:
 	bin/govnocloud2-darwin-arm64 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab --iprange 10.0.0.255 --master 192.168.1.29 tool wol
 
 suspend:
-	bin/govnocloud2-linux-amd64 tool suspend --ips 10.0.0.2,10.0.0.3 --master 192.168.1.29
+	bin/govnocloud2-linux-amd64 tool suspend --ips 10.0.0.2,10.0.0.3 --master 10.0.0.1
 
 suspendmac:
 	bin/govnocloud2-darwin-arm64 tool suspend --ips 10.0.0.2,10.0.0.3 --master 192.168.1.29
