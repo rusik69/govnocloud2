@@ -18,7 +18,7 @@ func TestCreateContainer(t *testing.T) {
 // TestListContainers tests the ListContainers function.
 func TestListContainers(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	containers, err := cli.ListContainers()
+	containers, err := cli.ListContainers("default")
 	if err != nil {
 		t.Fatalf("error listing containers: %v", err)
 	}

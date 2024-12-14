@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -59,6 +61,7 @@ func ListNodesHandler(c *gin.Context) {
 		})
 		return
 	}
+	log.Printf("nodes: %v", nodes)
 	c.JSON(http.StatusOK, nodes)
 }
 
@@ -66,11 +69,13 @@ func ListNodesHandler(c *gin.Context) {
 func (m *NodeManager) ListNodes() ([]string, error) {
 	out, err := m.kubectl.Run("get", "nodes", "-o", "jsonpath={.items[*].metadata.name}")
 	if err != nil {
+		log.Printf("failed to get nodes: %v", err)
 		return nil, fmt.Errorf("failed to get nodes: %w", err)
 	}
 
 	nodes := strings.Fields(string(out))
 	if len(nodes) == 0 {
+		log.Printf("no nodes found")
 		return []string{}, nil
 	}
 
@@ -106,11 +111,13 @@ func GetNodeHandler(c *gin.Context) {
 func (m *NodeManager) GetNode(name string) (*Node, error) {
 	out, err := m.kubectl.Run("get", "node", name, "-o", "json")
 	if err != nil {
+		log.Printf("failed to get node details: %v", err)
 		return nil, fmt.Errorf("failed to get node details: %w", err)
 	}
 
 	var node Node
 	if err := json.Unmarshal(out, &node); err != nil {
+		log.Printf("failed to parse node details: %v", err)
 		return nil, fmt.Errorf("failed to parse node details: %w", err)
 	}
 
@@ -140,6 +147,7 @@ func DeleteNodeHandler(c *gin.Context) {
 func (m *NodeManager) DeleteNode(name string) error {
 	_, err := m.kubectl.Run("delete", "node", name)
 	if err != nil {
+		log.Printf("failed to delete node: %v", err)
 		return fmt.Errorf("failed to delete node: %w", err)
 	}
 	return nil

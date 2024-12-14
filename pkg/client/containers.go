@@ -45,8 +45,8 @@ func (c *Client) CreateContainer(name, image, namespace string) error {
 }
 
 // ListContainers lists containers.
-func (c *Client) ListContainers() ([]types.Container, error) {
-	url := fmt.Sprintf("%s/containers", c.baseURL)
+func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
+	url := fmt.Sprintf("%s/containers?namespace=%s", c.baseURL, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error listing containers: %w", err)

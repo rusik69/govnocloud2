@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
@@ -99,12 +101,14 @@ type CloudInitConfig struct {
 func CreateVMHandler(c *gin.Context) {
 	var vm types.VM
 	if err := c.BindJSON(&vm); err != nil {
+		log.Printf("invalid request: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
 
 	manager := NewVMManager()
 	if err := manager.CreateVM(vm); err != nil {
+		log.Printf("failed to create VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create VM: %v", err))
 		return
 	}
@@ -118,14 +122,17 @@ func (m *VMManager) CreateVM(vm types.VM) error {
 
 	tempFile, err := m.writeVMConfig(vmConfig)
 	if err != nil {
+		log.Printf("failed to write VM config: %v", err)
 		return fmt.Errorf("failed to write VM config: %w", err)
 	}
 	defer os.Remove(tempFile)
 
 	if err := m.applyVMConfig(tempFile); err != nil {
+		log.Printf("failed to apply VM config: %v", err)
 		return fmt.Errorf("failed to apply VM config: %w", err)
 	}
 
+	log.Printf("VM %s created successfully", vm.Name)
 	return nil
 }
 
@@ -236,6 +243,7 @@ func (m *VMManager) generateVMConfig(vm types.VM) VMTemplate {
 func (m *VMManager) writeVMConfig(config VMTemplate) (string, error) {
 	tempFile, err := os.CreateTemp("", "vm-*.yaml")
 	if err != nil {
+		log.Printf("failed to create temp file: %v", err)
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer tempFile.Close()
@@ -243,6 +251,7 @@ func (m *VMManager) writeVMConfig(config VMTemplate) (string, error) {
 	encoder := json.NewEncoder(tempFile)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(config); err != nil {
+		log.Printf("failed to encode VM config: %v", err)
 		return "", fmt.Errorf("failed to encode VM config: %w", err)
 	}
 
@@ -253,6 +262,7 @@ func (m *VMManager) writeVMConfig(config VMTemplate) (string, error) {
 func (m *VMManager) applyVMConfig(configPath string) error {
 	out, err := m.kubectl.Run("apply", "-f", configPath)
 	if err != nil {
+		log.Printf("kubectl apply failed: %s", out)
 		return fmt.Errorf("kubectl apply failed: %s: %w", out, err)
 	}
 	return nil
@@ -263,10 +273,12 @@ func ListVMsHandler(c *gin.Context) {
 	manager := NewVMManager()
 	vms, err := manager.ListVMs()
 	if err != nil {
+		log.Printf("failed to list VMs: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list VMs: %v", err))
 		return
 	}
 
+	log.Printf("VMs listed successfully")
 	respondWithSuccess(c, gin.H{"vms": vms})
 }
 
@@ -274,6 +286,7 @@ func ListVMsHandler(c *gin.Context) {
 func (m *VMManager) ListVMs() ([]string, error) {
 	out, err := m.kubectl.Run("get", "VirtualMachines", "-o", "jsonpath={.items[*].metadata.name}")
 	if err != nil {
+		log.Printf("failed to list VMs: %v", err)
 		return nil, fmt.Errorf("failed to list VMs: %w", err)
 	}
 	return strings.Fields(string(out)), nil
@@ -283,6 +296,7 @@ func (m *VMManager) ListVMs() ([]string, error) {
 func GetVMHandler(c *gin.Context) {
 	vmID := c.Param("id")
 	if vmID == "" {
+		log.Printf("VM ID is required")
 		respondWithError(c, http.StatusBadRequest, "VM ID is required")
 		return
 	}
@@ -290,10 +304,11 @@ func GetVMHandler(c *gin.Context) {
 	manager := NewVMManager()
 	vm, err := manager.GetVM(vmID)
 	if err != nil {
+		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
 		return
 	}
-
+	log.Printf("VM %s retrieved successfully", vmID)
 	respondWithSuccess(c, gin.H{"vm": vm})
 }
 
@@ -301,6 +316,7 @@ func GetVMHandler(c *gin.Context) {
 func (m *VMManager) GetVM(id string) (string, error) {
 	out, err := m.kubectl.Run("get", "VirtualMachine", id, "-o", "json")
 	if err != nil {
+		log.Printf("failed to get VM %s: %v", id, err)
 		return "", fmt.Errorf("failed to get VM %s: %w", id, err)
 	}
 	return string(out), nil
@@ -310,16 +326,19 @@ func (m *VMManager) GetVM(id string) (string, error) {
 func DeleteVMHandler(c *gin.Context) {
 	vmName := c.Param("name")
 	if vmName == "" {
+		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
 
 	manager := NewVMManager()
 	if err := manager.DeleteVM(vmName); err != nil {
+		log.Printf("failed to delete VM %s: %v", vmName, err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete VM: %v", err))
 		return
 	}
 
+	log.Printf("VM %s deleted successfully", vmName)
 	respondWithSuccess(c, gin.H{"message": "VM deleted successfully"})
 }
 
@@ -327,6 +346,7 @@ func DeleteVMHandler(c *gin.Context) {
 func (m *VMManager) DeleteVM(name string) error {
 	out, err := m.kubectl.Run("delete", "VirtualMachine", name)
 	if err != nil {
+		log.Printf("failed to delete VM %s: %s: %v", name, out, err)
 		return fmt.Errorf("failed to delete VM %s: %s: %w", name, out, err)
 	}
 	return nil
