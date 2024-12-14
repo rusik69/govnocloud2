@@ -140,6 +140,7 @@ prometheus:
 grafana:
   service:
     type: NodePort
+namespace: monitoring
 `
 	file, err := os.CreateTemp("", "values-*.yaml")
 	if err != nil {
