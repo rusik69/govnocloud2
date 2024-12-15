@@ -11,11 +11,14 @@ import (
 )
 
 // CreateContainer creates a container.
-func (c *Client) CreateContainer(name, image, namespace string) error {
+func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk int) error {
 	container := types.Container{
 		Name:      name,
 		Image:     image,
 		Namespace: namespace,
+		CPU:       cpu,
+		RAM:       ram,
+		Disk:      disk,
 	}
 
 	data, err := json.Marshal(container)

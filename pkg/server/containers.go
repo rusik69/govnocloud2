@@ -206,7 +206,7 @@ func (m *ContainerManager) CreateContainer(container *types.Container) error {
 		log.Printf("failed to marshal pod manifest: %v", err)
 		return fmt.Errorf("failed to marshal pod manifest: %w", err)
 	}
-
+	log.Printf("pod manifest: %v", string(podJSON))
 	tmpFile, err := os.CreateTemp("", "container-*.json")
 	if err != nil {
 		log.Printf("failed to create temp file: %v", err)

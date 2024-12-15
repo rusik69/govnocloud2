@@ -9,7 +9,7 @@ import (
 // TestCreateContainer tests the CreateContainer function.
 func TestCreateContainer(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	err := cli.CreateContainer("test-container", "nginx", "default")
+	err := cli.CreateContainer("test-container", "nginx", "default", 1, 1024, 1024)
 	if err != nil {
 		t.Fatalf("error creating container: %v", err)
 	}
