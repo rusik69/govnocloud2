@@ -176,7 +176,7 @@ func (m *ContainerManager) ListContainers(namespace string) ([]types.Container, 
 	out, err := m.kubectl.Run("get", "pods", "-l", "type=container", "-o", "json", "-n", namespace)
 	if err != nil {
 		log.Printf("failed to list containers: %v", err)
-		return nil, fmt.Errorf("failed to list containers: %w", err)
+		return nil, fmt.Errorf("failed to list containers: %s %w", out, err)
 	}
 
 	var podList corev1.PodList
