@@ -119,7 +119,7 @@ func CreateVMHandler(c *gin.Context) {
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
 	vmConfig := m.generateVMConfig(vm)
-
+	log.Printf("VM config: %v", vmConfig)
 	tempFile, err := m.writeVMConfig(vmConfig)
 	if err != nil {
 		log.Printf("failed to write VM config: %v", err)
@@ -262,7 +262,6 @@ func (m *VMManager) writeVMConfig(config VMTemplate) (string, error) {
 func (m *VMManager) applyVMConfig(configPath string) error {
 	out, err := m.kubectl.Run("apply", "-f", configPath)
 	if err != nil {
-		log.Printf("kubectl apply failed: %s", out)
 		return fmt.Errorf("kubectl apply failed: %s: %w", out, err)
 	}
 	return nil

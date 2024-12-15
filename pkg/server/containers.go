@@ -54,6 +54,7 @@ func CreateContainerHandler(c *gin.Context) {
 
 	manager := NewContainerManager()
 	if err := manager.CreateContainer(&container); err != nil {
+		log.Printf("container create error: %s", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create container: %v", err))
 		return
 	}
@@ -65,26 +66,22 @@ func CreateContainerHandler(c *gin.Context) {
 func GetContainerHandler(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("container name is required")
 		respondWithError(c, http.StatusBadRequest, "container name is required")
 		return
 	}
 	namespace := c.Query("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
 	manager := NewContainerManager()
 	container, err := manager.GetContainer(name, namespace)
 	if err != nil {
-		log.Printf("failed to get container: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get container: %v", err))
 		return
 	}
 
 	if container == nil {
-		log.Printf("container not found")
 		respondWithError(c, http.StatusNotFound, "container not found")
 		return
 	}
@@ -110,7 +107,6 @@ func DeleteContainerHandler(c *gin.Context) {
 
 	manager := NewContainerManager()
 	if err := manager.DeleteContainer(name, namespace); err != nil {
-		log.Printf("failed to delete container: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete container: %v", err))
 		return
 	}
@@ -175,13 +171,11 @@ func generateEnvVars(envVars []string) []corev1.EnvVar {
 func (m *ContainerManager) ListContainers(namespace string) ([]types.Container, error) {
 	out, err := m.kubectl.Run("get", "pods", "-l", "type=container", "-o", "json", "-n", namespace)
 	if err != nil {
-		log.Printf("failed to list containers: %v", err)
 		return nil, fmt.Errorf("failed to list containers: %s %w", out, err)
 	}
 
 	var podList corev1.PodList
 	if err := json.Unmarshal([]byte(out), &podList); err != nil {
-		log.Printf("failed to parse pod list: %v", err)
 		return nil, fmt.Errorf("failed to parse pod list: %w", err)
 	}
 
@@ -219,9 +213,8 @@ func (m *ContainerManager) CreateContainer(container *types.Container) error {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
-	if _, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", container.Namespace); err != nil {
-		log.Printf("failed to create container pod: %v", err)
-		return fmt.Errorf("failed to create container pod: %w", err)
+	if out, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", container.Namespace); err != nil {
+		return fmt.Errorf("failed to create container pod: %s, %w", out, err)
 	}
 
 	return nil
@@ -230,13 +223,11 @@ func (m *ContainerManager) CreateContainer(container *types.Container) error {
 func (m *ContainerManager) GetContainer(name, namespace string) (*types.Container, error) {
 	out, err := m.kubectl.Run("get", "pod", name, "-o", "json", "-n", namespace)
 	if err != nil {
-		log.Printf("failed to get container pod: %v", err)
-		return nil, fmt.Errorf("failed to get container pod: %w", err)
+		return nil, fmt.Errorf("failed to get container pod: %s, %w", out, err)
 	}
 
 	var pod corev1.Pod
 	if err := json.Unmarshal([]byte(out), &pod); err != nil {
-		log.Printf("failed to parse pod details: %v", err)
 		return nil, fmt.Errorf("failed to parse pod details: %w", err)
 	}
 
@@ -244,9 +235,8 @@ func (m *ContainerManager) GetContainer(name, namespace string) (*types.Containe
 }
 
 func (m *ContainerManager) DeleteContainer(name, namespace string) error {
-	if _, err := m.kubectl.Run("delete", "pod", name, "-n", namespace); err != nil {
-		log.Printf("failed to delete container pod: %v", err)
-		return fmt.Errorf("failed to delete container pod: %w", err)
+	if out, err := m.kubectl.Run("delete", "pod", name, "-n", namespace); err != nil {
+		return fmt.Errorf("failed to delete container pod: %s, %w", out, err)
 	}
 	return nil
 }
