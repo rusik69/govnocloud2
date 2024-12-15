@@ -68,8 +68,11 @@ func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
 }
 
 // GetContainer gets a container.
-func (c *Client) GetContainer(name string) (types.Container, error) {
-	url := fmt.Sprintf("%s/containers/%s", c.baseURL, name)
+func (c *Client) GetContainer(name, namespace string) (types.Container, error) {
+	if namespace == "" {
+		return types.Container{}, fmt.Errorf("namespace is required")
+	}
+	url := fmt.Sprintf("%s/containers/%s?namespace=%s", c.baseURL, name, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return types.Container{}, fmt.Errorf("error getting container: %w", err)
@@ -91,8 +94,11 @@ func (c *Client) GetContainer(name string) (types.Container, error) {
 }
 
 // DeleteContainer deletes a container.
-func (c *Client) DeleteContainer(name string) error {
-	url := fmt.Sprintf("%s/containers/%s", c.baseURL, name)
+func (c *Client) DeleteContainer(name, namespace string) error {
+	if namespace == "" {
+		return fmt.Errorf("namespace is required")
+	}
+	url := fmt.Sprintf("%s/containers/%s?namespace=%s", c.baseURL, name, namespace)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)

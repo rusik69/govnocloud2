@@ -28,7 +28,7 @@ func TestListContainers(t *testing.T) {
 // TestGetContainer tests the GetContainer function.
 func TestGetContainer(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	container, err := cli.GetContainer("test-container")
+	container, err := cli.GetContainer("test-container", "default")
 	if err != nil {
 		t.Fatalf("error getting container: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestGetContainer(t *testing.T) {
 // TestDeleteContainer tests the DeleteContainer function.
 func TestDeleteContainer(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	err := cli.DeleteContainer("test-container")
+	err := cli.DeleteContainer("test-container", "default")
 	if err != nil {
 		t.Fatalf("error deleting container: %v", err)
 	}
