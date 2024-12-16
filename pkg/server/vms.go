@@ -278,7 +278,7 @@ func ListVMsHandler(c *gin.Context) {
 	}
 
 	log.Printf("VMs listed successfully")
-	respondWithSuccess(c, gin.H{"vms": vms})
+	respondWithSuccess(c, vms)
 }
 
 // ListVMs returns a list of virtual machines
