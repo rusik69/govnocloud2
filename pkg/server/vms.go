@@ -277,7 +277,7 @@ func ListVMsHandler(c *gin.Context) {
 		return
 	}
 
-	log.Printf("VMs listed successfully")
+	log.Printf("vms: %v+", vms)
 	respondWithSuccess(c, vms)
 }
 
@@ -347,7 +347,7 @@ func GetVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
 		return
 	}
-	log.Printf("VM %s retrieved successfully", vmID)
+	log.Printf("vm: %v", vm)
 	respondWithSuccess(c, gin.H{"vm": vm})
 }
 
