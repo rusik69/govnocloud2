@@ -333,21 +333,15 @@ func (m *VMManager) ListVMs() ([]types.VM, error) {
 
 // GetVMHandler handles VM retrieval requests
 func GetVMHandler(c *gin.Context) {
-	name := c.Param("name")
-	if name == "" {
-		log.Printf("VM name is required")
-		respondWithError(c, http.StatusBadRequest, "VM name is required")
-		return
-	}
-	namespace := c.Param("namespace")
-	if namespace == "" {
-		log.Printf("VM namespace is required")
-		respondWithError(c, http.StatusBadRequest, "VM namespace is required")
+	var vm types.VM
+	if err := c.BindJSON(&vm); err != nil {
+		log.Printf("invalid request: %v", err)
+		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
 
 	manager := NewVMManager()
-	vm, err := manager.GetVM(name, namespace)
+	vm, err := manager.GetVM(vm.Name, vm.Namespace)
 	if err != nil {
 		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
@@ -363,14 +357,15 @@ func (m *VMManager) GetVM(name, namespace string) (types.VM, error) {
 	if err != nil {
 		return types.VM{}, fmt.Errorf("failed to get VM %s: %w", out, err)
 	}
-	var vmTemplate VMTemplate
-	if err := json.Unmarshal(out, &vmTemplate); err != nil {
+	var VMTemplate VMTemplate
+	if err := json.Unmarshal(out, &VMTemplate); err != nil {
 		return types.VM{}, fmt.Errorf("failed to parse VM %s: %w", out, err)
 	}
-	var vm types.VM
-	vm.Name = vmTemplate.Metadata.Name
-	vm.Size = vmTemplate.Spec.Template.Metadata.Labels["kubevirt.io/size"]
-	vm.Image = vmTemplate.Spec.Template.Metadata.Labels["kubevirt.io/image"]
+	vm := types.VM{
+		Name:  VMTemplate.Metadata.Name,
+		Size:  VMTemplate.Spec.Template.Metadata.Labels["kubevirt.io/size"],
+		Image: VMTemplate.Spec.Template.Metadata.Labels["kubevirt.io/image"],
+	}
 	return vm, nil
 }
 
