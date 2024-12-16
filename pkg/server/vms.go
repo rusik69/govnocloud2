@@ -111,7 +111,7 @@ func CreateVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create VM: %v", err))
 		return
 	}
-
+	log.Printf("vm created successfully: %v+", vm)
 	respondWithSuccess(c, gin.H{"message": "VM created successfully"})
 }
 
@@ -126,7 +126,7 @@ func (m *VMManager) CreateVM(vm types.VM) error {
 	}
 	defer os.Remove(tempFile)
 
-	if err := m.applyVMConfig(tempFile); err != nil {
+	if err := m.applyVMConfig(tempFile, vm.Namespace); err != nil {
 		log.Printf("failed to apply VM config: %v", err)
 		return fmt.Errorf("failed to apply VM config: %w", err)
 	}
@@ -259,8 +259,8 @@ func (m *VMManager) writeVMConfig(config VMTemplate) (string, error) {
 }
 
 // applyVMConfig applies the VM configuration using kubectl
-func (m *VMManager) applyVMConfig(configPath string) error {
-	out, err := m.kubectl.Run("apply", "-f", configPath)
+func (m *VMManager) applyVMConfig(configPath, namespace string) error {
+	out, err := m.kubectl.Run("apply", "-f", configPath, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("kubectl apply failed: %s: %w", out, err)
 	}
@@ -333,15 +333,15 @@ func (m *VMManager) ListVMs() ([]types.VM, error) {
 
 // GetVMHandler handles VM retrieval requests
 func GetVMHandler(c *gin.Context) {
-	vmID := c.Param("id")
-	if vmID == "" {
-		log.Printf("VM ID is required")
-		respondWithError(c, http.StatusBadRequest, "VM ID is required")
+	var vm types.VM
+	if err := c.BindJSON(&vm); err != nil {
+		log.Printf("invalid request: %v", err)
+		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
 
 	manager := NewVMManager()
-	vm, err := manager.GetVM(vmID)
+	vm, err := manager.GetVM(vm.Name, vm.Namespace)
 	if err != nil {
 		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
@@ -352,13 +352,20 @@ func GetVMHandler(c *gin.Context) {
 }
 
 // GetVM retrieves a specific virtual machine
-func (m *VMManager) GetVM(id string) (string, error) {
-	out, err := m.kubectl.Run("get", "VirtualMachine", id, "-o", "json")
+func (m *VMManager) GetVM(name, namespace string) (types.VM, error) {
+	out, err := m.kubectl.Run("get", "VirtualMachine", name, "-n", namespace, "-o", "json")
 	if err != nil {
-		log.Printf("failed to get VM %s: %v", id, err)
-		return "", fmt.Errorf("failed to get VM %s: %w", id, err)
+		return types.VM{}, fmt.Errorf("failed to get VM %s: %w", out, err)
 	}
-	return string(out), nil
+	var vmTemplate VMTemplate
+	if err := json.Unmarshal(out, &vmTemplate); err != nil {
+		return types.VM{}, fmt.Errorf("failed to parse VM %s: %w", out, err)
+	}
+	var vm types.VM
+	vm.Name = vmTemplate.Metadata.Name
+	vm.Size = vmTemplate.Spec.Template.Metadata.Labels["kubevirt.io/size"]
+	vm.Image = vmTemplate.Spec.Template.Metadata.Labels["kubevirt.io/image"]
+	return vm, nil
 }
 
 // DeleteVMHandler handles VM deletion requests
