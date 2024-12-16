@@ -79,8 +79,8 @@ func (c *Client) ListVMs() ([]types.VM, error) {
 }
 
 // GetVM gets a VM.
-func (c *Client) GetVM(name string) (*types.VM, error) {
-	url := fmt.Sprintf("%s/vms/?name=%s", c.baseURL, name)
+func (c *Client) GetVM(name, namespace string) (*types.VM, error) {
+	url := fmt.Sprintf("%s/vms/?name=%s&namespace=%s", c.baseURL, name, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error getting VM: %w", err)

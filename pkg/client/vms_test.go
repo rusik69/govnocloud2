@@ -31,7 +31,7 @@ func TestListVMs(t *testing.T) {
 
 func TestGetVM(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	vm, err := cli.GetVM("test-vm")
+	vm, err := cli.GetVM("test-vm", testNamespace)
 	if err != nil {
 		t.Fatalf("error getting VM: %v", err)
 	}

@@ -333,15 +333,21 @@ func (m *VMManager) ListVMs() ([]types.VM, error) {
 
 // GetVMHandler handles VM retrieval requests
 func GetVMHandler(c *gin.Context) {
-	var vm types.VM
-	if err := c.BindJSON(&vm); err != nil {
-		log.Printf("invalid request: %v", err)
-		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("VM name is required")
+		respondWithError(c, http.StatusBadRequest, "VM name is required")
+		return
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("VM namespace is required")
+		respondWithError(c, http.StatusBadRequest, "VM namespace is required")
 		return
 	}
 
 	manager := NewVMManager()
-	vm, err := manager.GetVM(vm.Name, vm.Namespace)
+	vm, err := manager.GetVM(name, namespace)
 	if err != nil {
 		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
