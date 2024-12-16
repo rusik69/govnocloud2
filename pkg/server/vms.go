@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
 	"log"
 
@@ -184,6 +183,7 @@ func (m *VMManager) generateVMConfig(vm types.VM) VMTemplate {
 					Labels: map[string]string{
 						"kubevirt.io/size":   vm.Size,
 						"kubevirt.io/domain": vm.Name,
+						"kubevirt.io/image":  vm.Image,
 					},
 				},
 				Spec: struct {
@@ -282,13 +282,53 @@ func ListVMsHandler(c *gin.Context) {
 }
 
 // ListVMs returns a list of virtual machines
-func (m *VMManager) ListVMs() ([]string, error) {
-	out, err := m.kubectl.Run("get", "VirtualMachines", "-o", "jsonpath={.items[*].metadata.name}")
+func (m *VMManager) ListVMs() ([]types.VM, error) {
+	out, err := m.kubectl.Run("get", "VirtualMachines", "-o", "json")
 	if err != nil {
 		log.Printf("failed to list VMs: %v", err)
 		return nil, fmt.Errorf("failed to list VMs: %w", err)
 	}
-	return strings.Fields(string(out)), nil
+
+	var result struct {
+		Items []struct {
+			Metadata struct {
+				Name string `json:"name"`
+			} `json:"metadata"`
+			Spec struct {
+				Template struct {
+					Metadata struct {
+						Labels map[string]string `json:"labels"`
+					} `json:"metadata"`
+					Spec struct {
+						Domain struct {
+							Resources struct {
+								Requests struct {
+									Memory string `json:"memory"`
+									CPU    string `json:"cpu"`
+								} `json:"requests"`
+							} `json:"resources"`
+						} `json:"domain"`
+					} `json:"spec"`
+				} `json:"template"`
+			} `json:"spec"`
+		} `json:"items"`
+	}
+
+	if err := json.Unmarshal(out, &result); err != nil {
+		log.Printf("failed to parse VM list: %v", err)
+		return nil, fmt.Errorf("failed to parse VM list: %w", err)
+	}
+
+	vms := make([]types.VM, len(result.Items))
+	for i, item := range result.Items {
+		vms[i] = types.VM{
+			Name:  item.Metadata.Name,
+			Size:  item.Spec.Template.Metadata.Labels["kubevirt.io/size"],
+			Image: item.Spec.Template.Metadata.Labels["kubevirt.io/image"],
+		}
+	}
+
+	return vms, nil
 }
 
 // GetVMHandler handles VM retrieval requests
