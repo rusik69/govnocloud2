@@ -44,8 +44,12 @@ type KubeConfig struct {
 }
 
 type ServerConfig struct {
-	Host string
-	Port string
+	Host       string
+	Port       string
+	User       string
+	Password   string
+	Key        string
+	MasterHost string
 }
 
 type WebConfig struct {
@@ -204,8 +208,12 @@ func setupUninstallFlags(cmd *cobra.Command) {
 
 func setupServerFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
-	flags.StringVarP(&cfg.Server.Host, "host", "", "0.0.0.0", "listen host")
-	flags.StringVarP(&cfg.Server.Port, "port", "", "6969", "listen port")
+	flags.StringVarP(&cfg.Server.Host, "host", "", cfg.Server.Host, "listen host")
+	flags.StringVarP(&cfg.Server.Port, "port", "", cfg.Server.Port, "listen port")
+	flags.StringVarP(&cfg.Server.User, "user", "", cfg.Server.User, "ssh user")
+	flags.StringVarP(&cfg.Server.Password, "password", "", cfg.Server.Password, "ssh password")
+	flags.StringVarP(&cfg.Server.Key, "key", "", cfg.Server.Key, "ssh key")
+	flags.StringVarP(&cfg.Server.MasterHost, "master", "", cfg.Server.MasterHost, "master host")
 }
 
 func setupClientFlags(cmd *cobra.Command) {

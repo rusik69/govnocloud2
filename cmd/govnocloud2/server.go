@@ -15,6 +15,6 @@ var serverCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("listenHost: ", cfg.Server.Host)
 		log.Println("listenPort: ", cfg.Server.Port)
-		server.Serve(cfg.Server.Host, cfg.Server.Port)
+		server.Serve(cfg.Server.Host, cfg.Server.Port, cfg.Server.User, cfg.Server.Password, cfg.Server.Key, cfg.Server.MasterHost)
 	},
 }

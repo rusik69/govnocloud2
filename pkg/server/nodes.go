@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -10,15 +11,22 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 // NodeManager handles node operations
 type NodeManager struct {
 	kubectl KubectlRunner
+	k3sup   K3supRunner
 }
 
 // KubectlRunner interface for executing kubectl commands
 type KubectlRunner interface {
+	Run(args ...string) ([]byte, error)
+}
+
+// K3supRunner interface for executing k3sup commands
+type K3supRunner interface {
 	Run(args ...string) ([]byte, error)
 }
 
@@ -29,26 +37,19 @@ func (k *DefaultKubectlRunner) Run(args ...string) ([]byte, error) {
 	return exec.Command("kubectl", args...).Output()
 }
 
+// DefaultK3supRunner implements K3supRunner using exec.Command
+type DefaultK3supRunner struct{}
+
+func (k *DefaultK3supRunner) Run(args ...string) ([]byte, error) {
+	return exec.Command("k3sup", args...).Output()
+}
+
 // NewNodeManager creates a new NodeManager instance
 func NewNodeManager() *NodeManager {
 	return &NodeManager{
 		kubectl: &DefaultKubectlRunner{},
+		k3sup:   &DefaultK3supRunner{},
 	}
-}
-
-// Node represents a Kubernetes node
-type Node struct {
-	Name       string            `json:"name"`
-	Status     string            `json:"status,omitempty"`
-	Labels     map[string]string `json:"labels,omitempty"`
-	Conditions []NodeCondition   `json:"conditions,omitempty"`
-}
-
-// NodeCondition represents the condition of a node
-type NodeCondition struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
 }
 
 // ListNodesHandler handles HTTP requests to list nodes
@@ -108,19 +109,19 @@ func GetNodeHandler(c *gin.Context) {
 }
 
 // GetNode retrieves details of a specific node
-func (m *NodeManager) GetNode(name string) (*Node, error) {
-	out, err := m.kubectl.Run("get", "node", name, "-o", "json")
+func (m *NodeManager) GetNode(name string) (*types.Node, error) {
+	out, err := m.kubectl.Run("get", "node", name, "-o", "jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}'")
 	if err != nil {
-		log.Printf("failed to get node details: %v", err)
 		return nil, fmt.Errorf("failed to get node details: %w", err)
 	}
 
-	var node Node
-	if err := json.Unmarshal(out, &node); err != nil {
-		log.Printf("failed to parse node details: %v", err)
-		return nil, fmt.Errorf("failed to parse node details: %w", err)
+	node := types.Node{
+		Host:       string(out),
+		User:       server.config.User,
+		Key:        server.config.Key,
+		Password:   server.config.Password,
+		MasterHost: server.config.MasterHost,
 	}
-
 	return &node, nil
 }
 
@@ -157,7 +158,31 @@ func (m *NodeManager) DeleteNode(name string) error {
 func AddNodeHandler(c *gin.Context) {
 	// This would typically involve generating a join token and returning instructions
 	// Since this is not implemented, we return a proper status code and message
-	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "node addition via API is not implemented - please use kubeadm join command",
-	})
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read request body"})
+		return
+	}
+
+	var node types.Node
+	if err := json.Unmarshal(body, &node); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse request body"})
+		return
+	}
+
+	manager := NewNodeManager()
+	if err := manager.AddNode(node); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to add node: %w", err)})
+		return
+	}
+}
+
+// AddNode adds a node to the cluster
+func (m *NodeManager) AddNode(node types.Node) error {
+	out, err := m.k3sup.Run("join", "--ip", node.Host, "--server-ip", node.MasterHost, "--user", node.User, "--server-user", node.User, "--key", node.Key, "--k3s-extra-args", "--node-name", "node-"+node.Host)
+	if err != nil {
+		log.Printf("failed to add node: %v", err)
+		return fmt.Errorf("failed to add node: %s: %w", out, err)
+	}
+	return nil
 }

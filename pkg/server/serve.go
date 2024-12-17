@@ -12,8 +12,12 @@ import (
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
-	Host string
-	Port string
+	Host       string
+	Port       string
+	User       string
+	Password   string
+	Key        string
+	MasterHost string
 }
 
 // Server represents the HTTP server
@@ -21,6 +25,8 @@ type Server struct {
 	config ServerConfig
 	router *gin.Engine
 }
+
+var server *Server
 
 // NewServer creates a new server instance
 func NewServer(config ServerConfig) *Server {
@@ -92,13 +98,17 @@ func (s *Server) Start() error {
 }
 
 // Serve starts the server with the given configuration
-func Serve(host, port string) {
+func Serve(host, port, user, password, key, masterHost string) {
 	config := ServerConfig{
-		Host: host,
-		Port: port,
+		Host:       host,
+		Port:       port,
+		User:       user,
+		Password:   password,
+		Key:        key,
+		MasterHost: masterHost,
 	}
 
-	server := NewServer(config)
+	server = NewServer(config)
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
