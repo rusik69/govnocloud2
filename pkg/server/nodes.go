@@ -172,7 +172,8 @@ func AddNodeHandler(c *gin.Context) {
 
 	manager := NewNodeManager()
 	if err := manager.AddNode(node); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to add node: %w", err)})
+		log.Printf("failed to add node: %w", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to add node: %v", err)})
 		return
 	}
 }
