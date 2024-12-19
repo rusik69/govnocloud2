@@ -49,33 +49,33 @@ func (s *Server) setupRoutes() {
 		// VM endpoints
 		vms := v0.Group("/vms")
 		{
-			vms.POST("", CreateVMHandler)
-			vms.GET("", ListVMsHandler)
-			vms.GET("/:name", GetVMHandler)
-			vms.DELETE("/:id", DeleteVMHandler)
+			vms.POST("/:namespace/:name", CreateVMHandler)
+			vms.GET("/:namespace", ListVMsHandler)
+			vms.GET("/:namespace/:name", GetVMHandler)
+			vms.DELETE("/:namespace/:name", DeleteVMHandler)
 		}
 
 		// Node endpoints
 		nodes := v0.Group("/nodes")
 		{
-			nodes.GET("", ListNodesHandler)
-			nodes.POST("", AddNodeHandler)
-			nodes.GET("/:name", GetNodeHandler)
-			nodes.DELETE("/:name", DeleteNodeHandler)
+			nodes.GET("/:namespace", ListNodesHandler)
+			nodes.POST("/:namespace/:name", AddNodeHandler)
+			nodes.GET("/:namespace/:name", GetNodeHandler)
+			nodes.DELETE("/:namespace/:name", DeleteNodeHandler)
 		}
 		dbs := v0.Group("/dbs")
 		{
-			dbs.GET("", ListDBsHandler)
-			dbs.POST("", CreateDBHandler)
-			dbs.GET("/:name", GetDBHandler)
-			dbs.DELETE("/:name", DeleteDBHandler)
+			dbs.GET("/:namespace", ListDBsHandler)
+			dbs.POST("/:namespace/:name", CreateDBHandler)
+			dbs.GET("/:namespace/:name", GetDBHandler)
+			dbs.DELETE("/:namespace/:name", DeleteDBHandler)
 		}
 		containers := v0.Group("/containers")
 		{
-			containers.GET("", ListContainersHandler)
-			containers.POST("", CreateContainerHandler)
-			containers.GET("/:name", GetContainerHandler)
-			containers.DELETE("/:name", DeleteContainerHandler)
+			containers.GET("/:namespace", ListContainersHandler)
+			containers.POST("/:namespace/:name", CreateContainerHandler)
+			containers.GET("/:namespace/:name", GetContainerHandler)
+			containers.DELETE("/:namespace/:name", DeleteContainerHandler)
 		}
 	}
 

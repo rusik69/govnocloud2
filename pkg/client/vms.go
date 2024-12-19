@@ -41,7 +41,7 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 		return fmt.Errorf("error marshaling VM: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/vms", c.baseURL)
+	url := fmt.Sprintf("%s/vms/%s", c.baseURL, namespace)
 	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("error creating VM: %w", err)
@@ -57,8 +57,8 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 }
 
 // ListVMs lists VMs.
-func (c *Client) ListVMs() ([]types.VM, error) {
-	url := fmt.Sprintf("%s/vms", c.baseURL)
+func (c *Client) ListVMs(namespace string) ([]types.VM, error) {
+	url := fmt.Sprintf("%s/vms/%s", c.baseURL, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error listing VMs: %w", err)
@@ -80,7 +80,7 @@ func (c *Client) ListVMs() ([]types.VM, error) {
 
 // GetVM gets a VM.
 func (c *Client) GetVM(name, namespace string) (*types.VM, error) {
-	url := fmt.Sprintf("%s/vms/?name=%s&namespace=%s", c.baseURL, name, namespace)
+	url := fmt.Sprintf("%s/vms/%s/%s", c.baseURL, namespace, name)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error getting VM: %w", err)
@@ -101,8 +101,8 @@ func (c *Client) GetVM(name, namespace string) (*types.VM, error) {
 }
 
 // DeleteVM deletes a VM.
-func (c *Client) DeleteVM(name string) error {
-	url := fmt.Sprintf("%s/vms/%s", c.baseURL, name)
+func (c *Client) DeleteVM(name, namespace string) error {
+	url := fmt.Sprintf("%s/vms/%s/%s", c.baseURL, namespace, name)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return fmt.Errorf("error creating delete request: %w", err)

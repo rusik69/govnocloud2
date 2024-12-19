@@ -29,9 +29,11 @@ func NewContainerManager() *ContainerManager {
 
 // ListContainersHandler handles requests to list containers
 func ListContainersHandler(c *gin.Context) {
-	namespace := c.Query("namespace")
+	namespace := c.Param("namespace")
 	if namespace == "" {
-		namespace = "default"
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
 	}
 	manager := NewContainerManager()
 	containers, err := manager.ListContainers(namespace)
@@ -45,13 +47,26 @@ func ListContainersHandler(c *gin.Context) {
 
 // CreateContainerHandler handles requests to create a new container
 func CreateContainerHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("name is required")
+		respondWithError(c, http.StatusBadRequest, "name is required")
+		return
+	}
 	var container types.Container
 	if err := c.BindJSON(&container); err != nil {
 		log.Printf("invalid request: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
-
+	container.Namespace = namespace
+	container.Name = name
 	manager := NewContainerManager()
 	if err := manager.CreateContainer(&container); err != nil {
 		log.Printf("container create error: %s", err)
@@ -69,8 +84,9 @@ func GetContainerHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "container name is required")
 		return
 	}
-	namespace := c.Query("namespace")
+	namespace := c.Param("namespace")
 	if namespace == "" {
+		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
@@ -98,7 +114,7 @@ func DeleteContainerHandler(c *gin.Context) {
 		return
 	}
 
-	namespace := c.Query("namespace")
+	namespace := c.Param("namespace")
 	if namespace == "" {
 		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")

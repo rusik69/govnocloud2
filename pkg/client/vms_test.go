@@ -22,7 +22,7 @@ func TestCreateVM(t *testing.T) {
 
 func TestListVMs(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	vms, err := cli.ListVMs()
+	vms, err := cli.ListVMs(testNamespace)
 	if err != nil {
 		t.Fatalf("error listing VMs: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestGetVM(t *testing.T) {
 
 func TestDeleteVM(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	err := cli.DeleteVM("test-vm")
+	err := cli.DeleteVM("test-vm", testNamespace)
 	if err != nil {
 		t.Fatalf("error deleting VM: %v", err)
 	}

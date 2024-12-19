@@ -26,7 +26,7 @@ func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk i
 		return fmt.Errorf("error marshaling container: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/containers", c.baseURL)
+	url := fmt.Sprintf("%s/containers/%s", c.baseURL, namespace)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
@@ -49,7 +49,7 @@ func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk i
 
 // ListContainers lists containers.
 func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
-	url := fmt.Sprintf("%s/containers?namespace=%s", c.baseURL, namespace)
+	url := fmt.Sprintf("%s/containers/%s", c.baseURL, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error listing containers: %w", err)
@@ -75,7 +75,7 @@ func (c *Client) GetContainer(name, namespace string) (types.Container, error) {
 	if namespace == "" {
 		return types.Container{}, fmt.Errorf("namespace is required")
 	}
-	url := fmt.Sprintf("%s/containers/%s?namespace=%s", c.baseURL, name, namespace)
+	url := fmt.Sprintf("%s/containers/%s/%s", c.baseURL, namespace, name)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return types.Container{}, fmt.Errorf("error getting container: %w", err)
@@ -101,7 +101,7 @@ func (c *Client) DeleteContainer(name, namespace string) error {
 	if namespace == "" {
 		return fmt.Errorf("namespace is required")
 	}
-	url := fmt.Sprintf("%s/containers/%s?namespace=%s", c.baseURL, name, namespace)
+	url := fmt.Sprintf("%s/containers/%s/%s", c.baseURL, namespace, name)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
