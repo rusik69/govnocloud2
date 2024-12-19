@@ -24,7 +24,7 @@ func (c *Client) CreateDB(name, namespace, dbType, dbSize string) error {
 		return fmt.Errorf("error marshaling database: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/dbs/%s", c.baseURL, namespace)
+	url := fmt.Sprintf("%s/dbs/%s/%s", c.baseURL, namespace, name)
 	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("error creating database: %w", err)
