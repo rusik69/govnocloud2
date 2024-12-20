@@ -41,7 +41,7 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 		return fmt.Errorf("error marshaling VM: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/vms/%s", c.baseURL, namespace)
+	url := fmt.Sprintf("%s/vms/%s/%s", c.baseURL, namespace, name)
 	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("error creating VM: %w", err)

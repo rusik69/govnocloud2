@@ -26,7 +26,7 @@ func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk i
 		return fmt.Errorf("error marshaling container: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/containers/%s", c.baseURL, namespace)
+	url := fmt.Sprintf("%s/containers/%s/%s", c.baseURL, namespace, name)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
