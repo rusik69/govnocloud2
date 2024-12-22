@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/rusik69/govnocloud2/pkg/types"
@@ -61,7 +62,7 @@ func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("error listing containers: status=%s body=%s", resp.Status, string(body))
 	}
-
+	log.Printf("resp: %+v", resp.Body)
 	var containers []types.Container
 	err = json.NewDecoder(resp.Body).Decode(&containers)
 	if err != nil {
