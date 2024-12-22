@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -207,25 +208,21 @@ func (m *ContainerManager) ListContainers(namespace string) ([]types.Container, 
 func (m *ContainerManager) CreateContainer(container *types.Container) error {
 	pod, err := m.generatePodManifest(container)
 	if err != nil {
-		log.Printf("failed to generate pod manifest: %v", err)
 		return fmt.Errorf("failed to generate pod manifest: %w", err)
 	}
 
-	podJSON, err := json.Marshal(pod)
+	podYaml, err := yaml.Marshal(pod)
 	if err != nil {
-		log.Printf("failed to marshal pod manifest: %v", err)
 		return fmt.Errorf("failed to marshal pod manifest: %w", err)
 	}
-	log.Printf("pod manifest: %v", string(podJSON))
-	tmpFile, err := os.CreateTemp("", "container-*.json")
+	log.Printf("pod manifest: %v", string(podYaml))
+	tmpFile, err := os.CreateTemp("", "container-*.yaml")
 	if err != nil {
-		log.Printf("failed to create temp file: %v", err)
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer os.Remove(tmpFile.Name())
 
-	if err := os.WriteFile(tmpFile.Name(), podJSON, 0644); err != nil {
-		log.Printf("failed to write manifest: %v", err)
+	if err := os.WriteFile(tmpFile.Name(), podYaml, 0644); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
