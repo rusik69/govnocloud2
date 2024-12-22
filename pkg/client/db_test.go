@@ -8,7 +8,7 @@ import (
 
 func TestCreateDB(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	err := cli.CreateDB("test-db", "postgres", "small", testNamespace)
+	err := cli.CreateDB("test-db", testNamespace, "postgres", "small")
 	if err != nil {
 		t.Fatalf("error creating DB: %v", err)
 	}
