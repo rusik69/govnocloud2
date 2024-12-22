@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
@@ -147,20 +146,6 @@ spec:
 `, container.Name, container.Name, container.Name, container.Image, container.Port)
 
 	return pod, nil
-}
-
-func generateEnvVars(envVars []string) []corev1.EnvVar {
-	var result []corev1.EnvVar
-	for _, env := range envVars {
-		parts := strings.SplitN(env, "=", 2)
-		if len(parts) == 2 {
-			result = append(result, corev1.EnvVar{
-				Name:  parts[0],
-				Value: parts[1],
-			})
-		}
-	}
-	return result
 }
 
 func (m *ContainerManager) ListContainers(namespace string) ([]types.Container, error) {
