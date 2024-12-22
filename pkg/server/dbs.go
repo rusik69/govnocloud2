@@ -91,8 +91,15 @@ func DeleteDBHandler(c *gin.Context) {
 		return
 	}
 
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+
 	manager := NewDBManager()
-	if err := manager.DeleteDB(name); err != nil {
+	if err := manager.DeleteDB(name, namespace); err != nil {
 		log.Printf("failed to delete database: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete database: %v", err))
 		return
@@ -227,8 +234,8 @@ func (m *DBManager) GetDB(name string) (*types.DB, error) {
 }
 
 // DeleteDB removes a database
-func (m *DBManager) DeleteDB(name string) error {
-	if _, err := m.kubectl.Run("delete", "pod", name); err != nil {
+func (m *DBManager) DeleteDB(name, namespace string) error {
+	if _, err := m.kubectl.Run("delete", "pod", name, "-n", namespace); err != nil {
 		return fmt.Errorf("failed to delete database pod: %w", err)
 	}
 	return nil
