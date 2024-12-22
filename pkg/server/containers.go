@@ -10,10 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
-	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ContainerManager handles container operations
@@ -132,41 +129,22 @@ func DeleteContainerHandler(c *gin.Context) {
 }
 
 // Manager methods
-func (m *ContainerManager) generatePodManifest(container *types.Container) (*corev1.Pod, error) {
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: container.Name,
-			Labels: map[string]string{
-				"app":  container.Name,
-				"type": "container",
-			},
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  container.Name,
-					Image: container.Image,
-					Ports: []corev1.ContainerPort{
-						{
-							ContainerPort: int32(container.Port),
-							Protocol:      corev1.ProtocolTCP,
-						},
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%dm", container.CPU)),
-							corev1.ResourceMemory: resource.MustParse(fmt.Sprintf("%dMi", container.RAM)),
-						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%dm", container.CPU)),
-							corev1.ResourceMemory: resource.MustParse(fmt.Sprintf("%dMi", container.RAM)),
-						},
-					},
-					Env: generateEnvVars(container.Env),
-				},
-			},
-		},
-	}
+func (m *ContainerManager) generatePodManifest(container *types.Container) (string, error) {
+	pod := fmt.Sprintf(`
+apiVersion: v1
+kind: Pod
+metadata:
+  name: %s
+  labels:
+    app: %s
+    type: container
+spec:
+  containers:
+    - name: %s
+      image: %s
+      ports:
+        - containerPort: %d
+`, container.Name, container.Name, container.Name, container.Image, container.Port)
 
 	return pod, nil
 }
@@ -211,18 +189,14 @@ func (m *ContainerManager) CreateContainer(container *types.Container) error {
 		return fmt.Errorf("failed to generate pod manifest: %w", err)
 	}
 
-	podYaml, err := yaml.Marshal(pod)
-	if err != nil {
-		return fmt.Errorf("failed to marshal pod manifest: %w", err)
-	}
-	log.Printf("pod manifest: %v", string(podYaml))
+	log.Printf("pod manifest: %v", string(pod))
 	tmpFile, err := os.CreateTemp("", "container-*.yaml")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer os.Remove(tmpFile.Name())
 
-	if err := os.WriteFile(tmpFile.Name(), podYaml, 0644); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), []byte(pod), 0644); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
