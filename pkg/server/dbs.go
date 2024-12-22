@@ -34,7 +34,7 @@ func ListDBsHandler(c *gin.Context) {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list databases: %v", err))
 		return
 	}
-	respondWithSuccess(c, gin.H{"databases": dbs})
+	c.JSON(http.StatusOK, dbs)
 }
 
 // CreateDBHandler handles requests to create a new database
@@ -53,7 +53,7 @@ func CreateDBHandler(c *gin.Context) {
 		return
 	}
 
-	respondWithSuccess(c, gin.H{"message": "Database created successfully", "database": db})
+	c.JSON(http.StatusOK, gin.H{"message": "Database created successfully", "database": db})
 }
 
 // GetDBHandler handles requests to get database details
@@ -79,7 +79,7 @@ func GetDBHandler(c *gin.Context) {
 		return
 	}
 
-	respondWithSuccess(c, gin.H{"database": db})
+	c.JSON(http.StatusOK, db)
 }
 
 // DeleteDBHandler handles requests to delete a database
@@ -99,7 +99,7 @@ func DeleteDBHandler(c *gin.Context) {
 	}
 
 	log.Printf("database %s deleted successfully", name)
-	respondWithSuccess(c, gin.H{"message": "Database deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Database deleted successfully"})
 }
 
 // generatePodManifest generates a Pod manifest for the database
@@ -185,18 +185,15 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to generate pod manifest: %w", err)
 	}
 
-	podJSON, err := json.Marshal(pod)
-	if err != nil {
-		return fmt.Errorf("failed to marshal pod manifest: %w", err)
-	}
+	log.Printf("db pod: %s", pod)
 
-	tmpFile, err := os.CreateTemp("", "db-*.json")
+	tmpFile, err := os.CreateTemp("", "db-*.yaml")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer os.Remove(tmpFile.Name())
 
-	if err := os.WriteFile(tmpFile.Name(), podJSON, 0644); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), []byte(pod), 0644); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
