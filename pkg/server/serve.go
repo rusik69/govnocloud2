@@ -77,6 +77,13 @@ func (s *Server) setupRoutes() {
 			containers.GET("/:namespace/:name", GetContainerHandler)
 			containers.DELETE("/:namespace/:name", DeleteContainerHandler)
 		}
+		namespaces := v0.Group("/namespaces")
+		{
+			namespaces.GET("", ListNamespacesHandler)
+			namespaces.POST("/:name", CreateNamespaceHandler)
+			namespaces.GET("/:name", GetNamespaceHandler)
+			namespaces.DELETE("/:name", DeleteNamespaceHandler)
+		}
 	}
 
 	// Version endpoint
