@@ -143,7 +143,11 @@ spec:
       image: %s
       ports:
         - containerPort: %d
-`, container.Name, container.Name, container.Name, container.Image, container.Port)
+  resources:
+    requests:
+      cpu: %d
+      memory: %dMi	
+`, container.Name, container.Name, container.Name, container.Image, container.Port, container.CPU, container.RAM)
 
 	return pod, nil
 }
