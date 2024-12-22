@@ -11,8 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // DBManager handles database operations
@@ -105,52 +103,41 @@ func DeleteDBHandler(c *gin.Context) {
 }
 
 // generatePodManifest generates a Pod manifest for the database
-func (m *DBManager) generatePodManifest(db *types.DB) (*corev1.Pod, error) {
+func (m *DBManager) generatePodManifest(db *types.DB) (string, error) {
 	dbType, ok := types.DBTypes[db.Type]
 	if !ok {
-		return nil, fmt.Errorf("failed to get db image: %s", db.Type)
+		return "", fmt.Errorf("failed to get db image: %s", db.Type)
 	}
 	dbSize, ok := types.DBSizes[db.Size]
 	if !ok {
-		return nil, fmt.Errorf("failed to get db size: %s", db.Size)
+		return "", fmt.Errorf("failed to get db size: %s", db.Size)
 	}
-
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: db.Name,
-			Labels: map[string]string{
-				"app":    db.Name,
-				"type":   "database",
-				"dbtype": db.Type,
-				"dbsize": db.Size,
-				"db":     db.Type,
-			},
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  db.Name,
-					Image: dbType.Image,
-					Ports: []corev1.ContainerPort{
-						{
-							ContainerPort: int32(dbType.Port),
-							Protocol:      corev1.ProtocolTCP,
-						},
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%d", dbSize.CPU)),
-							corev1.ResourceMemory: resource.MustParse(fmt.Sprintf("%dMi", dbSize.RAM)),
-						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%d", dbSize.CPU)),
-							corev1.ResourceMemory: resource.MustParse(fmt.Sprintf("%dMi", dbSize.RAM)),
-						},
-					},
-				},
-			},
-		},
-	}
+	dbImage := dbType.Image
+	dbPort := dbType.Port
+	pod := fmt.Sprintf(`
+apiVersion: v1
+kind: Pod
+metadata:
+  name: %s
+  labels:
+    app: %s
+    type: database
+    dbtype: %s
+    dbsize: %s
+spec:
+  containers:
+    - name: %s
+      image: %s
+      ports:
+        - containerPort: %d
+      resources:
+        requests:
+          cpu: %dm
+          memory: %dMi
+        limits:
+          cpu: %dm
+          memory: %dMi
+`, db.Name, db.Name, db.Type, db.Size, db.Name, dbImage, dbPort, dbSize.CPU, dbSize.RAM, dbSize.CPU, dbSize.RAM)
 
 	return pod, nil
 }

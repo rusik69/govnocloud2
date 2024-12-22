@@ -65,7 +65,7 @@ func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
 	bodyString, _ := io.ReadAll(resp.Body)
 	log.Printf("resp: %+v", string(bodyString))
 	var containers []types.Container
-	err = json.NewDecoder(resp.Body).Decode(&containers)
+	err = json.Unmarshal(bodyString, &containers)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding containers: %w", err)
 	}
