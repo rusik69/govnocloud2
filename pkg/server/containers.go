@@ -40,7 +40,7 @@ func ListContainersHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("containers: %+v", containers)
-	respondWithSuccess(c, containers)
+	c.JSON(http.StatusOK, containers)
 }
 
 // CreateContainerHandler handles requests to create a new container
@@ -72,7 +72,7 @@ func CreateContainerHandler(c *gin.Context) {
 		return
 	}
 
-	respondWithSuccess(c, gin.H{"message": "Container created successfully", "container": container})
+	c.JSON(http.StatusOK, gin.H{"message": "Container created successfully", "container": container})
 }
 
 // GetContainerHandler handles requests to get container details
@@ -100,7 +100,7 @@ func GetContainerHandler(c *gin.Context) {
 		return
 	}
 
-	respondWithSuccess(c, gin.H{"container": container})
+	c.JSON(http.StatusOK, container)
 }
 
 // DeleteContainerHandler handles requests to delete a container
@@ -125,7 +125,7 @@ func DeleteContainerHandler(c *gin.Context) {
 		return
 	}
 
-	respondWithSuccess(c, gin.H{"message": "Container deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Container deleted successfully"})
 }
 
 // Manager methods
