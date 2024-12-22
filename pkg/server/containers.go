@@ -39,6 +39,7 @@ func ListContainersHandler(c *gin.Context) {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list containers: %v", err))
 		return
 	}
+	log.Printf("containers: %+v", containers)
 	respondWithSuccess(c, containers)
 }
 
