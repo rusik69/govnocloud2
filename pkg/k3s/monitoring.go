@@ -61,8 +61,9 @@ func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 			Chart     string
 			Namespace string
 		}{
-			Name:  "prometheus",
-			Chart: "prometheus-community/prometheus",
+			Name:      "prometheus",
+			Chart:     "prometheus-community/prometheus",
+			Namespace: "monitoring",
 		},
 		Values: MonitoringValues{
 			Prometheus: PrometheusConfig{
@@ -85,7 +86,24 @@ func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 // DeployPrometheus deploys Prometheus to k3s cluster.
 func DeployPrometheus(host, user, key string) error {
 	cfg := NewMonitoringConfig(host, user, key)
+	
+	// Create monitoring namespace first
+	if err := createMonitoringNamespace(cfg); err != nil {
+		return fmt.Errorf("failed to create monitoring namespace: %w", err)
+	}
+	
 	return deployMonitoringStack(cfg)
+}
+
+// createMonitoringNamespace ensures the monitoring namespace exists
+func createMonitoringNamespace(cfg *MonitoringConfig) error {
+	cmd := "kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -"
+	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	if err != nil {
+		return fmt.Errorf("failed to create monitoring namespace: %w", err)
+	}
+	log.Println(out)
+	return nil
 }
 
 // deployMonitoringStack handles the actual deployment of monitoring components
@@ -140,7 +158,19 @@ prometheus:
 grafana:
   service:
     type: NodePort
-namespace: monitoring
+  persistence:
+    enabled: true
+    size: 10Gi
+alertmanager:
+  service:
+    type: NodePort
+  persistence:
+    enabled: true
+    size: 2Gi
+server:
+  persistentVolume:
+    enabled: true
+    size: 50Gi
 `
 	file, err := os.CreateTemp("", "values-*.yaml")
 	if err != nil {
@@ -157,7 +187,12 @@ namespace: monitoring
 
 // installMonitoringChart installs the Prometheus chart using Helm
 func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
-	cmd := fmt.Sprintf("helm upgrade --install %s %s --values %s", cfg.Release.Name, cfg.Release.Chart, valuesFile)
+	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s",
+		cfg.Release.Name,
+		cfg.Release.Chart,
+		cfg.Release.Namespace,
+		valuesFile,
+	)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to install monitoring stack: %w", err)
