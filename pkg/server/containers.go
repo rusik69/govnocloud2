@@ -198,6 +198,11 @@ func (m *ContainerManager) CreateContainer(container *types.Container) error {
 		return fmt.Errorf("failed to create container pod: %s, %w", out, err)
 	}
 
+	// wait for pod to be ready
+	if out, err := m.kubectl.Run("wait", "--for=condition=ready", "pod", container.Name, "-n", container.Namespace, "--timeout=120s"); err != nil {
+		return fmt.Errorf("failed to wait for pod to be ready: %s, %w", out, err)
+	}
+
 	return nil
 }
 

@@ -208,6 +208,11 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to create database pod: %w", err)
 	}
 
+	// wait for pod to be ready
+	if out, err := m.kubectl.Run("wait", "--for=condition=ready", "pod", db.Name, "-n", db.Namespace, "--timeout=120s"); err != nil {
+		return fmt.Errorf("failed to wait for pod to be ready: %s, %w", out, err)
+	}
+
 	return nil
 }
 
