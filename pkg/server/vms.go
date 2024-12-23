@@ -87,8 +87,8 @@ spec:
       domain:
         resources:
           requests:
-            memory: %s
-            cpu: %s
+            memory: %dMi
+            cpu: %d
 `, vm.Name, vm.Namespace, vmSize.Name, vmImage.Name, vmImage.URL, vmSize.RAM, vmSize.CPU)
 
 	return vmConfig
