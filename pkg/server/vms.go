@@ -24,78 +24,6 @@ func NewVMManager() *VMManager {
 	}
 }
 
-// VMTemplate represents the KubeVirt VM template
-type VMTemplate struct {
-	APIVersion string `json:"apiVersion"`
-	Kind       string `json:"kind"`
-	Metadata   struct {
-		Name string `json:"name"`
-	} `json:"metadata"`
-	Spec struct {
-		Running  bool `json:"running"`
-		Template struct {
-			Metadata struct {
-				Labels map[string]string `json:"labels"`
-			} `json:"metadata"`
-			Spec struct {
-				Domain struct {
-					Devices   VMDevices   `json:"devices"`
-					Resources VMResources `json:"resources"`
-				} `json:"domain"`
-				Networks []VMNetwork `json:"networks"`
-				Volumes  []VMVolume  `json:"volumes"`
-			} `json:"spec"`
-		} `json:"template"`
-	} `json:"spec"`
-}
-
-type VMDevices struct {
-	Disks      []VMDisk      `json:"disks"`
-	Interfaces []VMInterface `json:"interfaces"`
-}
-
-type VMDisk struct {
-	Name string    `json:"name"`
-	Disk VMDiskBus `json:"disk"`
-}
-
-type VMDiskBus struct {
-	Bus string `json:"bus"`
-}
-
-type VMInterface struct {
-	Name       string      `json:"name"`
-	Masquerade interface{} `json:"masquerade"`
-}
-
-type VMResources struct {
-	Requests VMResourceRequests `json:"requests"`
-}
-
-type VMResourceRequests struct {
-	Memory string `json:"memory"`
-	CPU    int    `json:"cpu"`
-}
-
-type VMNetwork struct {
-	Name string      `json:"name"`
-	Pod  interface{} `json:"pod"`
-}
-
-type VMVolume struct {
-	Name          string           `json:"name"`
-	ContainerDisk *ContainerDisk   `json:"containerDisk,omitempty"`
-	CloudInit     *CloudInitConfig `json:"cloudInitNoCloud,omitempty"`
-}
-
-type ContainerDisk struct {
-	Image string `json:"image"`
-}
-
-type CloudInitConfig struct {
-	UserDataBase64 string `json:"userDataBase64"`
-}
-
 // CreateVMHandler handles VM creation requests
 func CreateVMHandler(c *gin.Context) {
 	var vm types.VM
@@ -136,123 +64,46 @@ func (m *VMManager) CreateVM(vm types.VM) error {
 }
 
 // generateVMConfig creates the VM configuration
-func (m *VMManager) generateVMConfig(vm types.VM) VMTemplate {
+func (m *VMManager) generateVMConfig(vm types.VM) string {
 	vmSize := types.VMSizes[vm.Size]
+	vmImage := types.VMImages[vm.Image]
+	vmConfig := fmt.Sprintf(`
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/size: %s
+        kubevirt.io/image: %s
+    spec:
+	  source:
+	  	http:
+	  		url: %s
+      domain:
+        resources:
+          requests:
+            memory: %s
+            cpu: %s
+`, vm.Name, vm.Namespace, vmSize.Name, vmImage.Name, vmImage.URL, vmSize.RAM, vmSize.CPU)
 
-	return VMTemplate{
-		APIVersion: "kubevirt.io/v1",
-		Kind:       "VirtualMachine",
-		Metadata: struct {
-			Name string `json:"name"`
-		}{
-			Name: vm.Name,
-		},
-		Spec: struct {
-			Running  bool `json:"running"`
-			Template struct {
-				Metadata struct {
-					Labels map[string]string `json:"labels"`
-				} `json:"metadata"`
-				Spec struct {
-					Domain struct {
-						Devices   VMDevices   `json:"devices"`
-						Resources VMResources `json:"resources"`
-					} `json:"domain"`
-					Networks []VMNetwork `json:"networks"`
-					Volumes  []VMVolume  `json:"volumes"`
-				} `json:"spec"`
-			} `json:"template"`
-		}{
-			Running: false,
-			Template: struct {
-				Metadata struct {
-					Labels map[string]string `json:"labels"`
-				} `json:"metadata"`
-				Spec struct {
-					Domain struct {
-						Devices   VMDevices   `json:"devices"`
-						Resources VMResources `json:"resources"`
-					} `json:"domain"`
-					Networks []VMNetwork `json:"networks"`
-					Volumes  []VMVolume  `json:"volumes"`
-				} `json:"spec"`
-			}{
-				Metadata: struct {
-					Labels map[string]string `json:"labels"`
-				}{
-					Labels: map[string]string{
-						"kubevirt.io/size":   vm.Size,
-						"kubevirt.io/domain": vm.Name,
-						"kubevirt.io/image":  vm.Image,
-					},
-				},
-				Spec: struct {
-					Domain struct {
-						Devices   VMDevices   `json:"devices"`
-						Resources VMResources `json:"resources"`
-					} `json:"domain"`
-					Networks []VMNetwork `json:"networks"`
-					Volumes  []VMVolume  `json:"volumes"`
-				}{
-					Domain: struct {
-						Devices   VMDevices   `json:"devices"`
-						Resources VMResources `json:"resources"`
-					}{
-						Devices: VMDevices{
-							Disks: []VMDisk{{
-								Name: "containerdisk",
-								Disk: VMDiskBus{Bus: "virtio"},
-							}},
-							Interfaces: []VMInterface{{
-								Name:       "default",
-								Masquerade: struct{}{},
-							}},
-						},
-						Resources: VMResources{
-							Requests: VMResourceRequests{
-								Memory: fmt.Sprintf("%dM", vmSize.RAM),
-								CPU:    vmSize.CPU,
-							},
-						},
-					},
-					Networks: []VMNetwork{{
-						Name: "default",
-						Pod:  struct{}{},
-					}},
-					Volumes: []VMVolume{
-						{
-							Name: "containerdisk",
-							ContainerDisk: &ContainerDisk{
-								Image: vm.Image,
-							},
-						},
-						{
-							Name: "cloudinitdisk",
-							CloudInit: &CloudInitConfig{
-								UserDataBase64: "SGkuXG4=",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	return vmConfig
 }
 
 // writeVMConfig writes the VM configuration to a temporary file
-func (m *VMManager) writeVMConfig(config VMTemplate) (string, error) {
+func (m *VMManager) writeVMConfig(config string) (string, error) {
 	tempFile, err := os.CreateTemp("", "vm-*.yaml")
 	if err != nil {
-		log.Printf("failed to create temp file: %v", err)
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer tempFile.Close()
 
-	encoder := json.NewEncoder(tempFile)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(config); err != nil {
-		log.Printf("failed to encode VM config: %v", err)
-		return "", fmt.Errorf("failed to encode VM config: %w", err)
+	if err := os.WriteFile(tempFile.Name(), []byte(config), 0644); err != nil {
+		return "", fmt.Errorf("failed to write VM config: %w", err)
 	}
 
 	return tempFile.Name(), nil
@@ -329,6 +180,20 @@ func (m *VMManager) ListVMs() ([]types.VM, error) {
 	}
 
 	return vms, nil
+}
+
+// Add this struct before the GetVM function
+type VMTemplate struct {
+	Metadata struct {
+		Name string `json:"name"`
+	} `json:"metadata"`
+	Spec struct {
+		Template struct {
+			Metadata struct {
+				Labels map[string]string `json:"labels"`
+			} `json:"metadata"`
+		} `json:"template"`
+	} `json:"spec"`
 }
 
 // GetVMHandler handles VM retrieval requests
