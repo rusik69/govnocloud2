@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,7 +43,17 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 	}
 
 	url := fmt.Sprintf("%s/vms/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(data))
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating VM: %w", err)
 	}
