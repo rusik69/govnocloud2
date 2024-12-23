@@ -216,7 +216,7 @@ func (m *ContainerManager) GetContainer(name, namespace string) (*types.Containe
 }
 
 func (m *ContainerManager) DeleteContainer(name, namespace string) error {
-	if out, err := m.kubectl.Run("delete", "pod", name, "-n", namespace); err != nil {
+	if out, err := m.kubectl.Run("delete", "pod", name, "-n", namespace, "--grace-period=0", "--force"); err != nil {
 		return fmt.Errorf("failed to delete container pod: %s, %w", out, err)
 	}
 	return nil
