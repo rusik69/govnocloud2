@@ -44,7 +44,10 @@ spec:
 		return "", err
 	}
 	defer tempFile.Close()
-	tempFile.WriteString(pvc)
+	_, err = tempFile.WriteString(pvc)
+	if err != nil {
+		return "", err
+	}
 	defer os.Remove(tempFile.Name())
 
 	out, err := m.kubectl.Run("apply", "-f", tempFile.Name())
