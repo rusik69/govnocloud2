@@ -133,6 +133,7 @@ func deployMonitoringStack(cfg *MonitoringConfig) error {
 // addHelmRepo adds the Prometheus Helm repository
 func addHelmRepo(cfg *MonitoringConfig) error {
 	cmd := fmt.Sprintf("helm repo add %s %s", cfg.HelmRepo.Name, cfg.HelmRepo.URL)
+	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to add Helm repository: %w", err)
@@ -145,6 +146,7 @@ func addHelmRepo(cfg *MonitoringConfig) error {
 // updateHelmRepos updates all Helm repositories
 func updateHelmRepos(cfg *MonitoringConfig) error {
 	cmd := "helm repo update"
+	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to update Helm repositories: %w", err)
@@ -198,6 +200,7 @@ func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
 		cfg.Release.Namespace,
 		valuesFile,
 	)
+	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to install monitoring stack: %w", err)
