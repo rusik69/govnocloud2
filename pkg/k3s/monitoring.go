@@ -190,7 +190,7 @@ server:
 
 // installMonitoringChart installs the Prometheus chart using Helm
 func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
-	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s --wait --timeout 300s",
+	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s --wait --timeout 310s",
 		cfg.Release.Name,
 		cfg.Release.Chart,
 		cfg.Release.Namespace,
@@ -200,11 +200,6 @@ func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
 	_, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to install monitoring stack: %w", err)
-	}
-	cmd = fmt.Sprintf("kubectl wait --for=condition=ready --timeout=300s pod -l app=prometheus -n %s", cfg.Release.Namespace)
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
-		return fmt.Errorf("failed to wait for monitoring namespace to be ready: %w", err)
 	}
 
 	return nil
