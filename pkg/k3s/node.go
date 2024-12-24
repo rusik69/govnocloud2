@@ -57,8 +57,18 @@ func (n *NodeConfig) Deploy() error {
 		nodeName,
 	)
 	log.Printf("Running: %s", cmd)
-
-	out, err := ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
+	var err error
+	var out string
+	// retry 3 times
+	for i := 0; i < 3; i++ {
+		out, err = ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
+		if err != nil {
+			log.Println(err)
+			log.Println("Retrying...")
+		} else {
+			break
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("failed to deploy k3s node: %s: %w", out, err)
 	}

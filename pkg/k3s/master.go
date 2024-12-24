@@ -60,8 +60,19 @@ func InstallK3sUp(host, user, key string) error {
 func (m *MasterConfig) Deploy() error {
 	cmd := fmt.Sprintf("k3sup install --ip %s --user %s --ssh-key %s --sudo", m.Host, m.User, m.Key)
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
-	log.Println(out)
+	// retry 3 times
+	var err error
+	var out string
+	for i := 0; i < 3; i++ {
+		out, err = ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
+		log.Println(out)
+		if err != nil {
+			log.Println(err)
+			log.Println("Retrying...")
+		} else {
+			break
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("failed to deploy k3s master: %w", err)
 	}

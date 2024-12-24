@@ -86,12 +86,17 @@ func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 // DeployPrometheus deploys Prometheus to k3s cluster.
 func DeployPrometheus(host, user, key string) error {
 	cfg := NewMonitoringConfig(host, user, key)
-	
+
 	// Create monitoring namespace first
 	if err := createMonitoringNamespace(cfg); err != nil {
 		return fmt.Errorf("failed to create monitoring namespace: %w", err)
 	}
-	
+
+	// Wait for monitoring namespace to be ready
+	if _, err := ssh.Run("kubectl wait --for=condition=ready --timeout=300s pod -l app=prometheus -n monitoring", cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for monitoring namespace to be ready: %w", err)
+	}
+
 	return deployMonitoringStack(cfg)
 }
 
