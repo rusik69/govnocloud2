@@ -197,7 +197,7 @@ func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
 		valuesFile,
 	)
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
+	_, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to install monitoring stack: %w", err)
 	}
