@@ -190,7 +190,7 @@ server:
 
 // installMonitoringChart installs the Prometheus chart using Helm
 func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
-	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s --wait --timeout 310s",
+	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s ",
 		cfg.Release.Name,
 		cfg.Release.Chart,
 		cfg.Release.Namespace,
