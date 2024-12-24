@@ -52,7 +52,7 @@ func InstallKubeVirt(host, user, key string) error {
 	}
 
 	// Wait for KubeVirt to be ready
-	if _, err := ssh.Run("kubectl wait --for=condition=ready --timeout=300s pod -l app=virt-operator -n kubevirt", cfg.Host, cfg.Key, cfg.User, "", true, 0); err != nil {
+	if _, err := ssh.Run("kubectl wait --for=condition=ready --timeout=300s pod -l app=virt-operator -n kubevirt", cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
 
