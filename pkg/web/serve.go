@@ -27,12 +27,12 @@ type WebServer struct {
 }
 
 // NewWebServerConfig creates a new web server configuration with defaults
-func NewWebServerConfig(host, port string) *WebServerConfig {
+func NewWebServerConfig(host, port, path string) *WebServerConfig {
 	return &WebServerConfig{
 		Host:         host,
 		Port:         port,
-		TemplatePath: "templates/*",
-		StaticPath:   "static",
+		TemplatePath: path + "/templates/*",
+		StaticPath:   path + "/static",
 		Debug:        false,
 	}
 }
@@ -132,8 +132,8 @@ func (s *WebServer) Start() error {
 }
 
 // Listen starts the web server with the given configuration
-func Listen(host, port string) error {
-	config := NewWebServerConfig(host, port)
+func Listen(host, port, path string) error {
+	config := NewWebServerConfig(host, port, path)
 	server := NewWebServer(config)
 
 	if err := server.Start(); err != nil {

@@ -55,6 +55,7 @@ type ServerConfig struct {
 type WebConfig struct {
 	Host string
 	Port string
+	Path string
 }
 
 type ClientConfig struct {
@@ -126,6 +127,7 @@ func initConfig() error {
 		Web: WebConfig{
 			Host: "0.0.0.0",
 			Port: "8080",
+			Path: "/srv/web",
 		},
 		Client: ClientConfig{
 			Host: "127.0.0.1",
@@ -226,6 +228,7 @@ func setupWebFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
 	flags.StringVarP(&cfg.Web.Host, "host", "", cfg.Web.Host, "listen host")
 	flags.StringVarP(&cfg.Web.Port, "port", "", cfg.Web.Port, "listen port")
+	flags.StringVarP(&cfg.Web.Path, "path", "", cfg.Web.Path, "web path")
 }
 
 func setupToolFlags() {

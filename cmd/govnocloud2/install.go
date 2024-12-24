@@ -75,6 +75,7 @@ var installCmd = &cobra.Command{
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.Password,
 			cfg.Install.SSH.KeyPath,
+			cfg.Web.Path,
 		)
 		if err != nil {
 			panic(err)
@@ -163,14 +164,14 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
-		// log.Println("Installing rook")
-		// err = k3s.InstallRook(
-		// 	cfg.Install.Master.Host,
-		// 	cfg.Install.SSH.User,
-		// 	cfg.Install.SSH.KeyPath,
-		// )
-		// if err != nil {
-		// 	panic(err)
-		// }
+		log.Println("Installing Longhorn")
+		err = k3s.InstallLonghorn(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
 	},
 }

@@ -44,7 +44,7 @@ WantedBy=multi-user.target
 }
 
 // Deploy deploys the server.
-func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key string) error {
+func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key, webPath string) error {
 	const (
 		binaryPath = "bin/govnocloud2-linux-amd64"
 		destPath   = "/usr/local/bin/govnocloud2"
@@ -85,7 +85,7 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key 
 	webConfig := GovnocloudServiceConfig{
 		Name:        "govnocloud2-web",
 		Description: "govnocloud2 web",
-		ExecStart:   fmt.Sprintf("%s web --port %s --host %s", destPath, webPort, webHost),
+		ExecStart:   fmt.Sprintf("%s web --port %s --host %s --path %s", destPath, webPort, webHost, webPath),
 		User:        "root",
 	}
 

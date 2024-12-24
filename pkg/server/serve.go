@@ -77,12 +77,19 @@ func (s *Server) setupRoutes() {
 			containers.GET("/:namespace/:name", GetContainerHandler)
 			containers.DELETE("/:namespace/:name", DeleteContainerHandler)
 		}
+		volumes := v0.Group("/volumes")
+		{
+			volumes.GET("/:namespace", ListVolumesHandler)
+			volumes.POST("/:namespace/:name", CreateVolumeHandler)
+			volumes.GET("/:namespace/:name", GetVolumeHandler)
+			volumes.DELETE("/:namespace/:name", DeleteVolumeHandler)
+		}
 		namespaces := v0.Group("/namespaces")
 		{
 			namespaces.GET("", ListNamespacesHandler)
-			namespaces.POST("/:name", CreateNamespaceHandler)
-			namespaces.GET("/:name", GetNamespaceHandler)
-			namespaces.DELETE("/:name", DeleteNamespaceHandler)
+			namespaces.POST("/:namespace/:name", CreateNamespaceHandler)
+			namespaces.GET("/:namespace/:name", GetNamespaceHandler)
+			namespaces.DELETE("/:namespace/:name", DeleteNamespaceHandler)
 		}
 	}
 
