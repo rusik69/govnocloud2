@@ -52,11 +52,11 @@ func InstallKubeVirt(host, user, key string) error {
 		return fmt.Errorf("failed to install virtctl: %w", err)
 	}
 
-	log.Println("sleeping 5 second")
+	log.Println("sleeping 5 seconds")
 	time.Sleep(5 * time.Second)
 	log.Println("Waiting for KubeVirt to be ready")
 	// Wait for KubeVirt to be ready
-	cmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=virt-operator -n kubevirt"
+	cmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-operator -n kubevirt"
 	log.Println(cmd)
 	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
