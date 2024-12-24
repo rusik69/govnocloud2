@@ -24,7 +24,7 @@ func NewVolumeManager() *VolumeManager {
 }
 
 // CreateVolumeHandler creates a new volume
-func (m *VolumeManager) CreateVolume(volume types.Volume) (string, error) {
+func (m *VolumeManager) CreateVolume(volume types.Volume, namespace string) (string, error) {
 	// Create longhorn volume
 	pvc := fmt.Sprintf(`apiVersion: v1
 kind: PersistentVolumeClaim
@@ -38,7 +38,7 @@ spec:
     requests:
       storage: %s
   storageClassName: longhorn
-`, volume.Name, volume.Namespace, volume.Size)
+`, volume.Name, namespace, volume.Size)
 	tempFile, err := os.CreateTemp("", "longhorn-pvc.yaml")
 	if err != nil {
 		return "", err
@@ -96,18 +96,23 @@ func (m *VolumeManager) GetVolume(name, namespace string) (types.Volume, error) 
 		return types.Volume{}, fmt.Errorf("invalid output format")
 	}
 	size := parts[1]
-	return types.Volume{Name: parts[0], Namespace: namespace, Size: size}, nil
+	return types.Volume{Name: name, Size: size}, nil
 }
 
 // CreateVolumeHandler creates a new volume
 func CreateVolumeHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
+		return
+	}
 	volume := types.Volume{}
 	m := NewVolumeManager()
 	if err := c.ShouldBindJSON(&volume); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	out, err := m.CreateVolume(volume)
+	out, err := m.CreateVolume(volume, namespace)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

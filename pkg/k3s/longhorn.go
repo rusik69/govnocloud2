@@ -33,6 +33,11 @@ func InstallLonghorn(host, user, keyPath string) error {
 		return fmt.Errorf("failed to install Longhorn: %w", err)
 	}
 
+	// Wait for Longhorn to be ready
+	if _, err := ssh.Run("kubectl wait --for=condition=ready --timeout=300s pod -l app=longhorn-manager -n longhorn-system", host, keyPath, user, "", false, 0); err != nil {
+		return fmt.Errorf("failed to wait for Longhorn to be ready: %w", err)
+	}
+
 	log.Println("Longhorn installation completed successfully")
 	return nil
 }

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,17 +18,20 @@ func (c *Client) CreateVolume(name, namespace, size string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	volume := types.Volume{Name: name, Size: size}
+	jsonBody, err := json.Marshal(volume)
+	if err != nil {
+		return fmt.Errorf("error marshalling volume: %w", err)
+	}
+	req.Body = io.NopCloser(bytes.NewBuffer(jsonBody))
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating volume: %w", err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to create volume: %d", resp.StatusCode)
 	}
-
 	return nil
 }
 

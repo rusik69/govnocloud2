@@ -7,4 +7,5 @@ type Node struct {
 	Key        string `json:"key"`
 	Password   string `json:"password"`
 	MasterHost string `json:"master_host"`
+	Status     string `json:"status"`
 }
