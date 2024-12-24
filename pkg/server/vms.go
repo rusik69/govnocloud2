@@ -81,14 +81,14 @@ spec:
         kubevirt.io/size: %s
         kubevirt.io/image: %s
     spec:
-	  source:
-	  	http:
-	  		url: %s
+      source:
+        http:
+          url: %s
       domain:
         resources:
           requests:
-            memory: %dMi
-            cpu: %d
+          memory: %dMi
+          cpu: %d
 `, vm.Name, vm.Namespace, vmSize.Name, vmImage.Name, vmImage.URL, vmSize.RAM, vmSize.CPU)
 
 	return vmConfig

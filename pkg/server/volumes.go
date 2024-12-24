@@ -39,6 +39,7 @@ spec:
       storage: %s
   storageClassName: longhorn
 `, volume.Name, namespace, volume.Size)
+	log.Println(pvc)
 	tempFile, err := os.CreateTemp("", "longhorn-pvc.yaml")
 	if err != nil {
 		return "", err
