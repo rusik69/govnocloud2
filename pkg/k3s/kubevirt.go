@@ -52,10 +52,13 @@ func InstallKubeVirt(host, user, key string) error {
 		return fmt.Errorf("failed to install virtctl: %w", err)
 	}
 
-	time.Sleep(10 * time.Second)
-
+	log.Println("sleeping 5 second")
+	time.Sleep(5 * time.Second)
+	log.Println("Waiting for KubeVirt to be ready")
 	// Wait for KubeVirt to be ready
-	if _, err := ssh.Run("kubectl wait --for=condition=ready --timeout=300s pod -l app=virt-operator -n kubevirt", cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
+	cmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=virt-operator -n kubevirt"
+	log.Println(cmd)
+	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
 
@@ -65,8 +68,8 @@ func InstallKubeVirt(host, user, key string) error {
 // applyKubeVirtManifest applies a KubeVirt manifest using kubectl
 func applyKubeVirtManifest(cfg *KubeVirtConfig, manifest string) error {
 	url := fmt.Sprintf("%s/%s", cfg.BaseURL, manifest)
-
 	cmd := fmt.Sprintf("kubectl apply -f %s", url)
+	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to apply KubeVirt manifest: %w", err)
@@ -81,6 +84,7 @@ func installVirtctl(cfg *KubeVirtConfig) error {
 	// Download virtctl
 	virtctlURL := fmt.Sprintf("%s/virtctl-linux-amd64", cfg.BaseURL)
 	cmd := fmt.Sprintf("sudo curl -L -o %s %s; sudo chmod +x %s", cfg.BinaryPath, virtctlURL, cfg.BinaryPath)
+	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to download virtctl: %w", err)
