@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 // NamespaceManager handles namespace operations
@@ -34,12 +35,13 @@ func (m *NamespaceManager) ListNamespaces() ([]string, error) {
 }
 
 // GetNamespace gets details of a specific namespace
-func (m *NamespaceManager) GetNamespace(name string) (string, error) {
-	namespace, err := m.kubectl.Run("get", "namespace", name, "-o", "yaml")
+func (m *NamespaceManager) GetNamespace(name string) (types.Namespace, error) {
+	namespace, err := m.kubectl.Run("get", "namespace", name, "-o", "jsonpath={.metadata.name}")
 	if err != nil {
-		return "", err
+		return types.Namespace{}, err
 	}
-	return string(namespace), nil
+	ns := types.Namespace{Name: string(namespace)}
+	return ns, nil
 }
 
 // NewNamespaceManager creates a new namespace manager

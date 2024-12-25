@@ -121,7 +121,7 @@ func (m *VMManager) writeVMConfig(config string) (string, error) {
 
 // applyVMConfig applies the VM configuration using kubectl
 func (m *VMManager) applyVMConfig(configPath, namespace string) error {
-	out, err := m.kubectl.Run("apply", "-f", configPath, "-n", namespace)
+	out, err := m.kubectl.Run("apply", "-f", configPath, "-n", namespace, "--wait=true", "--timeout=300s")
 	if err != nil {
 		return fmt.Errorf("kubectl apply failed: %s: %w", out, err)
 	}
