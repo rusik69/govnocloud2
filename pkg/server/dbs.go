@@ -192,7 +192,7 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to generate pod manifest: %w", err)
 	}
 
-	log.Printf("%s", pod)
+	log.Println(pod)
 
 	tmpFile, err := os.CreateTemp("", "db-*.yaml")
 	if err != nil {
@@ -208,7 +208,7 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to create database pod: %w", err)
 	}
 
-	// wait for pod to be ready
+	log.Printf("waiting for pod to be ready")
 	if out, err := m.kubectl.Run("wait", "--for=condition=ready", "pod", db.Name, "-n", db.Namespace, "--timeout=600s"); err != nil {
 		return fmt.Errorf("failed to wait for pod to be ready: %s, %w", out, err)
 	}
