@@ -77,8 +77,7 @@ func (m *VMManager) CreateVM(vm types.VM) error {
 func (m *VMManager) generateVMConfig(vm types.VM) string {
 	vmSize := types.VMSizes[vm.Size]
 	vmImage := types.VMImages[vm.Image]
-	vmConfig := fmt.Sprintf(`
-apiVersion: kubevirt.io/v1
+	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: %s
