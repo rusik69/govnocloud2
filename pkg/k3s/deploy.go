@@ -158,7 +158,7 @@ func DownloadVMImages(host, user, key string, imagesDir string) error {
 	// check if imagesDir exists on host and create if not
 	cmd := fmt.Sprintf("sudo mkdir -p %s", imagesDir)
 	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, key, user, "", false, 5); err != nil {
+	if out, err := ssh.Run(cmd, host, key, user, "", false, 600); err != nil {
 		return fmt.Errorf("failed to create images directory: %v\nOutput: %s", err, out)
 	}
 	for _, image := range types.VMImages {
