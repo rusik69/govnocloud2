@@ -9,14 +9,14 @@ import (
 
 // Config holds all command line flags
 type Config struct {
-	Master  MasterConfig
-	Worker  WorkerConfig
-	SSH     SSHConfig
-	Kube    KubeConfig
-	Server  ServerConfig
-	Web     WebConfig
-	Client  ClientConfig
-	Install InstallConfig
+	Master    MasterConfig
+	Worker    WorkerConfig
+	SSH       SSHConfig
+	Kube      KubeConfig
+	Server    ServerConfig
+	Web       WebConfig
+	Client    ClientConfig
+	Install   InstallConfig
 }
 
 type MasterConfig struct {

@@ -208,11 +208,6 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to create database pod: %w", err)
 	}
 
-	// log.Printf("waiting for pod to be ready")
-	// if out, err := m.kubectl.Run("wait", "--for=condition=ready", "pod", db.Name, "-n", db.Namespace, "--timeout=600s"); err != nil {
-	// 	return fmt.Errorf("failed to wait for pod to be ready: %s, %w", out, err)
-	// }
-
 	return nil
 }
 
@@ -240,7 +235,7 @@ func (m *DBManager) GetDB(name string) (*types.DB, error) {
 
 // DeleteDB removes a database
 func (m *DBManager) DeleteDB(name, namespace string) error {
-	if _, err := m.kubectl.Run("delete", "pod", name, "-n", namespace, "--force", "--grace-period=10"); err != nil {
+	if _, err := m.kubectl.Run("delete", "pod", name, "-n", namespace, "--force", "--grace-period=0"); err != nil {
 		return fmt.Errorf("failed to delete database pod: %w", err)
 	}
 	return nil

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 type GovnocloudServiceConfig struct {
@@ -150,4 +151,16 @@ func Suspend(ips []string, master, user, password, key string) {
 			continue
 		}
 	}
+}
+
+// DownloadVMImages downloads the VM images
+func DownloadVMImages(master, user, key string, imagesDir string) error {
+	for _, image := range types.VMImages {
+		cmd := fmt.Sprintf("wget -O %s %s", imagesDir+"/"+image.Name, image.URL)
+		log.Println(cmd)
+		if out, err := ssh.Run(cmd, master, key, user, "", false, 600); err != nil {
+			return fmt.Errorf("failed to download %s: %v\nOutput: %s", image.Name, err, out)
+		}
+	}
+	return nil
 }
