@@ -62,7 +62,7 @@ func (m *VMManager) CreateVM(vm types.VM) error {
 		log.Printf("failed to write VM config: %v", err)
 		return fmt.Errorf("failed to write VM config: %w", err)
 	}
-	defer os.Remove(tempFile)
+	//defer os.Remove(tempFile)
 
 	if err := m.applyVMConfig(tempFile, vm.Namespace); err != nil {
 		log.Printf("failed to apply VM config: %v", err)
@@ -143,53 +143,20 @@ func ListVMsHandler(c *gin.Context) {
 }
 
 // ListVMs returns a list of virtual machines
-func (m *VMManager) ListVMs(namespace string) ([]types.VM, error) {
-	out, err := m.kubectl.Run("get", "VirtualMachines", "-n", namespace, "-o", "json")
+func (m *VMManager) ListVMs(namespace string) ([]string, error) {
+	out, err := m.kubectl.Run("get", "VirtualMachines", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name}")
 	if err != nil {
 		log.Printf("failed to list VMs: %v", err)
 		return nil, fmt.Errorf("failed to list VMs: %w", err)
 	}
 
-	var result struct {
-		Items []struct {
-			Metadata struct {
-				Name string `json:"name"`
-			} `json:"metadata"`
-			Spec struct {
-				Template struct {
-					Metadata struct {
-						Labels map[string]string `json:"labels"`
-					} `json:"metadata"`
-					Spec struct {
-						Domain struct {
-							Resources struct {
-								Requests struct {
-									Memory string `json:"memory"`
-									CPU    string `json:"cpu"`
-								} `json:"requests"`
-							} `json:"resources"`
-						} `json:"domain"`
-					} `json:"spec"`
-				} `json:"template"`
-			} `json:"spec"`
-		} `json:"items"`
-	}
-
-	if err := json.Unmarshal(out, &result); err != nil {
+	var res []string
+	if err := json.Unmarshal(out, &res); err != nil {
 		log.Printf("failed to parse VM list: %v", err)
 		return nil, fmt.Errorf("failed to parse VM list: %w", err)
 	}
 
-	vms := make([]types.VM, len(result.Items))
-	for i, item := range result.Items {
-		vms[i] = types.VM{
-			Name:  item.Metadata.Name,
-			Size:  item.Spec.Template.Metadata.Labels["kubevirt.io/size"],
-			Image: item.Spec.Template.Metadata.Labels["kubevirt.io/image"],
-		}
-	}
-
-	return vms, nil
+	return res, nil
 }
 
 // Add this struct before the GetVM function
