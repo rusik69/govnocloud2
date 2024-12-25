@@ -204,7 +204,7 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
-	if _, err := m.kubectl.Run("apply", "-f", tmpFile.Name()); err != nil {
+	if _, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", db.Namespace, "--wait=true", "--timeout=300s"); err != nil {
 		return fmt.Errorf("failed to create database pod: %w", err)
 	}
 
