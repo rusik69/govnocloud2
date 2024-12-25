@@ -125,18 +125,21 @@ func CreateVolumeHandler(c *gin.Context) {
 // DeleteVolumeHandler deletes a volume
 func DeleteVolumeHandler(c *gin.Context) {
 	m := NewVolumeManager()
-	volume := c.Param("volume")
-	if volume == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "volume is required"})
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("name is required")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
 		return
 	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
+		log.Printf("namespace is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
 		return
 	}
-	out, err := m.DeleteVolume(volume, namespace)
+	out, err := m.DeleteVolume(name, namespace)
 	if err != nil {
+		log.Printf("failed to delete volume: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -149,11 +152,13 @@ func ListVolumesHandler(c *gin.Context) {
 	m := NewVolumeManager()
 	namespace := c.Param("namespace")
 	if namespace == "" {
+		log.Printf("namespace is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
 		return
 	}
 	volumes, err := m.ListVolumes(namespace)
 	if err != nil {
+		log.Printf("failed to list volumes: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

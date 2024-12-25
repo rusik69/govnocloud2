@@ -192,7 +192,7 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 		return fmt.Errorf("failed to generate pod manifest: %w", err)
 	}
 
-	log.Printf("db pod: %s", pod)
+	log.Printf("%s", pod)
 
 	tmpFile, err := os.CreateTemp("", "db-*.yaml")
 	if err != nil {

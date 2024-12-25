@@ -95,6 +95,8 @@ func GetContainerHandler(c *gin.Context) {
 		return
 	}
 
+	log.Printf("%+v", container)
+
 	if container == nil {
 		respondWithError(c, http.StatusNotFound, "container not found")
 		return
