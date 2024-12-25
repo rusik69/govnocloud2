@@ -58,10 +58,10 @@ func (s *Server) setupRoutes() {
 		// Node endpoints
 		nodes := v0.Group("/nodes")
 		{
-			nodes.GET("/:namespace", ListNodesHandler)
-			nodes.POST("/:namespace/:name", AddNodeHandler)
-			nodes.GET("/:namespace/:name", GetNodeHandler)
-			nodes.DELETE("/:namespace/:name", DeleteNodeHandler)
+			nodes.GET("/", ListNodesHandler)
+			nodes.POST("/", AddNodeHandler)
+			nodes.GET("/:name", GetNodeHandler)
+			nodes.DELETE("/:name", DeleteNodeHandler)
 		}
 		dbs := v0.Group("/dbs")
 		{
@@ -87,9 +87,9 @@ func (s *Server) setupRoutes() {
 		namespaces := v0.Group("/namespaces")
 		{
 			namespaces.GET("", ListNamespacesHandler)
-			namespaces.POST("/:namespace/:name", CreateNamespaceHandler)
-			namespaces.GET("/:namespace/:name", GetNamespaceHandler)
-			namespaces.DELETE("/:namespace/:name", DeleteNamespaceHandler)
+			namespaces.POST("/:name", CreateNamespaceHandler)
+			namespaces.GET("/:name", GetNamespaceHandler)
+			namespaces.DELETE("/:name", DeleteNamespaceHandler)
 		}
 	}
 
