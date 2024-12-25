@@ -100,6 +100,8 @@ func GetNodeHandler(c *gin.Context) {
 		return
 	}
 
+	log.Printf("node: %+v", node)
+
 	if node == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "node not found"})
 		return
@@ -156,14 +158,12 @@ func (m *NodeManager) DeleteNode(name string) error {
 
 // AddNodeHandler handles HTTP requests to add a node
 func AddNodeHandler(c *gin.Context) {
-	// This would typically involve generating a join token and returning instructions
-	// Since this is not implemented, we return a proper status code and message
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read request body"})
 		return
 	}
-
+	log.Println(string(body))
 	var node types.Node
 	if err := json.Unmarshal(body, &node); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse request body"})

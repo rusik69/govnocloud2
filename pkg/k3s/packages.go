@@ -39,14 +39,14 @@ func NewPackageConfig(host, user, key, interfaceName string, macs, ips []string)
 	}
 
 	return &PackageConfig{
-		Host:      host,
-		User:      user,
-		Key:       key,
-		Interface: interfaceName,
-		Timeout:   600,
-		DHCPRange: "10.0.0.10,10.0.0.200,255.255.255.0",
-		DNSServer: "8.8.8.8",
-		TFTPRoot:  "/srv/tftp",
+		Host:        host,
+		User:        user,
+		Key:         key,
+		Interface:   interfaceName,
+		Timeout:     600,
+		DHCPRange:   "10.0.0.10,10.0.0.200,255.255.255.0",
+		DNSServer:   "8.8.8.8",
+		TFTPRoot:    "/srv/tftp",
 		NetworkInfo: entries,
 	}
 }
@@ -116,12 +116,12 @@ func (p *PackageConfig) Configure() (string, error) {
 func (p *PackageConfig) createTFTPDirectory() error {
 	cmd := fmt.Sprintf("sudo mkdir %s || true", p.TFTPRoot)
 	log.Println(cmd)
-	
+
 	out, err := ssh.Run(cmd, p.Host, p.Key, p.User, "", false, 10)
 	if err != nil {
 		return fmt.Errorf("failed to create TFTP directory: %s: %w", out, err)
 	}
-	
+
 	return nil
 }
 

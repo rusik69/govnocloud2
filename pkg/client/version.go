@@ -19,7 +19,7 @@ func GetServerVersion(host, port string) (string, error) {
 	}
 
 	url := fmt.Sprintf("http://%s:%s/version", host, port)
-	
+
 	resp, err := client.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("error getting server version: %w", err)

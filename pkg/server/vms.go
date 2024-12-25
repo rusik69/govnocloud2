@@ -32,7 +32,7 @@ func CreateVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
-
+	log.Printf("vm: %+v", vm)
 	manager := NewVMManager()
 	if err := manager.CreateVM(vm); err != nil {
 		log.Printf("failed to create VM: %v", err)
@@ -46,7 +46,7 @@ func CreateVMHandler(c *gin.Context) {
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
 	vmConfig := m.generateVMConfig(vm)
-	log.Printf("VM config: %v", vmConfig)
+	log.Println(vmConfig)
 	tempFile, err := m.writeVMConfig(vmConfig)
 	if err != nil {
 		log.Printf("failed to write VM config: %v", err)
@@ -120,21 +120,21 @@ func (m *VMManager) applyVMConfig(configPath, namespace string) error {
 
 // ListVMsHandler handles VM listing requests
 func ListVMsHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
 	manager := NewVMManager()
-	vms, err := manager.ListVMs()
+	vms, err := manager.ListVMs(namespace)
 	if err != nil {
 		log.Printf("failed to list VMs: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list VMs: %v", err))
 		return
 	}
-
-	log.Printf("vms: %v+", vms)
+	log.Printf("vms: %+v", vms)
 	respondWithSuccess(c, vms)
 }
 
 // ListVMs returns a list of virtual machines
-func (m *VMManager) ListVMs() ([]types.VM, error) {
-	out, err := m.kubectl.Run("get", "VirtualMachines", "-o", "json")
+func (m *VMManager) ListVMs(namespace string) ([]types.VM, error) {
+	out, err := m.kubectl.Run("get", "VirtualMachines", "-n", namespace, "-o", "json")
 	if err != nil {
 		log.Printf("failed to list VMs: %v", err)
 		return nil, fmt.Errorf("failed to list VMs: %w", err)
@@ -198,22 +198,26 @@ type VMTemplate struct {
 
 // GetVMHandler handles VM retrieval requests
 func GetVMHandler(c *gin.Context) {
-	var vm types.VM
-	if err := c.BindJSON(&vm); err != nil {
-		log.Printf("invalid request: %v", err)
-		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	if namespace == "" {
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	if name == "" {
+		respondWithError(c, http.StatusBadRequest, "name is required")
 		return
 	}
 
 	manager := NewVMManager()
-	vm, err := manager.GetVM(vm.Name, vm.Namespace)
+	vm, err := manager.GetVM(name, namespace)
 	if err != nil {
 		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
 		return
 	}
-	log.Printf("vm: %v", vm)
-	respondWithSuccess(c, gin.H{"vm": vm})
+	log.Printf("%+v", vm)
+	c.JSON(http.StatusOK, vm)
 }
 
 // GetVM retrieves a specific virtual machine
@@ -236,30 +240,35 @@ func (m *VMManager) GetVM(name, namespace string) (types.VM, error) {
 
 // DeleteVMHandler handles VM deletion requests
 func DeleteVMHandler(c *gin.Context) {
-	vmName := c.Param("name")
-	if vmName == "" {
+	name := c.Param("name")
+	if name == "" {
 		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
 
 	manager := NewVMManager()
-	if err := manager.DeleteVM(vmName); err != nil {
-		log.Printf("failed to delete VM %s: %v", vmName, err)
+	if err := manager.DeleteVM(name, namespace); err != nil {
+		log.Printf("failed to delete VM %s in namespace %s: %v", name, namespace, err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete VM: %v", err))
 		return
 	}
 
-	log.Printf("VM %s deleted successfully", vmName)
+	log.Printf("VM %s deleted successfully", name)
 	respondWithSuccess(c, gin.H{"message": "VM deleted successfully"})
 }
 
 // DeleteVM removes a virtual machine
-func (m *VMManager) DeleteVM(name string) error {
-	out, err := m.kubectl.Run("delete", "VirtualMachine", name)
+func (m *VMManager) DeleteVM(name, namespace string) error {
+	out, err := m.kubectl.Run("delete", "VirtualMachine", name, "-n", namespace)
 	if err != nil {
-		log.Printf("failed to delete VM %s: %s: %v", name, out, err)
-		return fmt.Errorf("failed to delete VM %s: %s: %w", name, out, err)
+		return fmt.Errorf("failed to delete VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	return nil
 }
