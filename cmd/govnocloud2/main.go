@@ -9,14 +9,14 @@ import (
 
 // Config holds all command line flags
 type Config struct {
-	Master    MasterConfig
-	Worker    WorkerConfig
-	SSH       SSHConfig
-	Kube      KubeConfig
-	Server    ServerConfig
-	Web       WebConfig
-	Client    ClientConfig
-	Install   InstallConfig
+	Master  MasterConfig
+	Worker  WorkerConfig
+	SSH     SSHConfig
+	Kube    KubeConfig
+	Server  ServerConfig
+	Web     WebConfig
+	Client  ClientConfig
+	Install InstallConfig
 }
 
 type MasterConfig struct {
@@ -84,6 +84,7 @@ type InstallConfig struct {
 	Server struct {
 		Port string
 	}
+	ImagesDir string
 }
 
 var (
@@ -162,6 +163,7 @@ func initConfig() error {
 				KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
 				PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
 			},
+			ImagesDir: "/var/lib/govnocloud2/images",
 		},
 	}
 
@@ -198,6 +200,7 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Master.PubKeyPath, "masterpubkey", "", cfg.Install.Master.PubKeyPath, "master public key path")
 	flags.StringVarP(&cfg.Install.Master.KeyPath, "masterkey", "", cfg.Install.Master.KeyPath, "master key path")
 	flags.StringVarP(&cfg.Install.Workers.Interface, "interface", "", cfg.Install.Workers.Interface, "interface name")
+	flags.StringVarP(&cfg.Install.ImagesDir, "imagesdir", "", cfg.Install.ImagesDir, "images directory")
 }
 
 func setupUninstallFlags(cmd *cobra.Command) {

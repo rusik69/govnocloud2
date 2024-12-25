@@ -155,8 +155,15 @@ func Suspend(ips []string, master, user, password, key string) {
 
 // DownloadVMImages downloads the VM images
 func DownloadVMImages(master, user, key string, imagesDir string) error {
+	// check if imagesDir exists and create if not
+	if _, err := os.Stat(imagesDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(imagesDir, 0755); err != nil {
+			return fmt.Errorf("failed to create images directory: %w", err)
+		}
+	}
+
 	for _, image := range types.VMImages {
-		cmd := fmt.Sprintf("wget -O %s %s", imagesDir+"/"+image.Name, image.URL)
+		cmd := fmt.Sprintf("wget -O %s %s", imagesDir+"/"+image.FileName, image.URL)
 		log.Println(cmd)
 		if out, err := ssh.Run(cmd, master, key, user, "", false, 600); err != nil {
 			return fmt.Errorf("failed to download %s: %v\nOutput: %s", image.Name, err, out)

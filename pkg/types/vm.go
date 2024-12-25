@@ -76,12 +76,15 @@ type VMImage struct {
 	Name string `json:"name"`
 	// URL is the URL of the virtual machine image.
 	URL string `json:"url"`
+	// FileName is the name of the file to download.
+	FileName string `json:"fileName"`
 }
 
 // VMImages is a map of virtual machine images.
 var VMImages = map[string]VMImage{
 	"ubuntu24": VMImage{
-		Name: "ubuntu24",
-		URL:  "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img",
+		Name:     "ubuntu24",
+		URL:      "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img",
+		FileName: "ubuntu-24.04-server-cloudimg-amd64.img",
 	},
 }
