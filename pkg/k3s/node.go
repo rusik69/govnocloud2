@@ -16,6 +16,7 @@ type NodeConfig struct {
 	Password string
 	Master   string
 	Timeout  int
+	Retry    int
 }
 
 // NewNodeConfig creates a new node configuration with defaults
@@ -27,6 +28,7 @@ func NewNodeConfig(host, user, key, password, master string) *NodeConfig {
 		Password: password,
 		Master:   master,
 		Timeout:  600,
+		Retry:    3,
 	}
 }
 
@@ -60,7 +62,7 @@ func (n *NodeConfig) Deploy() error {
 	var err error
 	var out string
 	// retry 3 times
-	for i := 0; i < 3; i++ {
+	for i := 0; i < n.Retry; i++ {
 		out, err = ssh.Run(cmd, n.Master, n.Key, n.User, n.Password, true, n.Timeout)
 		if err != nil {
 			log.Println(err)

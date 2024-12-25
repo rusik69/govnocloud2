@@ -14,6 +14,7 @@ type MasterConfig struct {
 	Key      string
 	Password string
 	Timeout  int
+	Retries    int
 }
 
 // K3sFiles represents important k3s file paths
@@ -29,6 +30,7 @@ func NewMasterConfig(host, user, key string) *MasterConfig {
 		User:    user,
 		Key:     key,
 		Timeout: 600,
+		Retries:   3,
 	}
 }
 
@@ -63,7 +65,7 @@ func (m *MasterConfig) Deploy() error {
 	// retry 3 times
 	var err error
 	var out string
-	for i := 0; i < 3; i++ {
+	for i := 0; i < m.Retries; i++ {
 		out, err = ssh.Run(cmd, m.Host, m.Key, m.User, "", true, m.Timeout)
 		log.Println(out)
 		if err != nil {
