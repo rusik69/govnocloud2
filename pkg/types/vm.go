@@ -80,11 +80,11 @@ type VMImage struct {
 
 // VMImages is a map of virtual machine images.
 var VMImages = map[string]VMImage{
-	"ubuntu:24.04": VMImage{
+	"ubuntu24": VMImage{
 		Name: "ubuntu:24.04",
 		URL:  "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img",
 	},
-	"ubuntu:22.04": VMImage{
+	"ubuntu22": VMImage{
 		Name: "ubuntu:22.04",
 		URL:  "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img",
 	},

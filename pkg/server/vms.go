@@ -33,6 +33,16 @@ func CreateVMHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("vm: %+v", vm)
+	if _, ok := types.VMSizes[vm.Size]; !ok {
+		log.Printf("invalid VM size: %s", vm.Size)
+		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid VM size: %s", vm.Size))
+		return
+	}
+	if _, ok := types.VMImages[vm.Image]; !ok {
+		log.Printf("invalid VM image: %s", vm.Image)
+		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid VM image: %s", vm.Image))
+		return
+	}
 	manager := NewVMManager()
 	if err := manager.CreateVM(vm); err != nil {
 		log.Printf("failed to create VM: %v", err)
