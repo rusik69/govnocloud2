@@ -55,6 +55,11 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 		return fmt.Errorf("failed to copy binary: %w", err)
 	}
 
+	// Sync web files
+	if err := ssh.Rsync(webPath, "/var/www/govnocloud2", host, "root", key); err != nil {
+		return fmt.Errorf("failed to sync web files: %w", err)
+	}
+
 	// Make binary executable
 	cmd := fmt.Sprintf("sudo chmod +x %s", destPath)
 	log.Println(cmd)

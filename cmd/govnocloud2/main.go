@@ -127,7 +127,7 @@ func initConfig() error {
 		Web: WebConfig{
 			Host: "0.0.0.0",
 			Port: "8080",
-			Path: "/srv/web",
+			Path: "pkg/web/templates",
 		},
 		Client: ClientConfig{
 			Host: "127.0.0.1",
