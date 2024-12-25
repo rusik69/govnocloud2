@@ -240,7 +240,7 @@ func (m *DBManager) GetDB(name string) (*types.DB, error) {
 
 // DeleteDB removes a database
 func (m *DBManager) DeleteDB(name, namespace string) error {
-	if _, err := m.kubectl.Run("delete", "pod", name, "-n", namespace); err != nil {
+	if _, err := m.kubectl.Run("delete", "pod", name, "-n", namespace, "--force", "--grace-period=10"); err != nil {
 		return fmt.Errorf("failed to delete database pod: %w", err)
 	}
 	return nil
