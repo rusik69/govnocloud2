@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 // KubeVirtConfig holds KubeVirt installation configuration
@@ -21,7 +22,7 @@ type KubeVirtConfig struct {
 
 // NewKubeVirtConfig creates a default KubeVirt configuration
 func NewKubeVirtConfig(host, user, key string) *KubeVirtConfig {
-	const version = "v1.3.1"
+	const version = "v1.4.0"
 	return &KubeVirtConfig{
 		Version:     version,
 		BaseURL:     fmt.Sprintf("https://github.com/kubevirt/kubevirt/releases/download/%s", version),
@@ -61,7 +62,14 @@ func InstallKubeVirt(host, user, key string) error {
 	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
-
+	// Create kubevirt instance types
+	for _, size := range types.VMSizes {
+		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi", size.Name, size.CPU, size.RAM)
+		log.Println(cmd)
+		if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
+			return fmt.Errorf("failed to create kubevirt instance type: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -82,7 +90,7 @@ func applyKubeVirtManifest(cfg *KubeVirtConfig, manifest string) error {
 // installVirtctl downloads and installs the virtctl binary
 func installVirtctl(cfg *KubeVirtConfig) error {
 	// Download virtctl
-	virtctlURL := fmt.Sprintf("%s/virtctl-linux-amd64", cfg.BaseURL)
+	virtctlURL := fmt.Sprintf("%s/virtctl-v1.4.0-linux-amd64", cfg.BaseURL)
 	cmd := fmt.Sprintf("sudo curl -L -o %s %s; sudo chmod +x %s", cfg.BinaryPath, virtctlURL, cfg.BinaryPath)
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
