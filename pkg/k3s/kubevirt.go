@@ -62,12 +62,6 @@ func InstallKubeVirt(host, user, key string) error {
 	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
-	// wait for crds
-	cmd = "kubectl wait --for=condition=established --timeout=300s crd/virtualmachines.kubevirt.io"
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
-		return fmt.Errorf("failed to wait for crds: %w", err)
-	}
 	// Create kubevirt instance types
 	for _, size := range types.VMSizes {
 		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
