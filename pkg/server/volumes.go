@@ -70,7 +70,7 @@ func (m *VolumeManager) DeleteVolume(volume, namespace string) (string, error) {
 
 // ListVolumes lists all volumes
 func (m *VolumeManager) ListVolumes(namespace string) ([]string, error) {
-	out, err := m.kubectl.Run("get", "pvc", "-n", namespace, "-o", "jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.resources.requests.storage}{"\n"}{end}'")
+	out, err := m.kubectl.Run("get", "pvc", "-n", namespace, "-o", "jsonpath='{range .items[*]}{.metadata.name}{'\t'}{.spec.resources.requests.storage}{'\n'}{end}'")
 	if err != nil {
 		return nil, err
 	}
