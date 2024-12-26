@@ -64,7 +64,7 @@ func InstallKubeVirt(host, user, key string) error {
 	}
 	// Create kubevirt instance types
 	for _, size := range types.VMSizes {
-		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi", size.Name, size.CPU, size.RAM)
+		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
 		log.Println(cmd)
 		if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
 			return fmt.Errorf("failed to create kubevirt instance type: %w", err)

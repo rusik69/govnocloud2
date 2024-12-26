@@ -126,6 +126,16 @@ var installCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
+			log.Println("Downloading VM images")
+			err = k3s.DownloadVMImages(
+				worker,
+				cfg.Install.SSH.User,
+				cfg.Install.SSH.KeyPath,
+				cfg.Install.ImagesDir,
+			)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		command := "sudo k3s kubectl get nodes"
