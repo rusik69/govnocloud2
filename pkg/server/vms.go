@@ -32,7 +32,7 @@ func CreateVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
-	log.Printf("vm: %+v", vm)
+	log.Printf("%+v", vm)
 	if _, ok := types.VMSizes[vm.Size]; !ok {
 		log.Printf("invalid VM size: %s", vm.Size)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid VM size: %s", vm.Size))
@@ -90,15 +90,21 @@ spec:
         kubevirt.io/size: %s
         kubevirt.io/image: %s
     spec:
-      source:
-        http:
-          url: %s
       domain:
+        devices:
+          disks:
+          - name: bootdisk
+            disk:
+              bus: virtio
         resources:
           requests:
-          memory: %dMi
-          cpu: %d
-`, vm.Name, vm.Namespace, vmSize.Name, vmImage.Name, vmImage.URL, vmSize.RAM, vmSize.CPU)
+            memory: %dMi
+            cpu: %d
+      volumes:
+      - name: bootdisk
+        containerDisk:
+          image: %s
+`, vm.Name, vm.Namespace, vmSize.Name, vmImage.Name, vmSize.RAM, vmSize.CPU, vmImage.URL)
 
 	return vmConfig
 }
