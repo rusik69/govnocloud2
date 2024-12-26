@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"log"
 
@@ -55,81 +54,12 @@ func CreateVMHandler(c *gin.Context) {
 
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
-	vmConfig := m.generateVMConfig(vm)
-	log.Println(vmConfig)
-	tempFile, err := m.writeVMConfig(vmConfig)
-	if err != nil {
-		log.Printf("failed to write VM config: %v", err)
-		return fmt.Errorf("failed to write VM config: %w", err)
+	cmd := fmt.Sprintf("virtctl create vm --instancetype %s --name %s --namespace %s | kubectl create -f -", vm.Size, vm.Name, vm.Namespace)
+	log.Println(cmd)
+	if _, err := m.kubectl.Run(cmd); err != nil {
+		return fmt.Errorf("failed to create VM %s: %w", vm.Name, err)
 	}
-	//defer os.Remove(tempFile)
-
-	if err := m.applyVMConfig(tempFile, vm.Namespace); err != nil {
-		log.Printf("failed to apply VM config: %v", err)
-		return fmt.Errorf("failed to apply VM config: %w", err)
-	}
-
 	log.Printf("VM %s created successfully", vm.Name)
-	return nil
-}
-
-// generateVMConfig creates the VM configuration
-func (m *VMManager) generateVMConfig(vm types.VM) string {
-	vmSize := types.VMSizes[vm.Size]
-	vmImage := types.VMImages[vm.Image]
-	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
-kind: VirtualMachine
-metadata:
-  name: %s
-  namespace: %s
-spec:
-  running: true
-  template:
-    metadata:
-      labels:
-        kubevirt.io/size: %s
-        kubevirt.io/image: %s
-    spec:
-      domain:
-        devices:
-          disks:
-          - name: bootdisk
-            disk:
-              bus: virtio
-        resources:
-          requests:
-            memory: %dMi
-            cpu: %d
-      volumes:
-      - name: bootdisk
-        containerDisk:
-          image: %s
-`, vm.Name, vm.Namespace, vmSize.Name, vmImage.Name, vmSize.RAM, vmSize.CPU, vmImage.URL)
-
-	return vmConfig
-}
-
-// writeVMConfig writes the VM configuration to a temporary file
-func (m *VMManager) writeVMConfig(config string) (string, error) {
-	tempFile, err := os.CreateTemp("", "vm-*.yaml")
-	if err != nil {
-		return "", fmt.Errorf("failed to create temp file: %w", err)
-	}
-	defer tempFile.Close()
-
-	if err := os.WriteFile(tempFile.Name(), []byte(config), 0644); err != nil {
-		return "", fmt.Errorf("failed to write VM config: %w", err)
-	}
-
-	return tempFile.Name(), nil
-}
-
-// applyVMConfig applies the VM configuration using kubectl
-func (m *VMManager) applyVMConfig(configPath, namespace string) error {
-	out, err := m.kubectl.Run("apply", "-f", configPath, "-n", namespace, "--wait=true", "--timeout=300s")
-	if err != nil {
-		return fmt.Errorf("kubectl apply failed: %s: %w", out, err)
-	}
 	return nil
 }
 
