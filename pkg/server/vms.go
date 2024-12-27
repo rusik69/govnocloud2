@@ -9,6 +9,8 @@ import (
 
 	"strings"
 
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
@@ -56,12 +58,58 @@ func CreateVMHandler(c *gin.Context) {
 
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
-	cmd := fmt.Sprintf("virtctl create vm --instancetype %s --name %s --namespace %s | kubectl create -f -", vm.Size, vm.Name, vm.Namespace)
-	log.Println(cmd)
-	if _, err := m.kubectl.Run(cmd); err != nil {
-		return fmt.Errorf("failed to create VM %s: %w", vm.Name, err)
+	vmSize := types.VMSizes[vm.Size]
+	vmImage := types.VMImages[vm.Image]
+
+	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: %s
+  namespace: %s
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/size: %s
+        kubevirt.io/image: %s
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+        resources:
+          requests:
+            memory: %dMi
+            cpu: %d
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: %s`,
+		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.URL)
+
+	// Write config to temporary file
+	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
 	}
-	log.Printf("VM %s created successfully", vm.Name)
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.WriteString(vmConfig); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	// Apply the configuration
+	out, err := m.kubectl.Run("apply", "-f", tmpfile.Name())
+	if err != nil {
+		return fmt.Errorf("failed to create VM %s: %s: %w", vm.Name, out, err)
+	}
+
 	return nil
 }
 
