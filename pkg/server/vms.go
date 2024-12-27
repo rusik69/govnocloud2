@@ -89,7 +89,7 @@ spec:
         containerDisk:
           image: %s`,
 		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.URL)
-
+	log.Println(vmConfig)
 	// Write config to temporary file
 	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
 	if err != nil {
