@@ -63,7 +63,7 @@ func InstallKubeVirt(host, user, key string) error {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
 	// FIXME: wait for crds
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 	// Create kubevirt instance types
 	for _, size := range types.VMSizes {
 		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
@@ -78,7 +78,7 @@ func InstallKubeVirt(host, user, key string) error {
 // applyKubeVirtManifest applies a KubeVirt manifest using kubectl
 func applyKubeVirtManifest(cfg *KubeVirtConfig, manifest string) error {
 	url := fmt.Sprintf("%s/%s", cfg.BaseURL, manifest)
-	cmd := fmt.Sprintf("kubectl apply -f %s", url)
+	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s", url)
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
