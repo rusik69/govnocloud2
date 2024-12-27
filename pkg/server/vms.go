@@ -7,9 +7,10 @@ import (
 
 	"log"
 
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
-	"strings"
 )
 
 // VMManager handles VM operations
@@ -85,12 +86,12 @@ func (m *VMManager) ListVMs(namespace string) ([]string, error) {
 		log.Printf("failed to list VMs: %v", err)
 		return nil, fmt.Errorf("failed to list VMs: %w", err)
 	}
-	
+
 	// If output is empty, return empty slice
 	if len(out) == 0 {
 		return []string{}, nil
 	}
-	
+
 	// Split the space-separated output into slice
 	names := strings.Fields(string(out))
 	return names, nil
