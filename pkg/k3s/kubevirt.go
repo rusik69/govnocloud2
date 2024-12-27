@@ -63,7 +63,7 @@ func InstallKubeVirt(host, user, key string) error {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
 	// FIXME: wait for crds
-	time.Sleep(10 * time.Second)
+	time.Sleep(20 * time.Second)
 	// Create kubevirt instance types
 	for _, size := range types.VMSizes {
 		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
