@@ -31,7 +31,7 @@ func ListDBsHandler(c *gin.Context) {
 	dbs, err := manager.ListDBs()
 	if err != nil {
 		log.Printf("failed to list databases: %v", err)
-		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list databases: %v", err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to list databases: %v", err)})
 		return
 	}
 	c.JSON(http.StatusOK, dbs)

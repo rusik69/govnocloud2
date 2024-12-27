@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
+	"strings"
 )
 
 // VMManager handles VM operations
@@ -84,14 +85,15 @@ func (m *VMManager) ListVMs(namespace string) ([]string, error) {
 		log.Printf("failed to list VMs: %v", err)
 		return nil, fmt.Errorf("failed to list VMs: %w", err)
 	}
-
-	var res []string
-	if err := json.Unmarshal(out, &res); err != nil {
-		log.Printf("failed to parse VM list: %v", err)
-		return nil, fmt.Errorf("failed to parse VM list: %w", err)
+	
+	// If output is empty, return empty slice
+	if len(out) == 0 {
+		return []string{}, nil
 	}
-
-	return res, nil
+	
+	// Split the space-separated output into slice
+	names := strings.Fields(string(out))
+	return names, nil
 }
 
 // Add this struct before the GetVM function
