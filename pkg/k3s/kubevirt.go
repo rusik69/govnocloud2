@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
-	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 // KubeVirtConfig holds KubeVirt installation configuration
@@ -63,15 +62,15 @@ func InstallKubeVirt(host, user, key string) error {
 		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
 	}
 	// FIXME: wait for crds
-	time.Sleep(30 * time.Second)
+	// time.Sleep(30 * time.Second)
 	// Create kubevirt instance types
-	for _, size := range types.VMSizes {
-		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
-		log.Println(cmd)
-		if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
-			return fmt.Errorf("failed to create kubevirt instance type: %w", err)
-		}
-	}
+	// for _, size := range types.VMSizes {
+	// 	cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
+	// 	log.Println(cmd)
+	// 	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
+	// 		return fmt.Errorf("failed to create kubevirt instance type: %w", err)
+	// 	}
+	// }
 	return nil
 }
 
