@@ -26,6 +26,9 @@ func TestListVMs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error listing VMs: %v", err)
 	}
+	if len(vms) == 0 {
+		t.Fatalf("no VMs found")
+	}
 	t.Logf("VMs: %v", vms)
 }
 

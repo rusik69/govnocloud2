@@ -105,7 +105,7 @@ spec:
 	}
 
 	// Apply the configuration
-	out, err := m.kubectl.Run("apply", "-f", tmpfile.Name())
+	out, err := m.kubectl.Run("apply", "-f", tmpfile.Name(), "--wait=true", "--timeout=600s")
 	if err != nil {
 		return fmt.Errorf("failed to create VM %s: %s: %w", vm.Name, out, err)
 	}

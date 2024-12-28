@@ -68,7 +68,7 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 }
 
 // ListVMs lists VMs.
-func (c *Client) ListVMs(namespace string) ([]types.VM, error) {
+func (c *Client) ListVMs(namespace string) ([]string, error) {
 	url := fmt.Sprintf("%s/vms/%s", c.baseURL, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -81,7 +81,7 @@ func (c *Client) ListVMs(namespace string) ([]types.VM, error) {
 		return nil, fmt.Errorf("error listing VMs: status=%s body=%s", resp.Status, string(body))
 	}
 
-	var vms []types.VM
+	var vms []string
 	if err := json.NewDecoder(resp.Body).Decode(&vms); err != nil {
 		return nil, fmt.Errorf("error decoding VMs: %w", err)
 	}
