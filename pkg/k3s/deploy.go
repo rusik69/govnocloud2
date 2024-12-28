@@ -57,7 +57,7 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 	}
 
 	// Sync web files
-	if err := ssh.Rsync(webPath+"/*", "/var/www/govnocloud2/", host, "root", key); err != nil {
+	if err := ssh.Rsync("pkg/web/templates/*", webPath, host, "root", key); err != nil {
 		return fmt.Errorf("failed to sync web files: %w", err)
 	}
 

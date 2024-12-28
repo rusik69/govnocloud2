@@ -128,7 +128,7 @@ func initConfig() error {
 		Web: WebConfig{
 			Host: "0.0.0.0",
 			Port: "8080",
-			Path: "pkg/web/templates",
+			Path: "/var/www/govnocloud2",
 		},
 		Client: ClientConfig{
 			Host: "127.0.0.1",
