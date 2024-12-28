@@ -124,7 +124,7 @@ func ListVMsHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("vms: %+v", vms)
-	respondWithSuccess(c, vms)
+	c.JSON(http.StatusOK, vms)
 }
 
 // ListVMs returns a list of virtual machines
