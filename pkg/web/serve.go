@@ -52,3 +52,9 @@ func (s *WebServer) handleIndex(c *gin.Context) {
 		"Version":     "v2.0.0",
 	})
 }
+
+// Listen starts the web server
+func Listen(host, port, path string) error {
+	server := NewWebServer()
+	return server.Start(host + ":" + port)
+}
