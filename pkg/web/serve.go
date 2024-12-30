@@ -41,6 +41,10 @@ func (s *WebServer) Start(addr string) error {
 	// Setup routes
 	s.router.GET("/", s.handleIndex)
 	s.router.GET("/nodes", s.handleNodes)
+	s.router.GET("/vms", s.handleVms)
+	s.router.GET("/volumes", s.handleVolumes)
+	s.router.GET("/containers", s.handleContainers)
+	s.router.GET("/dbs", s.handleDbs)
 
 	return s.router.Run(addr)
 }
@@ -55,6 +59,42 @@ func (s *WebServer) handleNodes(c *gin.Context) {
 	c.HTML(http.StatusOK, "nodes.html", gin.H{
 		"Title":       "GovnoCloud Dashboard - Nodes",
 		"Description": "Manage your cloud nodes",
+		"Version":     "v2.0.0",
+	})
+}
+
+// handleVms handles the VMs page
+func (s *WebServer) handleVms(c *gin.Context) {
+	c.HTML(http.StatusOK, "vms.html", gin.H{
+		"Title":       "GovnoCloud Dashboard - Virtual Machines",
+		"Description": "Manage your virtual machines",
+		"Version":     "v2.0.0",
+	})
+}
+
+// handleVolumes handles the volumes page
+func (s *WebServer) handleVolumes(c *gin.Context) {
+	c.HTML(http.StatusOK, "volumes.html", gin.H{
+		"Title":       "GovnoCloud Dashboard - Volumes",
+		"Description": "Manage your storage volumes",
+		"Version":     "v2.0.0",
+	})
+}
+
+// handleContainers handles the containers page
+func (s *WebServer) handleContainers(c *gin.Context) {
+	c.HTML(http.StatusOK, "containers.html", gin.H{
+		"Title":       "GovnoCloud Dashboard - Containers",
+		"Description": "Manage your containers",
+		"Version":     "v2.0.0",
+	})
+}
+
+// handleDbs handles the databases page
+func (s *WebServer) handleDbs(c *gin.Context) {
+	c.HTML(http.StatusOK, "dbs.html", gin.H{
+		"Title":       "GovnoCloud Dashboard - Databases",
+		"Description": "Manage your databases",
 		"Version":     "v2.0.0",
 	})
 }
