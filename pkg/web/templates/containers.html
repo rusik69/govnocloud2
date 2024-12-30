@@ -98,7 +98,7 @@
         document.addEventListener('DOMContentLoaded', loadContainers);
 
         function loadContainers() {
-            fetch(`${API_BASE}/containers/default`)
+            fetch(`${API_BASE}/containers`)
                 .then(response => response.json())
                 .then(data => {
                     const containersList = document.getElementById('containers-list');

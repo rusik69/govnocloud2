@@ -185,3 +185,60 @@ func (m *NodeManager) AddNode(node types.Node) error {
 	}
 	return nil
 }
+
+// RestartNodeHandler handles HTTP requests to restart a node
+func RestartNodeHandler(c *gin.Context) {
+	nodeName := c.Param("name")
+	if nodeName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "node name is required"})
+		return
+	}
+
+	manager := NewNodeManager()
+	if err := manager.RestartNode(nodeName); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to restart node: %v", err)})
+		return
+	}
+}
+
+// RestartNode restarts a node
+func (m *NodeManager) RestartNode(name string) error {
+	node, err := m.GetNode(name)
+	if err != nil {
+		return fmt.Errorf("failed to get node: %w", err)
+	}
+	host := node.Host
+	user := node.User
+	key := node.Key
+	password := node.Password
+	if host == "" {
+		return fmt.Errorf("host is required")
+	}
+	if user == "" {
+		return fmt.Errorf("user is required")
+	}
+	if key == "" {
+		return fmt.Errorf("key is required")
+	}
+	if password == "" {
+		return fmt.Errorf("password is required")
+	}
+	_, err = m.kubectl.Run("cordon", "node", name)
+	if err != nil {
+		return fmt.Errorf("failed to cordon node: %w", err)
+	}
+	_, err = m.kubectl.Run("drain", "node", name, "--ignore-daemonsets", "--delete-emptydir-data")
+	if err != nil {
+		return fmt.Errorf("failed to drain node: %w", err)
+	}
+	rebootCmd := fmt.Sprintf("ssh -i %s %s@%s 'sudo reboot'", key, user, host)
+	_, err = m.kubectl.Run(rebootCmd)
+	if err != nil {
+		return fmt.Errorf("failed to reboot node: %w", err)
+	}
+	_, err = m.kubectl.Run("uncordon", "node", name)
+	if err != nil {
+		return fmt.Errorf("failed to uncordon node: %w", err)
+	}
+	return nil
+}
