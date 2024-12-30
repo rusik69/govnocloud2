@@ -32,7 +32,13 @@ var server *Server
 func NewServer(config ServerConfig) *Server {
 	router := gin.New()
 	router.Use(gin.Recovery())
-	router.Use(cors.Default())
+
+	// Configure CORS to allow all origins
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{"*"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	router.Use(cors.New(corsConfig))
+
 	router.Use(LoggingMiddleware())
 
 	return &Server{
