@@ -14,7 +14,7 @@ type MasterConfig struct {
 	Key      string
 	Password string
 	Timeout  int
-	Retries    int
+	Retries  int
 }
 
 // K3sFiles represents important k3s file paths
@@ -30,7 +30,7 @@ func NewMasterConfig(host, user, key string) *MasterConfig {
 		User:    user,
 		Key:     key,
 		Timeout: 600,
-		Retries:   3,
+		Retries: 3,
 	}
 }
 
@@ -111,8 +111,9 @@ func (m *MasterConfig) Uninstall() {
 		{"sudo rm -rf /etc/systemd/system/govnocloud2.service || true", "remove service file"},
 		{"sudo systemctl daemon-reload || true", "reload systemd"},
 		{"sudo rm -rf /usr/local/bin/govnocloud2 || true", "remove binary"},
+		{"sudo rm -rf /usr/local/bin/govnocloud2-web || true", "remove web binary"},
+		{"sudo rm -rf /var/www/govnocloud2 || true", "remove web dir"},
 	}
-
 	for _, command := range cleanupCommands {
 		out, err := ssh.Run(command.cmd, m.Host, m.Key, m.User, m.Password, false, 10)
 		if err != nil {
