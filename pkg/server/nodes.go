@@ -112,17 +112,39 @@ func GetNodeHandler(c *gin.Context) {
 
 // GetNode retrieves details of a specific node
 func (m *NodeManager) GetNode(name string) (*types.Node, error) {
-	out, err := m.kubectl.Run("get", "node", name, "-o", "jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}'")
+	// Get node IP
+	ipOut, err := m.kubectl.Run("get", "node", name, "-o", "jsonpath={.status.addresses[?(@.type==\"InternalIP\")].address}")
 	if err != nil {
-		return nil, fmt.Errorf("failed to get node details: %w", err)
+		return nil, fmt.Errorf("failed to get node IP: %w", err)
+	}
+
+	// Get node status
+	statusOut, err := m.kubectl.Run("get", "node", name, "-o", "jsonpath={.status.conditions[?(@.type==\"Ready\")].status}")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get node status: %w", err)
+	}
+
+	// Convert status to a more user-friendly format
+	status := "Unknown"
+	if strings.TrimSpace(string(statusOut)) == "True" {
+		status = "Ready"
+	} else if strings.TrimSpace(string(statusOut)) == "False" {
+		status = "NotReady"
+	}
+
+	// Clean up the IP output
+	host := strings.Trim(strings.TrimSpace(string(ipOut)), "'")
+	if host == "" {
+		return nil, fmt.Errorf("failed to get node IP address")
 	}
 
 	node := types.Node{
-		Host:       string(out),
+		Host:       host,
 		User:       server.config.User,
 		Key:        server.config.Key,
 		Password:   server.config.Password,
 		MasterHost: server.config.MasterHost,
+		Status:     status,
 	}
 	return &node, nil
 }
