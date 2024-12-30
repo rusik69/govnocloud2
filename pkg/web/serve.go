@@ -40,15 +40,21 @@ func NewWebServer() *WebServer {
 func (s *WebServer) Start(addr string) error {
 	// Setup routes
 	s.router.GET("/", s.handleIndex)
+	s.router.GET("/nodes", s.handleNodes)
 
 	return s.router.Run(addr)
 }
 
 // handleIndex handles the main page
 func (s *WebServer) handleIndex(c *gin.Context) {
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"Title":       "GovnoCloud Dashboard",
-		"Description": "Manage your cloud resources",
+	c.Redirect(http.StatusMovedPermanently, "/nodes")
+}
+
+// handleNodes handles the nodes page
+func (s *WebServer) handleNodes(c *gin.Context) {
+	c.HTML(http.StatusOK, "nodes.html", gin.H{
+		"Title":       "GovnoCloud Dashboard - Nodes",
+		"Description": "Manage your cloud nodes",
 		"Version":     "v2.0.0",
 	})
 }
