@@ -11,7 +11,7 @@ import (
 
 // ListNodes retrieves a list of all nodes
 func (c *Client) ListNodes() ([]string, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/api/v0/nodes", c.baseURL))
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s/nodes", c.baseURL))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list nodes: %w", err)
 	}
@@ -31,7 +31,7 @@ func (c *Client) ListNodes() ([]string, error) {
 
 // GetNode retrieves details of a specific node
 func (c *Client) GetNode(name string) (*types.Node, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/api/v0/nodes/%s", c.baseURL, name))
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s/nodes/%s", c.baseURL, name))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node: %w", err)
 	}
@@ -60,7 +60,7 @@ func (c *Client) AddNode(node types.Node) error {
 	}
 
 	resp, err := c.httpClient.Post(
-		fmt.Sprintf("%s/api/v0/nodes", c.baseURL),
+		fmt.Sprintf("%s/nodes", c.baseURL),
 		"application/json",
 		bytes.NewBuffer(nodeJSON),
 	)
@@ -80,7 +80,7 @@ func (c *Client) AddNode(node types.Node) error {
 func (c *Client) DeleteNode(name string) error {
 	req, err := http.NewRequest(
 		http.MethodDelete,
-		fmt.Sprintf("%s/api/v0/nodes/%s", c.baseURL, name),
+		fmt.Sprintf("%s/nodes/%s", c.baseURL, name),
 		nil,
 	)
 	if err != nil {
@@ -103,7 +103,7 @@ func (c *Client) DeleteNode(name string) error {
 // RestartNode restarts a specific node
 func (c *Client) RestartNode(name string) error {
 	resp, err := c.httpClient.Post(
-		fmt.Sprintf("%s/api/v0/nodes/%s/restart", c.baseURL, name),
+		fmt.Sprintf("%s/nodes/%s/restart", c.baseURL, name),
 		"application/json",
 		nil,
 	)
