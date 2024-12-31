@@ -66,22 +66,33 @@ func InstallLonghorn(host, user, keyPath string) error {
 		return fmt.Errorf("failed to install Longhorn: %w", err)
 	}
 
-	// Wait for Longhorn CSI driver to be ready
-	log.Println("Waiting for Longhorn CSI driver to be ready...")
-	time.Sleep(30 * time.Second)
-
-	// Verify CSI driver installation
-	cmd = "kubectl get csidriver driver.longhorn.io"
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
-		return fmt.Errorf("failed to verify CSI driver installation: %w", err)
+	// Wait for Longhorn pods to be ready with retries
+	maxRetries := 10
+	for i := 0; i < maxRetries; i++ {
+		log.Printf("Waiting for Longhorn pods (attempt %d/%d)...", i+1, maxRetries)
+		cmd = "kubectl -n longhorn-system wait --for=condition=ready pod --all --timeout=60s"
+		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err == nil {
+			break
+		}
+		if i == maxRetries-1 {
+			return fmt.Errorf("failed to wait for Longhorn pods after %d attempts", maxRetries)
+		}
+		time.Sleep(30 * time.Second)
 	}
 
-	// Wait for all Longhorn pods to be ready
-	cmd = "kubectl -n longhorn-system wait --for=condition=ready pod --all --timeout=300s"
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
-		return fmt.Errorf("failed to wait for Longhorn pods: %w", err)
+	// Wait for CSI driver to be registered with retries
+	log.Println("Waiting for CSI driver registration...")
+	for i := 0; i < maxRetries; i++ {
+		cmd = "kubectl get csidriver driver.longhorn.io -o name"
+		if out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err == nil && strings.Contains(out, "driver.longhorn.io") {
+			log.Println("CSI driver successfully registered")
+			break
+		}
+		if i == maxRetries-1 {
+			return fmt.Errorf("CSI driver not registered after %d attempts", maxRetries)
+		}
+		log.Printf("CSI driver not ready yet, waiting... (attempt %d/%d)", i+1, maxRetries)
+		time.Sleep(30 * time.Second)
 	}
 
 	log.Println("Longhorn installation completed successfully")
