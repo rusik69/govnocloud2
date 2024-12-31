@@ -2,6 +2,7 @@ package types
 
 // Node represents a node in the cluster
 type Node struct {
+	Name       string `json:"name"`
 	Host       string `json:"host"`
 	User       string `json:"user"`
 	Key        string `json:"key"`
