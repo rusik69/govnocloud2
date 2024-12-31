@@ -73,6 +73,8 @@ func (s *Server) setupRoutes() {
 			nodes.GET("/:name", GetNodeHandler)
 			nodes.DELETE("/:name", DeleteNodeHandler)
 			nodes.GET("/:name/restart", RestartNodeHandler)
+			nodes.GET("/:name/suspend", SuspendNodeHandler)
+			nodes.GET("/:name/resume", ResumeNodeHandler)
 		}
 		dbs := v0.Group("/dbs")
 		{

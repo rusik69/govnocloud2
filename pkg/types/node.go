@@ -9,4 +9,5 @@ type Node struct {
 	Password   string `json:"password"`
 	MasterHost string `json:"master_host"`
 	Status     string `json:"status"`
+	MacAddress string `json:"mac_address"`
 }

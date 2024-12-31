@@ -264,3 +264,46 @@ func (m *NodeManager) RestartNode(name string) error {
 	}
 	return nil
 }
+
+// SuspendNodeHandler handles HTTP requests to suspend a node
+func SuspendNodeHandler(c *gin.Context) {
+	hostName := c.Param("host")
+	if hostName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
+		return
+	}
+	manager := NewNodeManager()
+	if err := manager.SuspendNode(hostName, server.config.User, server.config.Key); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to suspend node: %v", err)})
+		return
+	}
+}
+
+// SuspendNode suspends a node
+func (m *NodeManager) SuspendNode(host, user, key string) error {
+	cmd := fmt.Sprintf("ssh -i %s %s@%s 'sudo systemctl suspend'", key, user, host)
+	_, err := m.kubectl.Run(cmd)
+	if err != nil {
+		return fmt.Errorf("failed to suspend node: %w", err)
+	}
+	return nil
+}
+
+// ResumeNodeHandler handles HTTP requests to resume a node
+func ResumeNodeHandler(c *gin.Context) {
+	hostName := c.Param("host")
+	if hostName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
+		return
+	}
+	manager := NewNodeManager()
+	if err := manager.ResumeNode(hostName, server.config.User, server.config.Key); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to resume node: %v", err)})
+		return
+	}
+}
+
+// ResumeNode resumes a node
+func (m *NodeManager) ResumeNode(host, user, key string) error {
+	return nil
+}
