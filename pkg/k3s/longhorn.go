@@ -60,18 +60,33 @@ func InstallLonghorn(host, user, keyPath string) error {
 		"--set csi.attacherReplicaCount=1 " +
 		"--set csi.provisionerReplicaCount=1 " +
 		"--set csi.resizerReplicaCount=1 " +
-		"--set csi.snapshotterReplicaCount=1"
+		"--set csi.snapshotterReplicaCount=1 " +
+		"--set csi.kubeletRootDir=/var/lib/kubelet " +
+		"--set longhornManager.priorityClass=\"\" " +
+		"--set longhornDriver.priorityClass=\"\""
 	log.Println(cmd)
 	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to install Longhorn: %w", err)
 	}
 
-	// Wait for Longhorn pods to be ready with retries
-	maxRetries := 10
+	// Wait for initial pod creation
+	log.Println("Waiting for initial pod creation...")
+	time.Sleep(30 * time.Second)
+
+	// Check Longhorn pod status
+	maxRetries := 20 // Increased retries
 	for i := 0; i < maxRetries; i++ {
-		log.Printf("Waiting for Longhorn pods (attempt %d/%d)...", i+1, maxRetries)
+		log.Printf("Checking Longhorn pods (attempt %d/%d)...", i+1, maxRetries)
+		cmd = "kubectl -n longhorn-system get pods"
+		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		if err == nil {
+			log.Printf("Pod status:\n%s", out)
+		}
+
+		// Check if all pods are ready
 		cmd = "kubectl -n longhorn-system wait --for=condition=ready pod --all --timeout=60s"
 		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err == nil {
+			log.Println("All Longhorn pods are ready")
 			break
 		}
 		if i == maxRetries-1 {
@@ -80,15 +95,27 @@ func InstallLonghorn(host, user, keyPath string) error {
 		time.Sleep(30 * time.Second)
 	}
 
-	// Wait for CSI driver to be registered with retries
-	log.Println("Waiting for CSI driver registration...")
+	// Check CSI driver registration with debugging
+	log.Println("Checking CSI driver registration...")
 	for i := 0; i < maxRetries; i++ {
-		cmd = "kubectl get csidriver driver.longhorn.io -o name"
-		if out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err == nil && strings.Contains(out, "driver.longhorn.io") {
+		// List all CSI drivers for debugging
+		cmd = "kubectl get csidrivers"
+		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		log.Printf("Available CSI drivers:\n%s", out)
+
+		// Check for Longhorn CSI driver
+		cmd = "kubectl get csidriver driver.longhorn.io"
+		out, err = ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		if err == nil {
+			log.Printf("CSI driver found:\n%s", out)
 			log.Println("CSI driver successfully registered")
 			break
 		}
 		if i == maxRetries-1 {
+			// Get Longhorn manager logs for debugging
+			cmd = "kubectl -n longhorn-system logs -l app=longhorn-manager --tail=100"
+			out, _ := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+			log.Printf("Longhorn manager logs:\n%s", out)
 			return fmt.Errorf("CSI driver not registered after %d attempts", maxRetries)
 		}
 		log.Printf("CSI driver not ready yet, waiting... (attempt %d/%d)", i+1, maxRetries)
