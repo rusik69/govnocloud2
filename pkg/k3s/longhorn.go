@@ -101,6 +101,9 @@ func InstallLonghorn(host, user, keyPath string) error {
 		// List all CSI drivers for debugging
 		cmd = "kubectl get csidrivers"
 		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		if err != nil {
+			return fmt.Errorf("failed to get CSI drivers: %w", err)
+		}
 		log.Printf("Available CSI drivers:\n%s", out)
 
 		// Check for Longhorn CSI driver
