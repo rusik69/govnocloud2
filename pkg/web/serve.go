@@ -45,6 +45,7 @@ func (s *WebServer) Start(addr string) error {
 	s.router.GET("/volumes", s.handleVolumes)
 	s.router.GET("/containers", s.handleContainers)
 	s.router.GET("/dbs", s.handleDbs)
+	s.router.GET("/namespaces", s.handleNamespaces)
 
 	return s.router.Run(addr)
 }
@@ -95,6 +96,15 @@ func (s *WebServer) handleDbs(c *gin.Context) {
 	c.HTML(http.StatusOK, "dbs.html", gin.H{
 		"Title":       "GovnoCloud Dashboard - Databases",
 		"Description": "Manage your databases",
+		"Version":     "v2.0.0",
+	})
+}
+
+// handleNamespaces handles the namespaces page
+func (s *WebServer) handleNamespaces(c *gin.Context) {
+	c.HTML(http.StatusOK, "namespaces.html", gin.H{
+		"Title":       "GovnoCloud Dashboard - Namespaces",
+		"Description": "Manage your Kubernetes namespaces",
 		"Version":     "v2.0.0",
 	})
 }

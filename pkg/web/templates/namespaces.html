@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .namespace-card {
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .namespace-card:hover {
+            transform: translateY(-5px);
+        }
+        .status-badge {
+            float: right;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-terminating {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">GovnoCloud</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/vms">VMs</a>
+                <a class="nav-link" href="/containers">Containers</a>
+                <a class="nav-link" href="/dbs">Databases</a>
+                <a class="nav-link" href="/nodes">Nodes</a>
+                <a class="nav-link active" href="/namespaces">Namespaces</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Namespaces</h2>
+            <button class="btn btn-primary" onclick="showCreateNamespaceModal()">Create Namespace</button>
+        </div>
+
+        <div id="namespaces-list" class="row"></div>
+    </div>
+
+    <!-- Create Namespace Modal -->
+    <div class="modal fade" id="createNamespaceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Namespace</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createNamespaceForm">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" required 
+                                   pattern="[a-z0-9]([-a-z0-9]*[a-z0-9])?"
+                                   title="Name must consist of lowercase letters, numbers, and hyphens, and must start and end with a letter or number">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Resource Quota</label>
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label">CPU Limit</label>
+                                    <input type="number" class="form-control" name="cpu_limit" min="1">
+                                </div>
+                                <div class="col">
+                                    <label class="form-label">Memory Limit (GB)</label>
+                                    <input type="number" class="form-control" name="memory_limit" min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createNamespace()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = 'http://master.govno.cloud:6969/api/v0';
+
+        // Load namespaces on page load
+        document.addEventListener('DOMContentLoaded', loadNamespaces);
+
+        function loadNamespaces() {
+            fetch(`${API_BASE}/namespaces`)
+                .then(response => response.json())
+                .then(data => {
+                    const namespacesList = document.getElementById('namespaces-list');
+                    namespacesList.innerHTML = '';
+                    data.forEach(namespace => {
+                        namespacesList.appendChild(createNamespaceCard(namespace));
+                    });
+                })
+                .catch(error => console.error('Error loading namespaces:', error));
+        }
+
+        function createNamespaceCard(namespace) {
+            const card = document.createElement('div');
+            card.className = 'col-md-4';
+            card.innerHTML = `
+                <div class="card namespace-card">
+                    <div class="card-body">
+                        <span class="badge status-badge ${namespace.status === 'Active' ? 'status-active' : 'status-terminating'}">
+                            ${namespace.status}
+                        </span>
+                        <h5 class="card-title">${namespace.name}</h5>
+                        <p class="card-text">
+                            <strong>Description:</strong> ${namespace.description || 'No description'}<br>
+                            <strong>Created:</strong> ${new Date(namespace.created_at).toLocaleString()}<br>
+                            <strong>Resources:</strong><br>
+                            CPU: ${namespace.cpu_usage || '0'}/${namespace.cpu_limit || '∞'}<br>
+                            Memory: ${namespace.memory_usage || '0'}/${namespace.memory_limit || '∞'} GB
+                        </p>
+                        <div class="btn-group">
+                            <button class="btn btn-danger" onclick="deleteNamespace('${namespace.name}')"
+                                    ${namespace.name === 'default' || namespace.name === 'kube-system' ? 'disabled' : ''}>
+                                Delete
+                            </button>
+                            <button class="btn btn-info" onclick="showNamespaceInfo('${namespace.name}')">
+                                Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function showCreateNamespaceModal() {
+            new bootstrap.Modal(document.getElementById('createNamespaceModal')).show();
+        }
+
+        function createNamespace() {
+            const form = document.getElementById('createNamespaceForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(`${API_BASE}/namespaces/${data.name}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('createNamespaceModal')).hide();
+                form.reset();
+                loadNamespaces();
+            })
+            .catch(error => console.error('Error creating namespace:', error));
+        }
+
+        function deleteNamespace(name) {
+            if (confirm(`Are you sure you want to delete namespace ${name}? This will delete all resources in the namespace!`)) {
+                fetch(`${API_BASE}/namespaces/${name}`, {
+                    method: 'DELETE',
+                })
+                .then(() => loadNamespaces())
+                .catch(error => console.error('Error deleting namespace:', error));
+            }
+        }
+
+        function showNamespaceInfo(name) {
+            fetch(`${API_BASE}/namespaces/${name}`)
+                .then(response => response.json())
+                .then(namespace => {
+                    alert(`Namespace Information:
+                    Name: ${namespace.name}
+                    Status: ${namespace.status}
+                    Created: ${new Date(namespace.created_at).toLocaleString()}
+                    Description: ${namespace.description || 'No description'}
+                    
+                    Resource Usage:
+                    CPU: ${namespace.cpu_usage || '0'}/${namespace.cpu_limit || '∞'}
+                    Memory: ${namespace.memory_usage || '0'}/${namespace.memory_limit || '∞'} GB
+                    
+                    Resource Count:
+                    Pods: ${namespace.pod_count || 0}
+                    Services: ${namespace.service_count || 0}
+                    Volumes: ${namespace.volume_count || 0}`);
+                })
+                .catch(error => console.error('Error getting namespace info:', error));
+        }
+    </script>
+</body>
+</html>
