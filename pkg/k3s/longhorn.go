@@ -48,7 +48,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 		// Install required packages
 		cmd = fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
 			"'sudo apt-get update && "+
-			"sudo apt-get install -y open-iscsi nfs-common util-linux'",
+			"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils'",
 			keyPath, user, nodeIP)
 		log.Printf("Installing required packages on node %s", nodeIP)
 		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
@@ -195,7 +195,6 @@ spec:
 	if out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to apply Longhorn ingress: %s: %w", out, err)
 	}
-
 	// Create basic auth secret for dashboard access
 	cmd = "htpasswd -bc /tmp/auth admin govnocloud"
 	log.Println("Creating basic auth file")
