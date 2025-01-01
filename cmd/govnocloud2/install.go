@@ -188,6 +188,7 @@ var installCmd = &cobra.Command{
 		log.Println("Installing Longhorn")
 		err = k3s.InstallLonghorn(
 			cfg.Install.Master.Host,
+			workersIPsSplit,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
 		)

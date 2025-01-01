@@ -10,41 +10,32 @@ import (
 )
 
 // InstallLonghorn installs Longhorn storage system into the Kubernetes cluster
-func InstallLonghorn(host, user, keyPath string) error {
+func InstallLonghorn(master string, nodes []string, user, keyPath string) error {
 	log.Println("Installing Longhorn storage system...")
 
 	// Add the Longhorn Helm repository
 	cmd := "helm repo add longhorn https://charts.longhorn.io"
 	log.Println(cmd)
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to add Longhorn helm repo: %w", err)
 	}
 
 	// Update Helm repositories
 	cmd = "helm repo update"
 	log.Println(cmd)
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to update helm repos: %w", err)
 	}
 
 	// Create namespace for Longhorn
 	cmd = "kubectl create namespace longhorn-system"
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+	out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0)
 	if err != nil && !strings.Contains(out, "already exists") {
 		return fmt.Errorf("failed to create longhorn namespace: %s: %w", out, err)
 	}
 
-	// Install open-iscsi and other required packages on all nodes
-	cmd = "kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}'"
-	log.Println(cmd)
-	out, err = ssh.Run(cmd, host, keyPath, user, "", true, 0)
-	if err != nil {
-		return fmt.Errorf("failed to get node IPs: %w", err)
-	}
-
-	nodeIPs := strings.Fields(out)
-	for _, nodeIP := range nodeIPs {
+	for _, nodeIP := range nodes {
 		// Install required packages
 		cmd = fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
 			"'sudo apt-get update && "+
@@ -54,7 +45,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 			"sudo systemctl disable --now multipathd.service'",
 			keyPath, user, nodeIP)
 		log.Printf("Installing required packages on node %s", nodeIP)
-		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 			return fmt.Errorf("failed to install packages on node %s: %w", nodeIP, err)
 		}
 
@@ -64,7 +55,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 			"sudo chmod 777 /var/lib/longhorn'",
 			keyPath, user, nodeIP)
 		log.Printf("Creating data directory on node %s", nodeIP)
-		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 			return fmt.Errorf("failed to create data directory on node %s: %w", nodeIP, err)
 		}
 	}
@@ -89,7 +80,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 		"--set longhornDriver.priorityClass=\"\""
 
 	log.Println(cmd)
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to install Longhorn: %w", err)
 	}
 
@@ -102,14 +93,14 @@ func InstallLonghorn(host, user, keyPath string) error {
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("Checking Longhorn pods (attempt %d/%d)...", i+1, maxRetries)
 		cmd = "kubectl -n longhorn-system get pods"
-		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0)
 		if err == nil {
 			log.Printf("Pod status:\n%s", out)
 		}
 
 		// Check if all pods are ready
 		cmd = "kubectl -n longhorn-system wait --for=condition=ready pod --all --timeout=60s"
-		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err == nil {
+		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err == nil {
 			log.Println("All Longhorn pods are ready")
 			break
 		}
@@ -123,7 +114,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 	for _, nodeIP := range nodeIPs {
 		cmd = fmt.Sprintf("kubectl label nodes node-%s node.longhorn.io/create-default-disk=true --overwrite", nodeIP)
 		log.Printf("Labeling node %s for Longhorn storage", nodeIP)
-		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 			return fmt.Errorf("failed to label node %s: %w", nodeIP, err)
 		}
 	}
@@ -133,7 +124,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 	for i := 0; i < maxRetries; i++ {
 		// List all CSI drivers for debugging
 		cmd = "kubectl get csidrivers"
-		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0)
 		if err != nil {
 			return fmt.Errorf("failed to get CSI drivers: %w", err)
 		}
@@ -141,7 +132,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 
 		// Check for Longhorn CSI driver
 		cmd = "kubectl get csidriver driver.longhorn.io"
-		out, err = ssh.Run(cmd, host, keyPath, user, "", true, 0)
+		out, err = ssh.Run(cmd, master, keyPath, user, "", true, 0)
 		if err == nil {
 			log.Printf("CSI driver found:\n%s", out)
 			log.Println("CSI driver successfully registered")
@@ -150,7 +141,7 @@ func InstallLonghorn(host, user, keyPath string) error {
 		if i == maxRetries-1 {
 			// Get Longhorn manager logs for debugging
 			cmd = "kubectl -n longhorn-system logs -l app=longhorn-manager --tail=100"
-			out, _ := ssh.Run(cmd, host, keyPath, user, "", true, 0)
+			out, _ := ssh.Run(cmd, master, keyPath, user, "", true, 0)
 			log.Printf("Longhorn manager logs:\n%s", out)
 			return fmt.Errorf("CSI driver not registered after %d attempts", maxRetries)
 		}
@@ -188,20 +179,20 @@ spec:
 	// Write ingress YAML to a temporary file on the master node
 	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/longhorn-ingress.yaml\n%s\nEOF", ingressYaml)
 	log.Println("Creating Longhorn ingress YAML")
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to create ingress YAML: %w", err)
 	}
 
 	// Apply the ingress configuration
 	cmd = "kubectl apply -f /tmp/longhorn-ingress.yaml"
 	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+	if out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to apply Longhorn ingress: %s: %w", out, err)
 	}
 
 	// Cleanup temporary files
 	cmd = "rm -f /tmp/longhorn-ingress.yaml /tmp/auth"
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		log.Printf("Warning: failed to cleanup temporary files: %v", err)
 	}
 
