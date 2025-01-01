@@ -54,7 +54,7 @@ func InstallLonghorn(master string, nodes []string, user, keyPath string) error 
 	}
 
 	// Install Longhorn using Helm with block device configuration
-	cmd := "helm install longhorn longhorn/longhorn " +
+	cmd = "helm install longhorn longhorn/longhorn " +
 		"--namespace longhorn-system " +
 		"--set persistence.defaultClass=true " +
 		"--set defaultSettings.defaultReplicaCount=1 " +
@@ -122,6 +122,7 @@ spec:
 	}
 
 	// Check CSI driver registration with debugging
+	maxRetries := 20
 	log.Println("Checking CSI driver registration...")
 	for i := 0; i < maxRetries; i++ {
 		// List all CSI drivers for debugging
