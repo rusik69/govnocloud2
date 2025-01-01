@@ -15,12 +15,10 @@ var serverCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("listenHost: ", cfg.Server.Host)
 		log.Println("listenPort: ", cfg.Server.Port)
-		log.Println("etcdHost: ", cfg.Server.Etcd.Host)
-		log.Println("etcdPort: ", cfg.Server.Etcd.Port)
 		log.Println("masterHost: ", cfg.Server.MasterHost)
 		log.Println("user: ", cfg.Server.User)
 		log.Println("password: ", cfg.Server.Password)
 		log.Println("key: ", cfg.Server.Key)
-		server.Serve(cfg.Server.Host, cfg.Server.Port, cfg.Server.User, cfg.Server.Password, cfg.Server.Key, cfg.Server.MasterHost, cfg.Server.Etcd.Host, cfg.Server.Etcd.Port)
+		server.Serve(cfg.Server.Host, cfg.Server.Port, cfg.Server.User, cfg.Server.Password, cfg.Server.Key, cfg.Server.MasterHost)
 	},
 }

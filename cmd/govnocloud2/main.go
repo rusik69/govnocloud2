@@ -50,7 +50,6 @@ type ServerConfig struct {
 	Password   string
 	Key        string
 	MasterHost string
-	Etcd       EtcdConfig
 }
 
 type WebConfig struct {
@@ -86,11 +85,6 @@ type InstallConfig struct {
 		Port string
 	}
 	ImagesDir string
-}
-
-type EtcdConfig struct {
-	Host     string
-	Port     string
 }
 
 var (
@@ -130,10 +124,6 @@ func initConfig() error {
 		Server: ServerConfig{
 			Host: "0.0.0.0",
 			Port: "6969",
-			Etcd: EtcdConfig{
-				Host:     "localhost",
-				Port:     "2379",
-			},
 		},
 		Web: WebConfig{
 			Host: "0.0.0.0",
@@ -195,12 +185,6 @@ func setupCommands() {
 	}
 
 	toolCmd.AddCommand(wolCmd, suspendCmd)
-}
-
-func setupEtcdFlags(cmd *cobra.Command) {
-	flags := cmd.Flags()
-	flags.StringVarP(&cfg.Server.Etcd.Host, "etcdhost", "", cfg.Server.Etcd.Host, "etcd host")
-	flags.StringVarP(&cfg.Server.Etcd.Port, "etcdport", "", cfg.Server.Etcd.Port, "etcd port")
 }
 
 func setupInstallFlags(cmd *cobra.Command) {
@@ -270,7 +254,6 @@ func init() {
 
 	setupCommands()
 	setupInstallFlags(installCmd)
-	setupEtcdFlags(installCmd)
 	setupUninstallFlags(uninstallCmd)
 	setupServerFlags(serverCmd)
 	setupClientFlags(clientCmd)
