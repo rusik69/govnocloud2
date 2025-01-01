@@ -49,7 +49,9 @@ func InstallLonghorn(host, user, keyPath string) error {
 		cmd = fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
 			"'sudo apt-get update && "+
 			"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils nfs-common && "+
-			"modprobe dm_crypt'",
+			"sudo modprobe dm_crypt && "+
+			"sudo systemctl disable --now multipathd.socket && "+
+			"sudo systemctl disable --now multipathd.service'",
 			keyPath, user, nodeIP)
 		log.Printf("Installing required packages on node %s", nodeIP)
 		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
