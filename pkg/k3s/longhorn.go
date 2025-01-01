@@ -195,27 +195,6 @@ spec:
 	if out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to apply Longhorn ingress: %s: %w", out, err)
 	}
-	// Create basic auth secret for dashboard access
-	cmd = "htpasswd -bc /tmp/auth admin govnocloud"
-	log.Println("Creating basic auth file")
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
-		return fmt.Errorf("failed to create basic auth file: %w", err)
-	}
-
-	// Create Kubernetes secret from basic auth file
-	cmd = "kubectl create secret generic basic-auth --from-file=/tmp/auth -n longhorn-system"
-	log.Println(cmd)
-	out, err = ssh.Run(cmd, host, keyPath, user, "", true, 0)
-	if err != nil && !strings.Contains(out, "already exists") {
-		return fmt.Errorf("failed to create basic auth secret: %s: %w", out, err)
-	}
-
-	// Add basic auth annotation to ingress
-	cmd = "kubectl annotate ingress longhorn-ingress -n longhorn-system nginx.ingress.kubernetes.io/auth-type=basic nginx.ingress.kubernetes.io/auth-secret=basic-auth --overwrite"
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
-		return fmt.Errorf("failed to add basic auth to ingress: %w", err)
-	}
 
 	// Wait for ingress to be ready
 	log.Println("Waiting for Longhorn dashboard to be accessible...")
@@ -225,8 +204,6 @@ spec:
 		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
 		if err == nil && strings.Contains(out, "master.govno.cloud") {
 			log.Println("Longhorn dashboard is accessible at: http://master.govno.cloud")
-			log.Println("Username: admin")
-			log.Println("Password: govnocloud")
 			break
 		}
 		if i == maxRetries-1 {
