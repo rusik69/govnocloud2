@@ -110,7 +110,7 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 	}
 
 	// Install etcd
-	cmd = "sudo apt install etcd"
+	cmd = "sudo apt install -y etcd-server"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, password, false, 30); err != nil {
 		return fmt.Errorf("failed to install etcd: %s", out)
