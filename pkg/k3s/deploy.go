@@ -109,6 +109,13 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 		return fmt.Errorf("failed to copy web service: %w", err)
 	}
 
+	// Install etcd
+	cmd = "sudo apt install etcd"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, password, false, 30); err != nil {
+		return fmt.Errorf("failed to install etcd: %s", out)
+	}
+
 	// Reload systemd and enable services
 	commands := []struct {
 		cmd  string
@@ -117,6 +124,7 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 		{"sudo systemctl daemon-reload", "reload systemd"},
 		{"sudo systemctl enable --now govnocloud2", "enable server service"},
 		{"sudo systemctl enable --now govnocloud2-web", "enable web service"},
+		{"sudo systemctl enable --now etcd", "enable etcd service"},
 	}
 
 	for _, command := range commands {

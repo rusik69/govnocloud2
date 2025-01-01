@@ -113,6 +113,7 @@ func (m *MasterConfig) Uninstall() {
 		{"sudo rm -rf /usr/local/bin/govnocloud2 || true", "remove binary"},
 		{"sudo rm -rf /usr/local/bin/govnocloud2-web || true", "remove web binary"},
 		{"sudo rm -rf /var/www/govnocloud2 || true", "remove web dir"},
+		{"sudo rm -rf /var/lib/etcd || true", "remove etcd data"},
 	}
 	for _, command := range cleanupCommands {
 		out, err := ssh.Run(command.cmd, m.Host, m.Key, m.User, m.Password, false, 10)

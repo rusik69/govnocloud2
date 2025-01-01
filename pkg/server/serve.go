@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	etcdclientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // ServerConfig holds server configuration
@@ -18,12 +19,15 @@ type ServerConfig struct {
 	Password   string
 	Key        string
 	MasterHost string
+	EtcdHost   string
+	EtcdPort   string
 }
 
 // Server represents the HTTP server
 type Server struct {
 	config ServerConfig
 	router *gin.Engine
+	etcd   *etcdclientv3.Client
 }
 
 var server *Server
@@ -45,9 +49,15 @@ func NewServer(config ServerConfig) *Server {
 
 	router.Use(LoggingMiddleware())
 
+	etcd, err := NewEtcdClient(config.EtcdHost, config.EtcdPort)
+	if err != nil {
+		log.Fatalf("Failed to create etcd client: %v", err)
+	}
+
 	return &Server{
 		config: config,
 		router: router,
+		etcd:   etcd.client,
 	}
 }
 
@@ -125,7 +135,7 @@ func (s *Server) Start() error {
 }
 
 // Serve starts the server with the given configuration
-func Serve(host, port, user, password, key, masterHost string) {
+func Serve(host, port, user, password, key, masterHost, etcdHost, etcdPort string) {
 	config := ServerConfig{
 		Host:       host,
 		Port:       port,
@@ -133,6 +143,8 @@ func Serve(host, port, user, password, key, masterHost string) {
 		Password:   password,
 		Key:        key,
 		MasterHost: masterHost,
+		EtcdHost:   etcdHost,
+		EtcdPort:   etcdPort,
 	}
 
 	server = NewServer(config)

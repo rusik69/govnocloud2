@@ -194,15 +194,5 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-
-		log.Println("Installing etcd")
-		err = k3s.InstallEtcd(
-			cfg.Install.Master.Host,
-			cfg.Install.SSH.User,
-			cfg.Install.SSH.KeyPath,
-		)
-		if err != nil {
-			panic(err)
-		}
 	},
 }
