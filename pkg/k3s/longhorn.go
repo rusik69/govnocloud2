@@ -57,6 +57,9 @@ func InstallLonghorn(host, user, keyPath string) error {
 	cmd = "helm install longhorn longhorn/longhorn " +
 		"--namespace longhorn-system " +
 		"--set persistence.defaultClass=true " +
+		"--set defaultSettings.defaultReplicaCount=1 " +
+		"--set defaultSettings.createDefaultDiskLabeledNodes=true " +
+		"--set defaultSettings.defaultDataPath=/dev/sda " +
 		"--set csi.attacherReplicaCount=1 " +
 		"--set csi.provisionerReplicaCount=1 " +
 		"--set csi.resizerReplicaCount=1 " +
@@ -93,6 +96,15 @@ func InstallLonghorn(host, user, keyPath string) error {
 			return fmt.Errorf("failed to wait for Longhorn pods after %d attempts", maxRetries)
 		}
 		time.Sleep(30 * time.Second)
+	}
+
+	// Label nodes for Longhorn storage
+	for _, nodeIP := range nodeIPs {
+		cmd = fmt.Sprintf("kubectl label nodes node-%s node.longhorn.io/create-default-disk=true --overwrite", nodeIP)
+		log.Printf("Labeling node %s for Longhorn storage", nodeIP)
+		if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
+			return fmt.Errorf("failed to label node %s: %w", nodeIP, err)
+		}
 	}
 
 	// Check CSI driver registration with debugging
