@@ -196,23 +196,6 @@ spec:
 		return fmt.Errorf("failed to apply Longhorn ingress: %s: %w", out, err)
 	}
 
-	// Wait for ingress to be ready
-	log.Println("Waiting for Longhorn dashboard to be accessible...")
-	maxRetries = 10
-	for i := 0; i < maxRetries; i++ {
-		cmd = "kubectl get ingress -n longhorn-system longhorn-ingress"
-		out, err := ssh.Run(cmd, host, keyPath, user, "", true, 0)
-		if err == nil && strings.Contains(out, "master.govno.cloud") {
-			log.Println("Longhorn dashboard is accessible at: http://master.govno.cloud")
-			break
-		}
-		if i == maxRetries-1 {
-			return fmt.Errorf("failed to verify Longhorn dashboard access after %d attempts", maxRetries)
-		}
-		log.Printf("Waiting for ingress to be ready (attempt %d/%d)...", i+1, maxRetries)
-		time.Sleep(10 * time.Second)
-	}
-
 	// Cleanup temporary files
 	cmd = "rm -f /tmp/longhorn-ingress.yaml /tmp/auth"
 	if _, err := ssh.Run(cmd, host, keyPath, user, "", true, 0); err != nil {
