@@ -170,7 +170,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   rules:
-  - host: master.govno.cloud
+  - host: longhorn.govno.cloud
     http:
       paths:
       - path: /
