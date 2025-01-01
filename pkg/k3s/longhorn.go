@@ -37,40 +37,39 @@ func InstallLonghorn(master string, nodes []string, user, keyPath string) error 
 
 	for _, nodeIP := range nodes {
 		// Install required packages
-		cmd = fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
+		cmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
 			"'sudo apt-get update && "+
-			"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils nfs-common && "+
+			"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils && "+
 			"sudo modprobe dm_crypt && "+
 			"sudo systemctl disable --now multipathd.socket && "+
-			"sudo systemctl disable --now multipathd.service'",
+			"sudo systemctl disable --now multipathd.service && "+
+			"sudo systemctl enable --now iscsid && "+
+			"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 && "+
+			"sudo blockdev --rereadpt /dev/sda'",
 			keyPath, user, nodeIP)
-		log.Printf("Installing required packages on node %s", nodeIP)
+		log.Printf("Installing required packages and preparing disk on node %s", nodeIP)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
-			return fmt.Errorf("failed to install packages on node %s: %w", nodeIP, err)
-		}
-
-		// Create data directory
-		cmd = fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
-			"'sudo mkdir -p /var/lib/longhorn && "+
-			"sudo chmod 777 /var/lib/longhorn'",
-			keyPath, user, nodeIP)
-		log.Printf("Creating data directory on node %s", nodeIP)
-		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
-			return fmt.Errorf("failed to create data directory on node %s: %w", nodeIP, err)
+			return fmt.Errorf("failed to prepare node %s: %w", nodeIP, err)
 		}
 	}
 
-	// Install Longhorn using Helm with specific configuration
-	cmd = "helm install longhorn longhorn/longhorn " +
+	// Install Longhorn using Helm with block device configuration
+	cmd := "helm install longhorn longhorn/longhorn " +
 		"--namespace longhorn-system " +
 		"--set persistence.defaultClass=true " +
 		"--set defaultSettings.defaultReplicaCount=1 " +
 		"--set defaultSettings.createDefaultDiskLabeledNodes=true " +
-		"--set defaultSettings.defaultDataPath=/var/lib/longhorn " +
+		"--set defaultSettings.defaultDataPath=/dev/sda " +
 		"--set defaultSettings.defaultDataLocality=disabled " +
 		"--set defaultSettings.replicaSoftAntiAffinity=true " +
 		"--set defaultSettings.storageOverProvisioningPercentage=200 " +
 		"--set defaultSettings.storageMinimalAvailablePercentage=10 " +
+		"--set defaultSettings.disableSchedulingOnCordonedNode=true " +
+		"--set defaultSettings.nodeDownPodDeletionPolicy=delete-both-statefulset-and-deployment-pod " +
+		"--set defaultSettings.allowNodeDrainWithLastHealthyReplica=true " +
+		"--set defaultSettings.autoCleanupSystemGeneratedSnapshot=true " +
+		"--set defaultSettings.concurrentAutomaticEngineUpgrade=3 " +
+		"--set defaultSettings.backingImageCleanupWaitInterval=600 " +
 		"--set csi.attacherReplicaCount=1 " +
 		"--set csi.provisionerReplicaCount=1 " +
 		"--set csi.resizerReplicaCount=1 " +
@@ -88,34 +87,37 @@ func InstallLonghorn(master string, nodes []string, user, keyPath string) error 
 	log.Println("Waiting for initial pod creation...")
 	time.Sleep(30 * time.Second)
 
-	// Check Longhorn pod status
-	maxRetries := 20 // Increased retries
-	for i := 0; i < maxRetries; i++ {
-		log.Printf("Checking Longhorn pods (attempt %d/%d)...", i+1, maxRetries)
-		cmd = "kubectl -n longhorn-system get pods"
-		out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0)
-		if err == nil {
-			log.Printf("Pod status:\n%s", out)
-		}
-
-		// Check if all pods are ready
-		cmd = "kubectl -n longhorn-system wait --for=condition=ready pod --all --timeout=60s"
-		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err == nil {
-			log.Println("All Longhorn pods are ready")
-			break
-		}
-		if i == maxRetries-1 {
-			return fmt.Errorf("failed to wait for Longhorn pods after %d attempts", maxRetries)
-		}
-		time.Sleep(30 * time.Second)
-	}
-
-	// Label nodes for Longhorn storage
+	// Label nodes and configure disks
 	for _, nodeIP := range nodes {
+		// Label node for Longhorn
 		cmd = fmt.Sprintf("kubectl label nodes node-%s node.longhorn.io/create-default-disk=true --overwrite", nodeIP)
 		log.Printf("Labeling node %s for Longhorn storage", nodeIP)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 			return fmt.Errorf("failed to label node %s: %w", nodeIP, err)
+		}
+
+		// Create disk config
+		diskConfig := fmt.Sprintf(`
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: node-%s
+  namespace: longhorn-system
+spec:
+  disks:
+    sda:
+      path: /dev/sda
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 0
+      tags: []
+`, nodeIP)
+
+		// Apply disk configuration
+		cmd = fmt.Sprintf("cat << 'EOF' | kubectl apply -f -\n%s\nEOF", diskConfig)
+		log.Printf("Configuring disk on node %s", nodeIP)
+		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
+			return fmt.Errorf("failed to configure disk on node %s: %w", nodeIP, err)
 		}
 	}
 
