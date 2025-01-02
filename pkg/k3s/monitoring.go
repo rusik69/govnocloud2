@@ -19,10 +19,13 @@ type MonitoringConfig struct {
 		Chart     string
 		Namespace string
 	}
-	Values MonitoringValues
-	Host   string
-	User   string
-	Key    string
+	Values           MonitoringValues
+	Host             string
+	User             string
+	Key              string
+	GrafanaHost      string
+	PrometheusHost   string
+	AlertmanagerHost string
 }
 
 // MonitoringValues represents the Helm values for monitoring
@@ -47,7 +50,7 @@ type MonitoringServiceConfig struct {
 }
 
 // NewMonitoringConfig creates a default monitoring configuration
-func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
+func NewMonitoringConfig(host, user, key string, grafanaHost, prometheusHost, alertmanagerHost string) *MonitoringConfig {
 	return &MonitoringConfig{
 		HelmRepo: struct {
 			Name string
@@ -77,15 +80,19 @@ func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 				},
 			},
 		},
-		Host: host,
-		User: user,
-		Key:  key,
+		Host:             host,
+		User:             user,
+		Key:              key,
+		GrafanaHost:      grafanaHost,
+		PrometheusHost:   prometheusHost,
+		AlertmanagerHost: alertmanagerHost,
 	}
 }
 
 // DeployPrometheus deploys Prometheus Operator stack to k3s cluster
-func DeployPrometheus(host, user, key string) error {
-	cfg := NewMonitoringConfig(host, user, key)
+func DeployPrometheus(host, user, key string, grafanaHost, prometheusHost, alertmanagerHost string) error {
+
+	cfg := NewMonitoringConfig(host, user, key, grafanaHost, prometheusHost, alertmanagerHost)
 
 	if err := createMonitoringNamespace(cfg); err != nil {
 		return fmt.Errorf("failed to create monitoring namespace: %w", err)
@@ -256,7 +263,7 @@ func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
 
 // createMonitoringIngresses creates ingress resources for monitoring components
 func createMonitoringIngresses(cfg *MonitoringConfig) error {
-	ingressYaml := `
+	ingressYaml := fmt.Sprintf(`
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -267,7 +274,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   rules:
-  - host: grafana.govno.cloud
+  - host: %s
     http:
       paths:
       - path: /
@@ -277,7 +284,7 @@ spec:
             name: monitoring-grafana
             port:
               number: 80
-  - host: prometheus.govno.cloud
+  - host: %s
     http:
       paths:
       - path: /
@@ -287,7 +294,7 @@ spec:
             name: monitoring-kube-prometheus-prometheus
             port:
               number: 9090
-  - host: alertmanager.govno.cloud
+  - host: %s
     http:
       paths:
       - path: /
@@ -297,7 +304,7 @@ spec:
             name: monitoring-kube-prometheus-alertmanager
             port:
               number: 9093
-`
+`, cfg.GrafanaHost, cfg.PrometheusHost, cfg.AlertmanagerHost)
 
 	// Write and apply ingress configuration
 	cmd := fmt.Sprintf("cat << 'EOF' > /tmp/monitoring-ingress.yaml\n%s\nEOF", ingressYaml)
@@ -313,9 +320,9 @@ spec:
 	}
 
 	log.Println("Monitoring stack is accessible at:")
-	log.Println("- Grafana: http://grafana.govno.cloud (admin/govnocloud)")
-	log.Println("- Prometheus: http://prometheus.govno.cloud")
-	log.Println("- Alertmanager: http://alertmanager.govno.cloud")
+	log.Printf("- Grafana: http://%s", cfg.GrafanaHost)
+	log.Printf("- Prometheus: http://%s", cfg.PrometheusHost)
+	log.Printf("- Alertmanager: http://%s", cfg.AlertmanagerHost)
 
 	return nil
 }

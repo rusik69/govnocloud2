@@ -84,7 +84,13 @@ type InstallConfig struct {
 	Server struct {
 		Port string
 	}
-	ImagesDir string
+	ImagesDir  string
+	Monitoring struct {
+		Enabled          bool
+		GrafanaHost      string
+		PrometheusHost   string
+		AlertmanagerHost string
+	}
 }
 
 var (
@@ -164,6 +170,17 @@ func initConfig() error {
 				PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
 			},
 			ImagesDir: "/var/lib/govnocloud2/images",
+			Monitoring: struct {
+				Enabled          bool
+				GrafanaHost      string
+				PrometheusHost   string
+				AlertmanagerHost string
+			}{
+				Enabled:          true,
+				GrafanaHost:      "grafana.govno.cloud",
+				PrometheusHost:   "prometheus.govno.cloud",
+				AlertmanagerHost: "alertmanager.govno.cloud",
+			},
 		},
 	}
 
@@ -201,6 +218,10 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Master.KeyPath, "masterkey", "", cfg.Install.Master.KeyPath, "master key path")
 	flags.StringVarP(&cfg.Install.Workers.Interface, "interface", "", cfg.Install.Workers.Interface, "interface name")
 	flags.StringVarP(&cfg.Install.ImagesDir, "imagesdir", "", cfg.Install.ImagesDir, "images directory")
+	flags.BoolVarP(&cfg.Install.Monitoring.Enabled, "monitoring", "", cfg.Install.Monitoring.Enabled, "enable monitoring")
+	flags.StringVarP(&cfg.Install.Monitoring.GrafanaHost, "grafanahost", "", cfg.Install.Monitoring.GrafanaHost, "grafana host")
+	flags.StringVarP(&cfg.Install.Monitoring.PrometheusHost, "prometheushost", "", cfg.Install.Monitoring.PrometheusHost, "prometheus host")
+	flags.StringVarP(&cfg.Install.Monitoring.AlertmanagerHost, "alertmanagerhost", "", cfg.Install.Monitoring.AlertmanagerHost, "alertmanager host")
 }
 
 func setupUninstallFlags(cmd *cobra.Command) {

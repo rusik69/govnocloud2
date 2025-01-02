@@ -165,16 +165,6 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
-		log.Println("Installing monitoring stack")
-		err = k3s.DeployPrometheus(
-			cfg.Install.Master.Host,
-			cfg.Install.SSH.User,
-			cfg.Install.SSH.KeyPath,
-		)
-		if err != nil {
-			panic(err)
-		}
-
 		log.Println("Installing KubeVirt")
 		err = k3s.InstallKubeVirt(
 			cfg.Install.Master.Host,
@@ -194,6 +184,22 @@ var installCmd = &cobra.Command{
 		)
 		if err != nil {
 			panic(err)
+		}
+		if cfg.Install.Monitoring.Enabled {
+			log.Println("Installing monitoring stack")
+			err = k3s.DeployPrometheus(
+				cfg.Install.Master.Host,
+				cfg.Install.SSH.User,
+				cfg.Install.SSH.KeyPath,
+				cfg.Install.Monitoring.GrafanaHost,
+				cfg.Install.Monitoring.PrometheusHost,
+				cfg.Install.Monitoring.AlertmanagerHost,
+			)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			log.Println("Monitoring is not enabled")
 		}
 	},
 }
