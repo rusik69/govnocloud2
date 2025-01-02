@@ -61,19 +61,19 @@ func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 			Chart     string
 			Namespace string
 		}{
-			Name:      "prometheus",
-			Chart:     "prometheus-community/prometheus",
+			Name:      "monitoring",
+			Chart:     "prometheus-community/kube-prometheus-stack",
 			Namespace: "monitoring",
 		},
 		Values: MonitoringValues{
 			Prometheus: PrometheusConfig{
 				Service: MonitoringServiceConfig{
-					Type: "NodePort",
+					Type: "ClusterIP",
 				},
 			},
 			Grafana: GrafanaConfig{
 				Service: MonitoringServiceConfig{
-					Type: "NodePort",
+					Type: "ClusterIP",
 				},
 			},
 		},
@@ -83,11 +83,10 @@ func NewMonitoringConfig(host, user, key string) *MonitoringConfig {
 	}
 }
 
-// DeployPrometheus deploys Prometheus to k3s cluster.
+// DeployPrometheus deploys Prometheus Operator stack to k3s cluster
 func DeployPrometheus(host, user, key string) error {
 	cfg := NewMonitoringConfig(host, user, key)
 
-	// Create monitoring namespace first
 	if err := createMonitoringNamespace(cfg); err != nil {
 		return fmt.Errorf("failed to create monitoring namespace: %w", err)
 	}
@@ -123,7 +122,23 @@ func deployMonitoringStack(cfg *MonitoringConfig) error {
 	}
 	defer os.Remove(valuesFile)
 
-	return installMonitoringChart(cfg, valuesFile)
+	if err := installMonitoringChart(cfg, valuesFile); err != nil {
+		return err
+	}
+
+	// Wait for pods to be ready
+	log.Println("Waiting for monitoring pods to be ready...")
+	cmd := "kubectl -n monitoring wait --for=condition=ready pod --all --timeout=300s"
+	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 0); err != nil {
+		log.Printf("Warning: Some pods are not ready: %v", err)
+	}
+
+	// Create ingresses
+	if err := createMonitoringIngresses(cfg); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // addHelmRepo adds the Prometheus Helm repository
@@ -155,26 +170,60 @@ func updateHelmRepos(cfg *MonitoringConfig) error {
 // createValuesFile creates a temporary values file for Helm
 func createValuesFile(values MonitoringValues) (string, error) {
 	valuesYaml := `
-prometheus:
-  service:
-    type: NodePort
 grafana:
-  service:
-    type: NodePort
   persistence:
     enabled: true
-    size: 10Gi
+    size: 5Gi
+  service:
+    type: ClusterIP
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
 alertmanager:
-  service:
-    type: NodePort
-  persistence:
-    enabled: true
-    size: 2Gi
-server:
-  persistentVolume:
-    enabled: true
-    size: 50Gi
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false
+  tls:
+    enabled: false
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: true
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserver: true
+    kubePrometheusNodeAlerting: true
+    kubePrometheusNodeRecording: true
+    kubernetesAbsent: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeScheduler: true
+    network: true
+    node: true
+    prometheus: true
+    prometheusOperator: true
+    time: true
 `
+
 	file, err := os.CreateTemp("", "values-*.yaml")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temporary values file: %w", err)
@@ -201,6 +250,72 @@ func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
 	if err != nil {
 		return fmt.Errorf("failed to install monitoring stack: %w", err)
 	}
+
+	return nil
+}
+
+// createMonitoringIngresses creates ingress resources for monitoring components
+func createMonitoringIngresses(cfg *MonitoringConfig) error {
+	ingressYaml := `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-ingress
+  namespace: monitoring
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+spec:
+  rules:
+  - host: grafana.govno.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-grafana
+            port:
+              number: 80
+  - host: prometheus.govno.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-kube-prometheus-prometheus
+            port:
+              number: 9090
+  - host: alertmanager.govno.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-kube-prometheus-alertmanager
+            port:
+              number: 9093
+`
+
+	// Write and apply ingress configuration
+	cmd := fmt.Sprintf("cat << 'EOF' > /tmp/monitoring-ingress.yaml\n%s\nEOF", ingressYaml)
+	log.Println("Creating monitoring ingress YAML")
+	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 0); err != nil {
+		return fmt.Errorf("failed to create ingress YAML: %w", err)
+	}
+
+	cmd = "kubectl apply -f /tmp/monitoring-ingress.yaml -n monitoring"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 0); err != nil {
+		return fmt.Errorf("failed to apply monitoring ingress: %s: %w", out, err)
+	}
+
+	log.Println("Monitoring stack is accessible at:")
+	log.Println("- Grafana: http://grafana.govno.cloud (admin/govnocloud)")
+	log.Println("- Prometheus: http://prometheus.govno.cloud")
+	log.Println("- Alertmanager: http://alertmanager.govno.cloud")
 
 	return nil
 }
