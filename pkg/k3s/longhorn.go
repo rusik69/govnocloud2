@@ -10,7 +10,7 @@ import (
 )
 
 // InstallLonghorn installs Longhorn storage system into the Kubernetes cluster
-func InstallLonghorn(master string, nodes []string, user, keyPath string) error {
+func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) error {
 	log.Println("Installing Longhorn storage system...")
 
 	// Add the Longhorn Helm repository
@@ -35,7 +35,7 @@ func InstallLonghorn(master string, nodes []string, user, keyPath string) error 
 		return fmt.Errorf("failed to create longhorn namespace: %s: %w", out, err)
 	}
 
-	for _, nodeIP := range nodes {
+	for _, nodeIP := range nodeIPs {
 		// Install required packages
 		cmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
 			"'sudo apt-get update && "+
@@ -87,13 +87,23 @@ func InstallLonghorn(master string, nodes []string, user, keyPath string) error 
 	log.Println("Waiting for initial pod creation...")
 	time.Sleep(30 * time.Second)
 
+	// Get list of nodes
+	cmd = "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
+	out, err = ssh.Run(cmd, master, keyPath, user, "", true, 0)
+	if err != nil {
+		return fmt.Errorf("failed to get nodes: %w", err)
+	}
+	nodes := strings.Split(out, " ")
+
+	log.Printf("Nodes: %+v", nodes)
+
 	// Label nodes and configure disks
-	for _, nodeIP := range nodes {
+	for _, node := range nodes {
 		// Label node for Longhorn
-		cmd = fmt.Sprintf("kubectl label nodes node-%s node.longhorn.io/create-default-disk=true --overwrite", nodeIP)
-		log.Printf("Labeling node %s for Longhorn storage", nodeIP)
+		cmd = fmt.Sprintf("kubectl label nodes %s node.longhorn.io/create-default-disk=true --overwrite", node)
+		log.Printf("Labeling node %s for Longhorn storage", node)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
-			return fmt.Errorf("failed to label node %s: %w", nodeIP, err)
+			return fmt.Errorf("failed to label node %s: %w", node, err)
 		}
 
 		// Create disk config
@@ -111,13 +121,13 @@ spec:
       evictionRequested: false
       storageReserved: 0
       tags: []
-`, nodeIP)
+`, node)
 
 		// Apply disk configuration
 		cmd = fmt.Sprintf("cat << 'EOF' | kubectl apply -f -\n%s\nEOF", diskConfig)
-		log.Printf("Configuring disk on node %s", nodeIP)
+		log.Printf("Configuring disk on node %s", node)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
-			return fmt.Errorf("failed to configure disk on node %s: %w", nodeIP, err)
+			return fmt.Errorf("failed to configure disk on node %s: %w", node, err)
 		}
 	}
 
