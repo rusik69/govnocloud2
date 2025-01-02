@@ -93,7 +93,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 	if err != nil {
 		return fmt.Errorf("failed to get nodes: %w", err)
 	}
-	nodes := strings.Split(out, " ")
+	nodes := strings.Fields(out)
 
 	log.Printf("Nodes: %+v", nodes)
 
