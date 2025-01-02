@@ -101,7 +101,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 	for _, node := range nodes {
 		// Label node for Longhorn
 		cmd = fmt.Sprintf("kubectl label nodes %s node.longhorn.io/create-default-disk=true --overwrite", node)
-		log.Printf("Labeling node %s for Longhorn storage", node)
+		log.Println(cmd)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 			return fmt.Errorf("failed to label node %s: %w", node, err)
 		}
