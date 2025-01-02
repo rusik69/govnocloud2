@@ -35,14 +35,14 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		return fmt.Errorf("failed to create longhorn namespace: %s: %w", out, err)
 	}
 
-	cmd = "'sudo apt-get update && " +
+	cmd = "sudo apt-get update && " +
 		"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils && " +
 		"sudo modprobe dm_crypt && " +
 		"sudo systemctl disable --now multipathd.socket && " +
 		"sudo systemctl disable --now multipathd.service && " +
 		"sudo systemctl enable --now iscsid && " +
 		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 && " +
-		"sudo blockdev --rereadpt /dev/sda'"
+		"sudo blockdev --rereadpt /dev/sda"
 
 	log.Println(cmd)
 	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
