@@ -41,8 +41,12 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		"sudo systemctl disable --now multipathd.socket && " +
 		"sudo systemctl disable --now multipathd.service && " +
 		"sudo systemctl enable --now iscsid && " +
+		"sudo umount /mnt && " +
 		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 && " +
-		"sudo blockdev --rereadpt /dev/sda"
+		"sudo blockdev --rereadpt /dev/sda && " +
+		"sudo mkfs.ext4 /dev/sda && " +
+		"sudo mkdir /mnt && " +
+		"sudo mount /dev/sda /mnt"
 
 	log.Println(cmd)
 	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
@@ -73,7 +77,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		"--set persistence.defaultClass=true " +
 		"--set defaultSettings.defaultReplicaCount=1 " +
 		"--set defaultSettings.createDefaultDiskLabeledNodes=true " +
-		"--set defaultSettings.defaultDataPath=/dev/sda " +
+		"--set defaultSettings.defaultDataPath=/mnt " +
 		"--set defaultSettings.defaultDataLocality=disabled " +
 		"--set defaultSettings.replicaSoftAntiAffinity=true " +
 		"--set defaultSettings.storageOverProvisioningPercentage=200 " +
