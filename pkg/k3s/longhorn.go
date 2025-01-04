@@ -134,7 +134,7 @@ metadata:
 spec:
   disks:
     sda:
-      path: /dev/sda
+      path: /mnt
       allowScheduling: true
       evictionRequested: false
       storageReserved: 0
