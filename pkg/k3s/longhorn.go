@@ -35,17 +35,17 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		return fmt.Errorf("failed to create longhorn namespace: %s: %w", out, err)
 	}
 
-	cmd = "sudo apt-get update && " +
-		"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils && " +
-		"sudo modprobe dm_crypt && " +
-		"sudo systemctl disable --now multipathd.socket && " +
-		"sudo systemctl disable --now multipathd.service && " +
-		"sudo systemctl enable --now iscsid && " +
-		"sudo umount /mnt && " +
-		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 && " +
-		"sudo blockdev --rereadpt /dev/sda && " +
-		"sudo mkfs.ext4 /dev/sda && " +
-		"sudo mkdir /mnt && " +
+	cmd = "sudo apt-get update ; " +
+		"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils ; " +
+		"sudo modprobe dm_crypt ; " +
+		"sudo systemctl disable --now multipathd.socket ; " +
+		"sudo systemctl disable --now multipathd.service ; " +
+		"sudo systemctl enable --now iscsid ; " +
+		"sudo umount /mnt ; " +
+		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 ; " +
+		"sudo blockdev --rereadpt /dev/sda ; " +
+		"sudo mkfs.ext4 /dev/sda ; " +
+		"sudo mkdir /mnt ; " +
 		"sudo mount /dev/sda /mnt"
 
 	log.Println(cmd)
@@ -56,14 +56,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 	for _, nodeIP := range nodeIPs {
 		// Install required packages
 		cmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
-			"'sudo apt-get update && "+
-			"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils && "+
-			"sudo modprobe dm_crypt && "+
-			"sudo systemctl disable --now multipathd.socket && "+
-			"sudo systemctl disable --now multipathd.service && "+
-			"sudo systemctl enable --now iscsid && "+
-			"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 && "+
-			"sudo blockdev --rereadpt /dev/sda'",
+			"'"+cmd+"'",
 			keyPath, user, nodeIP)
 		log.Println(cmd)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
