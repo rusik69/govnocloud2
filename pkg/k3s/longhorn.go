@@ -83,7 +83,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		"--set defaultSettings.replicaSoftAntiAffinity=true " +
 		"--set defaultSettings.storageOverProvisioningPercentage=200 " +
 		"--set defaultSettings.storageMinimalAvailablePercentage=10 " +
-		"--set defaultSettings.reservedStorage=1Gi " +
+		"--set defaultSettings.storageReservedPercentageForDefaultDisk=1 " +
 		"--set defaultSettings.disableSchedulingOnCordonedNode=true " +
 		"--set defaultSettings.nodeDownPodDeletionPolicy=delete-both-statefulset-and-deployment-pod " +
 		"--set defaultSettings.allowNodeDrainWithLastHealthyReplica=true " +
