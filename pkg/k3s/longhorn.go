@@ -64,6 +64,16 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		}
 	}
 
+	// Get list of nodes
+	cmd = "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
+	out, err = ssh.Run(cmd, master, keyPath, user, "", true, 0)
+	if err != nil {
+		return fmt.Errorf("failed to get nodes: %w", err)
+	}
+	nodes := strings.Fields(out)
+
+	log.Printf("Nodes: %+v", nodes)
+
 	// Install Longhorn using Helm with block device configuration
 	cmd = "helm install longhorn longhorn/longhorn " +
 		"--namespace longhorn-system " +
@@ -92,6 +102,36 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 	log.Println(cmd)
 	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
 		return fmt.Errorf("failed to install Longhorn: %w", err)
+	}
+
+	// Wait for initial pod creation
+	log.Println("Waiting for initial pod creation...")
+	time.Sleep(30 * time.Second)
+
+	for _, node := range nodes {
+		// Create disk config
+		diskConfig := fmt.Sprintf(`
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: %s
+  namespace: longhorn-system
+spec:
+  disks:
+    sda:
+      path: /mnt
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 0
+      tags: []
+`, node)
+
+		// Apply disk configuration
+		cmd = fmt.Sprintf("cat << 'EOF' | kubectl apply -f -\n%s\nEOF", diskConfig)
+		log.Printf("Configuring disk on node %s", node)
+		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
+			return fmt.Errorf("failed to configure disk on node %s: %w", node, err)
+		}
 	}
 
 	// Check CSI driver registration with debugging
