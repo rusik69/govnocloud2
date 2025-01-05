@@ -179,14 +179,21 @@ func createValuesFile(values MonitoringValues) (string, error) {
 	valuesYaml := `
 grafana:
   persistence:
-    enabled: false
+    enabled: true
+    size: 5Gi
   service:
     type: ClusterIP
 prometheus:
   prometheusSpec:
     retention: 30d
+  persistence:
+    enabled: true
+    size: 5Gi
 alertmanager:
   alertmanagerSpec: {}
+  persistence:
+    enabled: true
+    size: 5Gi
 prometheusOperator:
   admissionWebhooks:
     enabled: false
