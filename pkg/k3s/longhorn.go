@@ -128,6 +128,7 @@ spec:
     sda:
       path: /mnt
       allowScheduling: true
+	  diskType: filesystem
       evictionRequested: false
       storageReserved: 0
       tags: []
