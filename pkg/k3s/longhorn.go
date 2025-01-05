@@ -185,6 +185,13 @@ spec:
 		log.Printf("Warning: failed to cleanup temporary files: %v", err)
 	}
 
+	// wait for all pods in longhorn-system namespace to be ready
+	log.Println("Waiting for all pods in longhorn-system namespace to be ready...")
+	cmd = "kubectl wait --for=condition=ready pod --all -n longhorn-system --timeout=1800s"
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
+		return fmt.Errorf("failed to wait for pods to be ready: %w", err)
+	}
+
 	log.Println("Longhorn installation completed successfully")
 	return nil
 }
