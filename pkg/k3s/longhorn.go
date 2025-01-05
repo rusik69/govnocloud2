@@ -41,12 +41,12 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		"sudo systemctl disable --now multipathd.socket ; " +
 		"sudo systemctl disable --now multipathd.service ; " +
 		"sudo systemctl enable --now iscsid ; " +
-		"sudo umount /mnt ; " +
+		"sudo umount /mnt ; sudo umount /var/lib/longhorn ; " +
 		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 ; " +
 		"sudo blockdev --rereadpt /dev/sda ; " +
 		"sudo mkfs.ext4 /dev/sda ; " +
-		"sudo mkdir /mnt ; " +
-		"sudo mount /dev/sda /mnt"
+		"sudo mkdir -p /var/lib/longhorn ; " +
+		"sudo mount /dev/sda /var/lib/longhorn"
 
 	log.Println(cmd)
 	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
@@ -79,8 +79,6 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		"--namespace longhorn-system " +
 		"--set persistence.defaultClass=true " +
 		"--set defaultSettings.defaultReplicaCount=1 " +
-		"--set defaultSettings.createDefaultDiskLabeledNodes=true " +
-		"--set defaultSettings.defaultDataPath=/mnt " +
 		"--set defaultSettings.defaultDataLocality=disabled " +
 		"--set defaultSettings.replicaSoftAntiAffinity=true " +
 		"--set defaultSettings.storageOverProvisioningPercentage=200 " +
@@ -89,7 +87,6 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		"--set defaultSettings.nodeDownPodDeletionPolicy=delete-both-statefulset-and-deployment-pod " +
 		"--set defaultSettings.allowNodeDrainWithLastHealthyReplica=true " +
 		"--set defaultSettings.autoCleanupSystemGeneratedSnapshot=true " +
-		"--set defaultSettings.autoCreateCustomDefaultDisk=true " +
 		"--set defaultSettings.concurrentAutomaticEngineUpgrade=3 " +
 		"--set defaultSettings.backingImageCleanupWaitInterval=600 " +
 		"--set csi.attacherReplicaCount=1 " +
