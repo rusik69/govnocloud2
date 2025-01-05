@@ -74,6 +74,13 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 
 	log.Printf("Nodes: %+v", nodes)
 
+	// Configure filesystem disk on each node
+	for _, node := range nodes {
+		if err := configureLonghornDisk(node, master, keyPath, user); err != nil {
+			return err
+		}
+	}
+
 	// Install Longhorn using Helm with block device configuration
 	cmd = "helm install longhorn longhorn/longhorn " +
 		"--namespace longhorn-system " +
@@ -213,5 +220,33 @@ spec:
 	}
 
 	log.Println("Longhorn installation completed successfully")
+	return nil
+}
+
+// configureLonghornDisk configures a filesystem disk for Longhorn on a node
+func configureLonghornDisk(node, master, keyPath, user string) error {
+	diskConfig := fmt.Sprintf(`
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: %s
+  namespace: longhorn-system
+spec:
+  disks:
+    default:
+      path: /mnt
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 0
+      tags: []
+`, node)
+
+	// Apply disk configuration
+	cmd := fmt.Sprintf("cat << 'EOF' | kubectl apply -f -\n%s\nEOF", diskConfig)
+	log.Printf("Configuring disk on node %s", node)
+	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
+		return fmt.Errorf("failed to configure disk on node %s: %w", node, err)
+	}
+
 	return nil
 }
