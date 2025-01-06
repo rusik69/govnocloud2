@@ -238,7 +238,7 @@ defaultRules:
 
 // installMonitoringChart installs the Prometheus chart using Helm
 func installMonitoringChart(cfg *MonitoringConfig, valuesFile string) error {
-	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s --wait --timeout 300s",
+	cmd := fmt.Sprintf("helm upgrade --install %s %s --namespace %s --create-namespace --values %s --wait --timeout 600s",
 		cfg.Release.Name,
 		cfg.Release.Chart,
 		cfg.Release.Namespace,
