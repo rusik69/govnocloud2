@@ -186,14 +186,8 @@ grafana:
 prometheus:
   prometheusSpec:
     retention: 30d
-  persistence:
-    enabled: true
-    size: 5Gi
 alertmanager:
   alertmanagerSpec: {}
-  persistence:
-    enabled: true
-    size: 5Gi
 prometheusOperator:
   admissionWebhooks:
     enabled: false
