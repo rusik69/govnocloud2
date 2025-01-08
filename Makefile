@@ -50,10 +50,10 @@ update-deps:
 	go mod tidy
 	go mod verify
 
-run-debug:
+run-web:
 	DEBUG=true bin/govnocloud2-linux-amd64 web
 
-run-debug-mac:
+run-web-mac:
 	DEBUG=true bin/govnocloud2-darwin-arm64 web
 
 all: get build

@@ -3,6 +3,7 @@ package web
 import (
 	"embed"
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -12,105 +13,69 @@ import (
 //go:embed templates/*
 var templates embed.FS
 
-// WebServer represents the web interface server
 type WebServer struct {
 	router *gin.Engine
 }
 
-// NewWebServer creates a new web interface server
+var pages = map[string]string{
+	"nodes":      "Nodes",
+	"vms":        "Virtual Machines",
+	"volumes":    "Volumes",
+	"containers": "Containers",
+	"dbs":        "Databases",
+	"namespaces": "Namespaces",
+}
+
 func NewWebServer() *WebServer {
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(logRequests())
 
-	// Configure CORS
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	router.Use(cors.New(config))
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+	}))
 
-	// Load templates
 	tmpl := template.Must(template.ParseFS(templates, "templates/*"))
 	router.SetHTMLTemplate(tmpl)
 
-	return &WebServer{
-		router: router,
-	}
+	return &WebServer{router: router}
 }
 
-// Start starts the web interface server
 func (s *WebServer) Start(addr string) error {
-	// Setup routes
-	s.router.GET("/", s.handleIndex)
-	s.router.GET("/nodes", s.handleNodes)
-	s.router.GET("/vms", s.handleVms)
-	s.router.GET("/volumes", s.handleVolumes)
-	s.router.GET("/containers", s.handleContainers)
-	s.router.GET("/dbs", s.handleDbs)
-	s.router.GET("/namespaces", s.handleNamespaces)
-
+	s.setupRoutes()
+	log.Printf("Starting web server on %s", addr)
 	return s.router.Run(addr)
 }
 
-// handleIndex handles the main page
-func (s *WebServer) handleIndex(c *gin.Context) {
-	c.Redirect(http.StatusMovedPermanently, "/nodes")
-}
-
-// handleNodes handles the nodes page
-func (s *WebServer) handleNodes(c *gin.Context) {
-	c.HTML(http.StatusOK, "nodes.html", gin.H{
-		"Title":       "GovnoCloud Dashboard - Nodes",
-		"Description": "Manage your cloud nodes",
-		"Version":     "v2.0.0",
+func (s *WebServer) setupRoutes() {
+	s.router.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/nodes")
 	})
+
+	for route, title := range pages {
+		s.router.GET("/"+route, s.handlePage(route, title))
+	}
 }
 
-// handleVms handles the VMs page
-func (s *WebServer) handleVms(c *gin.Context) {
-	c.HTML(http.StatusOK, "vms.html", gin.H{
-		"Title":       "GovnoCloud Dashboard - Virtual Machines",
-		"Description": "Manage your virtual machines",
-		"Version":     "v2.0.0",
-	})
+func (s *WebServer) handlePage(page, title string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		data := NewPageData()
+		data.Title = "GovnoCloud Dashboard - " + title
+		data.Description = "Manage your " + title
+
+		c.HTML(http.StatusOK, page+".html", data)
+	}
 }
 
-// handleVolumes handles the volumes page
-func (s *WebServer) handleVolumes(c *gin.Context) {
-	c.HTML(http.StatusOK, "volumes.html", gin.H{
-		"Title":       "GovnoCloud Dashboard - Volumes",
-		"Description": "Manage your storage volumes",
-		"Version":     "v2.0.0",
-	})
+func logRequests() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Printf("Web: %s %s", c.Request.Method, c.Request.URL.Path)
+		c.Next()
+	}
 }
 
-// handleContainers handles the containers page
-func (s *WebServer) handleContainers(c *gin.Context) {
-	c.HTML(http.StatusOK, "containers.html", gin.H{
-		"Title":       "GovnoCloud Dashboard - Containers",
-		"Description": "Manage your containers",
-		"Version":     "v2.0.0",
-	})
-}
-
-// handleDbs handles the databases page
-func (s *WebServer) handleDbs(c *gin.Context) {
-	c.HTML(http.StatusOK, "dbs.html", gin.H{
-		"Title":       "GovnoCloud Dashboard - Databases",
-		"Description": "Manage your databases",
-		"Version":     "v2.0.0",
-	})
-}
-
-// handleNamespaces handles the namespaces page
-func (s *WebServer) handleNamespaces(c *gin.Context) {
-	c.HTML(http.StatusOK, "namespaces.html", gin.H{
-		"Title":       "GovnoCloud Dashboard - Namespaces",
-		"Description": "Manage your Kubernetes namespaces",
-		"Version":     "v2.0.0",
-	})
-}
-
-// Listen starts the web server
-func Listen(host, port, path string) error {
+func Listen(host, port string) error {
 	server := NewWebServer()
 	return server.Start(host + ":" + port)
 }

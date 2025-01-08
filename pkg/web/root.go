@@ -10,13 +10,14 @@ import (
 type PageData struct {
 	Title       string                 `json:"title"`
 	Description string                 `json:"description,omitempty"`
-	Version     string                 `json:"version,omitempty"`
 	Data        map[string]interface{} `json:"data,omitempty"`
+	MasterHost  string                 `json:"master_host"`
+	MasterPort  string                 `json:"master_port"`
 }
 
 // NewPageData creates a new page data instance with defaults
-func NewPageData() *PageData {
-	return &PageData{
+func NewPageData() PageData {
+	return PageData{
 		Title: "Govnocloud2",
 		Data:  make(map[string]interface{}),
 	}
@@ -26,9 +27,6 @@ func NewPageData() *PageData {
 func RootHandler(c *gin.Context) {
 	data := NewPageData()
 	data.Description = "Cloud Management Platform"
-	data.Version = GetVersion()
-
-	// Add any additional data needed for the root page
 	data.Data["features"] = []string{
 		"VM Management",
 		"Container Management",
@@ -36,71 +34,28 @@ func RootHandler(c *gin.Context) {
 		"Node Management",
 	}
 
-	renderTemplate(c, "index.html", data)
-}
-
-// renderTemplate renders an HTML template with error handling
-func renderTemplate(c *gin.Context, template string, data interface{}) {
-	c.Header("Content-Type", "text/html; charset=utf-8")
-	c.Header("X-Content-Type-Options", "nosniff")
-
-	// Gin's HTML method doesn't return an error, so we can call it directly
-	c.HTML(http.StatusOK, template, data)
-}
-
-// GetVersion returns the current version
-func GetVersion() string {
-	// This could be set during build time
-	return "v0.0.1"
-}
-
-// GetLogger returns the logger instance
-func GetLogger() Logger {
-	// This could be replaced with a proper logger implementation
-	return defaultLogger{}
-}
-
-// Logger interface for logging
-type Logger interface {
-	Error(msg string, keysAndValues ...interface{})
-	Info(msg string, keysAndValues ...interface{})
-	Debug(msg string, keysAndValues ...interface{})
-}
-
-// defaultLogger implements Logger interface
-type defaultLogger struct{}
-
-func (l defaultLogger) Error(msg string, keysAndValues ...interface{}) {
-	// Implement proper error logging
-}
-
-func (l defaultLogger) Info(msg string, keysAndValues ...interface{}) {
-	// Implement proper info logging
-}
-
-func (l defaultLogger) Debug(msg string, keysAndValues ...interface{}) {
-	// Implement proper debug logging
+	c.HTML(http.StatusOK, "index.html", data)
 }
 
 // HealthHandler handles health check requests
 func HealthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "healthy",
+	c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+}
+
+// HandleError renders the error page with the given status and message
+func HandleError(c *gin.Context, status int, message string) {
+	c.HTML(status, "error.html", gin.H{
+		"title": "Error",
+		"error": message,
 	})
 }
 
 // NotFoundHandler handles 404 errors
 func NotFoundHandler(c *gin.Context) {
-	c.HTML(http.StatusNotFound, "error.html", gin.H{
-		"title": "Page Not Found",
-		"error": "The requested page could not be found",
-	})
+	HandleError(c, http.StatusNotFound, "The requested page could not be found")
 }
 
 // ErrorHandler handles internal server errors
 func ErrorHandler(c *gin.Context) {
-	c.HTML(http.StatusInternalServerError, "error.html", gin.H{
-		"title": "Internal Server Error",
-		"error": "An unexpected error occurred",
-	})
+	HandleError(c, http.StatusInternalServerError, "An unexpected error occurred")
 }
