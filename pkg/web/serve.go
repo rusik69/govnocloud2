@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"path"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,8 @@ import (
 var templates embed.FS
 
 type WebServer struct {
-	router *gin.Engine
+	router  *gin.Engine
+	webPath string
 }
 
 var pages = map[string]string{
@@ -26,7 +28,7 @@ var pages = map[string]string{
 	"namespaces": "Namespaces",
 }
 
-func NewWebServer() *WebServer {
+func NewWebServer(webPath string) *WebServer {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(logRequests())
@@ -36,25 +38,34 @@ func NewWebServer() *WebServer {
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 	}))
 
-	tmpl := template.Must(template.ParseFS(templates, "templates/*"))
+	// Load templates with web path prefix
+	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
+		"webpath": func() string { return webPath },
+	}).ParseFS(templates, "templates/*"))
+
 	router.SetHTMLTemplate(tmpl)
 
-	return &WebServer{router: router}
+	return &WebServer{
+		router:  router,
+		webPath: webPath,
+	}
 }
 
 func (s *WebServer) Start(addr string) error {
 	s.setupRoutes()
-	log.Printf("Starting web server on %s", addr)
+	log.Printf("Starting web server on %s (path: %s)", addr, s.webPath)
 	return s.router.Run(addr)
 }
 
 func (s *WebServer) setupRoutes() {
-	s.router.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/nodes")
+	group := s.router.Group(s.webPath)
+
+	group.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, path.Join(s.webPath, "nodes"))
 	})
 
 	for route, title := range pages {
-		s.router.GET("/"+route, s.handlePage(route, title))
+		group.GET("/"+route, s.handlePage(route, title))
 	}
 }
 
@@ -63,6 +74,7 @@ func (s *WebServer) handlePage(page, title string) gin.HandlerFunc {
 		data := NewPageData()
 		data.Title = "GovnoCloud Dashboard - " + title
 		data.Description = "Manage your " + title
+		data.WebPath = s.webPath
 
 		c.HTML(http.StatusOK, page+".html", data)
 	}
@@ -75,7 +87,7 @@ func logRequests() gin.HandlerFunc {
 	}
 }
 
-func Listen(host, port string) error {
-	server := NewWebServer()
+func Listen(host, port, webPath string) error {
+	server := NewWebServer(webPath)
 	return server.Start(host + ":" + port)
 }

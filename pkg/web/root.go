@@ -11,8 +11,7 @@ type PageData struct {
 	Title       string                 `json:"title"`
 	Description string                 `json:"description,omitempty"`
 	Data        map[string]interface{} `json:"data,omitempty"`
-	MasterHost  string                 `json:"master_host"`
-	MasterPort  string                 `json:"master_port"`
+	WebPath     string                 `json:"web_path"`
 }
 
 // NewPageData creates a new page data instance with defaults
