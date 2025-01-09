@@ -108,12 +108,11 @@ func CreateVolumeHandler(c *gin.Context) {
 		return
 	}
 	volume := types.Volume{}
-	m := NewVolumeManager()
 	if err := c.ShouldBindJSON(&volume); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	out, err := m.CreateVolume(volume, namespace)
+	out, err := volumeManager.CreateVolume(volume, namespace)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -124,7 +123,6 @@ func CreateVolumeHandler(c *gin.Context) {
 
 // DeleteVolumeHandler deletes a volume
 func DeleteVolumeHandler(c *gin.Context) {
-	m := NewVolumeManager()
 	name := c.Param("name")
 	if name == "" {
 		log.Printf("name is required")
@@ -137,7 +135,7 @@ func DeleteVolumeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
 		return
 	}
-	out, err := m.DeleteVolume(name, namespace)
+	out, err := volumeManager.DeleteVolume(name, namespace)
 	if err != nil {
 		log.Printf("failed to delete volume: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -149,14 +147,13 @@ func DeleteVolumeHandler(c *gin.Context) {
 
 // ListVolumesHandler lists all volumes
 func ListVolumesHandler(c *gin.Context) {
-	m := NewVolumeManager()
 	namespace := c.Param("namespace")
 	if namespace == "" {
 		log.Printf("namespace is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
 		return
 	}
-	volumes, err := m.ListVolumes(namespace)
+	volumes, err := volumeManager.ListVolumes(namespace)
 	if err != nil {
 		log.Printf("failed to list volumes: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -167,7 +164,6 @@ func ListVolumesHandler(c *gin.Context) {
 
 // GetVolumeHandler gets details of a specific volume
 func GetVolumeHandler(c *gin.Context) {
-	m := NewVolumeManager()
 	name := c.Param("name")
 	if name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
@@ -178,7 +174,7 @@ func GetVolumeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
 		return
 	}
-	volume, err := m.GetVolume(name, namespace)
+	volume, err := volumeManager.GetVolume(name, namespace)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
