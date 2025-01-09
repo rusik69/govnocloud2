@@ -19,6 +19,6 @@ var serverCmd = &cobra.Command{
 		log.Println("user: ", cfg.Server.User)
 		log.Println("password: ", cfg.Server.Password)
 		log.Println("key: ", cfg.Server.Key)
-		server.Serve(cfg.Server.Host, cfg.Server.Port, cfg.Server.User, cfg.Server.Password, cfg.Server.Key, cfg.Server.MasterHost)
+		server.Serve(cfg.Server.Host, cfg.Server.Port, cfg.Server.User, cfg.Server.Password, cfg.Server.Key, cfg.Server.MasterHost, cfg.Server.ImageDir)
 	},
 }

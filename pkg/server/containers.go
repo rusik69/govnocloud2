@@ -32,8 +32,7 @@ func ListContainersHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	manager := NewContainerManager()
-	containers, err := manager.ListContainers(namespace)
+	containers, err := containerManager.ListContainers(namespace)
 	if err != nil {
 		log.Printf("failed to list containers: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list containers: %v", err))
@@ -65,8 +64,7 @@ func CreateContainerHandler(c *gin.Context) {
 	}
 	container.Namespace = namespace
 	container.Name = name
-	manager := NewContainerManager()
-	if err := manager.CreateContainer(&container); err != nil {
+	if err := containerManager.CreateContainer(&container); err != nil {
 		log.Printf("container create error: %s", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create container: %v", err))
 		return
@@ -88,8 +86,7 @@ func GetContainerHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	manager := NewContainerManager()
-	container, err := manager.GetContainer(name, namespace)
+	container, err := containerManager.GetContainer(name, namespace)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get container: %v", err))
 		return
@@ -121,8 +118,7 @@ func DeleteContainerHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewContainerManager()
-	if err := manager.DeleteContainer(name, namespace); err != nil {
+	if err := containerManager.DeleteContainer(name, namespace); err != nil {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete container: %v", err))
 		return
 	}

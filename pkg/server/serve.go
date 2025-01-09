@@ -18,6 +18,7 @@ type ServerConfig struct {
 	Password   string
 	Key        string
 	MasterHost string
+	ImageDir   string
 }
 
 // Server represents the HTTP server
@@ -28,11 +29,23 @@ type Server struct {
 
 var server *Server
 
+var vmManager *VMManager
+var containerManager *ContainerManager
+var volumeManager *VolumeManager
+var namespaceManager *NamespaceManager
+var nodeManager *NodeManager
+var dbManager *DBManager
+
 // NewServer creates a new server instance
 func NewServer(config ServerConfig) *Server {
 	router := gin.New()
 	router.Use(gin.Recovery())
-
+	vmManager = NewVMManager()
+	containerManager = NewContainerManager()
+	volumeManager = NewVolumeManager()
+	namespaceManager = NewNamespaceManager()
+	nodeManager = NewNodeManager()
+	dbManager = NewDBManager()
 	// Configure CORS to allow all origins
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
@@ -125,7 +138,7 @@ func (s *Server) Start() error {
 }
 
 // Serve starts the server with the given configuration
-func Serve(host, port, user, password, key, masterHost string) {
+func Serve(host, port, user, password, key, masterHost, imageDir string) {
 	config := ServerConfig{
 		Host:       host,
 		Port:       port,
@@ -133,6 +146,7 @@ func Serve(host, port, user, password, key, masterHost string) {
 		Password:   password,
 		Key:        key,
 		MasterHost: masterHost,
+		ImageDir:   imageDir,
 	}
 
 	server = NewServer(config)

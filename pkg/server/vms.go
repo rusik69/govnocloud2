@@ -46,8 +46,7 @@ func CreateVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid VM image: %s", vm.Image))
 		return
 	}
-	manager := NewVMManager()
-	if err := manager.CreateVM(vm); err != nil {
+	if err := vmManager.CreateVM(vm); err != nil {
 		log.Printf("failed to create VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create VM: %v", err))
 		return
@@ -60,7 +59,7 @@ func CreateVMHandler(c *gin.Context) {
 func (m *VMManager) CreateVM(vm types.VM) error {
 	vmSize := types.VMSizes[vm.Size]
 	vmImage := types.VMImages[vm.Image]
-
+	imagePath := server.config.ImageDir + "/" + vmImage.FileName
 	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -88,7 +87,7 @@ spec:
       - name: rootdisk
         containerDisk:
           image: %s`,
-		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.URL)
+		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, imagePath)
 	log.Println(vmConfig)
 	// Write config to temporary file
 	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
@@ -116,8 +115,7 @@ spec:
 // ListVMsHandler handles VM listing requests
 func ListVMsHandler(c *gin.Context) {
 	namespace := c.Param("namespace")
-	manager := NewVMManager()
-	vms, err := manager.ListVMs(namespace)
+	vms, err := vmManager.ListVMs(namespace)
 	if err != nil {
 		log.Printf("failed to list VMs: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list VMs: %v", err))
@@ -172,8 +170,7 @@ func GetVMHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewVMManager()
-	vm, err := manager.GetVM(name, namespace)
+	vm, err := vmManager.GetVM(name, namespace)
 	if err != nil {
 		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
@@ -216,8 +213,7 @@ func DeleteVMHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewVMManager()
-	if err := manager.DeleteVM(name, namespace); err != nil {
+	if err := vmManager.DeleteVM(name, namespace); err != nil {
 		log.Printf("failed to delete VM %s in namespace %s: %v", name, namespace, err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete VM: %v", err))
 		return

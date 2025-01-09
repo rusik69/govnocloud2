@@ -58,8 +58,7 @@ func CreateNamespaceHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
 		return
 	}
-	manager := NewNamespaceManager()
-	err := manager.CreateNamespace(name)
+	err := namespaceManager.CreateNamespace(name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -74,8 +73,7 @@ func DeleteNamespaceHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
 		return
 	}
-	manager := NewNamespaceManager()
-	err := manager.DeleteNamespace(name)
+	err := namespaceManager.DeleteNamespace(name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -85,8 +83,7 @@ func DeleteNamespaceHandler(c *gin.Context) {
 
 // ListNamespacesHandler lists all namespaces
 func ListNamespacesHandler(c *gin.Context) {
-	manager := NewNamespaceManager()
-	namespaces, err := manager.ListNamespaces()
+	namespaces, err := namespaceManager.ListNamespaces()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -101,8 +98,7 @@ func GetNamespaceHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
 		return
 	}
-	manager := NewNamespaceManager()
-	namespace, err := manager.GetNamespace(name)
+	namespace, err := namespaceManager.GetNamespace(name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

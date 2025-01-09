@@ -27,8 +27,7 @@ func NewDBManager() *DBManager {
 
 // ListDBsHandler handles requests to list databases
 func ListDBsHandler(c *gin.Context) {
-	manager := NewDBManager()
-	dbs, err := manager.ListDBs()
+	dbs, err := dbManager.ListDBs()
 	if err != nil {
 		log.Printf("failed to list databases: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to list databases: %v", err)})
@@ -46,8 +45,7 @@ func CreateDBHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewDBManager()
-	if err := manager.CreateDB(&db); err != nil {
+	if err := dbManager.CreateDB(&db); err != nil {
 		log.Printf("failed to create database: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create database: %v", err))
 		return
@@ -65,8 +63,7 @@ func GetDBHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewDBManager()
-	db, err := manager.GetDB(name)
+	db, err := dbManager.GetDB(name)
 	if err != nil {
 		log.Printf("failed to get database: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get database: %v", err))
@@ -98,8 +95,7 @@ func DeleteDBHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewDBManager()
-	if err := manager.DeleteDB(name, namespace); err != nil {
+	if err := dbManager.DeleteDB(name, namespace); err != nil {
 		log.Printf("failed to delete database: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete database: %v", err))
 		return

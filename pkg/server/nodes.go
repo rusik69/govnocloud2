@@ -54,8 +54,7 @@ func NewNodeManager() *NodeManager {
 
 // ListNodesHandler handles HTTP requests to list nodes
 func ListNodesHandler(c *gin.Context) {
-	manager := NewNodeManager()
-	nodes, err := manager.ListNodes()
+	nodes, err := nodeManager.ListNodes()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to list nodes: %v", err),
@@ -91,8 +90,7 @@ func GetNodeHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewNodeManager()
-	node, err := manager.GetNode(nodeName)
+	node, err := nodeManager.GetNode(nodeName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to get node %s: %v", nodeName, err),
@@ -157,8 +155,7 @@ func DeleteNodeHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewNodeManager()
-	if err := manager.DeleteNode(nodeName); err != nil {
+	if err := nodeManager.DeleteNode(nodeName); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to delete node %s: %v", nodeName, err),
 		})
@@ -192,8 +189,7 @@ func AddNodeHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewNodeManager()
-	if err := manager.AddNode(node); err != nil {
+	if err := nodeManager.AddNode(node); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to add node: %v", err)})
 		return
 	}
@@ -216,8 +212,7 @@ func RestartNodeHandler(c *gin.Context) {
 		return
 	}
 
-	manager := NewNodeManager()
-	if err := manager.RestartNode(nodeName); err != nil {
+	if err := nodeManager.RestartNode(nodeName); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to restart node: %v", err)})
 		return
 	}
@@ -272,8 +267,7 @@ func SuspendNodeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
-	manager := NewNodeManager()
-	if err := manager.SuspendNode(hostName, server.config.User, server.config.Key); err != nil {
+	if err := nodeManager.SuspendNode(hostName, server.config.User, server.config.Key); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to suspend node: %v", err)})
 		return
 	}
@@ -296,8 +290,7 @@ func ResumeNodeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
-	manager := NewNodeManager()
-	if err := manager.ResumeNode(hostName, server.config.User, server.config.Key); err != nil {
+	if err := nodeManager.ResumeNode(hostName, server.config.User, server.config.Key); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to resume node: %v", err)})
 		return
 	}
