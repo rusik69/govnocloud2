@@ -13,7 +13,7 @@ import (
 
 // Server represents the HTTP server
 type Server struct {
-	config ServerConfig
+	config types.ServerConfig
 	router *gin.Engine
 }
 

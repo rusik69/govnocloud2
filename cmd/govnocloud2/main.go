@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rusik69/govnocloud2/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +14,7 @@ type Config struct {
 	Worker  WorkerConfig
 	SSH     SSHConfig
 	Kube    KubeConfig
-	Server  ServerConfig
+	Server  types.ServerConfig
 	Web     WebConfig
 	Client  ClientConfig
 	Install InstallConfig
@@ -41,16 +42,6 @@ type SSHConfig struct {
 
 type KubeConfig struct {
 	ConfigPath string
-}
-
-type ServerConfig struct {
-	Host       string
-	Port       string
-	User       string
-	Password   string
-	Key        string
-	MasterHost string
-	ImageDir   string
 }
 
 type WebConfig struct {
@@ -128,7 +119,7 @@ func initConfig() error {
 			IPRange:   "10.0.0.0/24",
 			Interface: "enp0s25",
 		},
-		Server: ServerConfig{
+		Server: types.ServerConfig{
 			Host:       "0.0.0.0",
 			Port:       "6969",
 			ImageDir:   "/var/lib/govnocloud2/images",
