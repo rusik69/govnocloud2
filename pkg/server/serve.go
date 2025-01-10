@@ -8,18 +8,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
-
-// ServerConfig holds server configuration
-type ServerConfig struct {
-	Host       string
-	Port       string
-	User       string
-	Password   string
-	Key        string
-	MasterHost string
-	ImageDir   string
-}
 
 // Server represents the HTTP server
 type Server struct {
@@ -37,7 +27,7 @@ var nodeManager *NodeManager
 var dbManager *DBManager
 
 // NewServer creates a new server instance
-func NewServer(config ServerConfig) *Server {
+func NewServer(config types.ServerConfig) *Server {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	vmManager = NewVMManager()
@@ -138,18 +128,8 @@ func (s *Server) Start() error {
 }
 
 // Serve starts the server with the given configuration
-func Serve(host, port, user, password, key, masterHost, imageDir string) {
-	config := ServerConfig{
-		Host:       host,
-		Port:       port,
-		User:       user,
-		Password:   password,
-		Key:        key,
-		MasterHost: masterHost,
-		ImageDir:   imageDir,
-	}
-
-	server = NewServer(config)
+func Serve(serverConfig types.ServerConfig) {
+	server = NewServer(serverConfig)
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
