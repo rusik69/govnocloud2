@@ -81,17 +81,6 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
-		log.Println("Downloading VM images")
-		err = k3s.DownloadVMImages(
-			cfg.Install.Master.Host,
-			cfg.Install.SSH.User,
-			cfg.Install.SSH.KeyPath,
-			cfg.Install.ImagesDir,
-		)
-		if err != nil {
-			panic(err)
-		}
-
 		// Install k3sup tool
 		log.Println("Installing k3sup tool on " + cfg.Install.Master.Host)
 		err = k3s.InstallK3sUp(
@@ -113,7 +102,17 @@ var installCmd = &cobra.Command{
 			log.Println(out)
 			panic(err)
 		}
-
+		log.Println("Downloading VM images on " + cfg.Install.Master.Host)
+		err = k3s.DownloadVMImages(
+			cfg.Install.Master.Host,
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+			cfg.Install.ImagesDir,
+		)
+		if err != nil {
+			panic(err)
+		}
 		for _, worker := range workersIPsSplit {
 			log.Println("Deploying k3s worker on " + worker)
 			err = k3s.DeployNode(
@@ -126,8 +125,9 @@ var installCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
-			log.Println("Downloading VM images")
+			log.Println("Downloading VM images on " + worker)
 			err = k3s.DownloadVMImages(
+				cfg.Install.Master.Host,
 				worker,
 				cfg.Install.SSH.User,
 				cfg.Install.SSH.KeyPath,

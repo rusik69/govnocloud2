@@ -55,8 +55,27 @@ func CreateVMHandler(c *gin.Context) {
 	respondWithSuccess(c, gin.H{"message": "VM created successfully"})
 }
 
+// CreateVolumeForVM creates a new volume for a VM
+func CreateVolumeForVM(vm types.VM) error {
+	volume := types.Volume{
+		Name: vm.Name,
+		Size: vm.Size,
+	}
+	out, err := volumeManager.CreateVolume(volume, vm.Namespace)
+	if err != nil {
+		return fmt.Errorf("failed to create volume for VM %s: %w", vm.Name, err)
+	}
+	log.Printf("volume created successfully: %s", out)
+	return nil
+}
+
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
+	// Create volume first
+	if err := CreateVolumeForVM(vm); err != nil {
+		return fmt.Errorf("failed to create volume: %w", err)
+	}
+
 	vmSize := types.VMSizes[vm.Size]
 	vmImage := types.VMImages[vm.Image]
 	imagePath := server.config.ImageDir + "/" + vmImage.FileName
