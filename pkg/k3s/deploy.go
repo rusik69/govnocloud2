@@ -165,11 +165,11 @@ func Suspend(ips []string, master, user, password, key string) {
 }
 
 // DownloadVMImages downloads the VM images
-func DownloadVMImages(host, user, key string, imagesDir string) error {
+func DownloadVMImages(master, host, user, key, imagesDir string) error {
 	// check if imagesDir exists on host and create if not
-	cmd := fmt.Sprintf("sudo mkdir -p %s", imagesDir)
+	cmd := fmt.Sprintf("ssh %s@%s 'sudo mkdir -p %s'", user, host, imagesDir)
 	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, key, user, "", false, 600); err != nil {
+	if out, err := ssh.Run(cmd, master, key, user, "", false, 600); err != nil {
 		return fmt.Errorf("failed to create images directory: %v\nOutput: %s", err, out)
 	}
 	for _, image := range types.VMImages {
