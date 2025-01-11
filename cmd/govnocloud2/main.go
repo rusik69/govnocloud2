@@ -78,10 +78,11 @@ type InstallConfig struct {
 	}
 	ImagesDir  string
 	Monitoring struct {
-		Enabled          bool
-		GrafanaHost      string
-		PrometheusHost   string
-		AlertmanagerHost string
+		Enabled             bool
+		GrafanaHost         string
+		PrometheusHost      string
+		AlertmanagerHost    string
+		KubevirtManagerHost string
 	}
 }
 
@@ -165,15 +166,17 @@ func initConfig() error {
 			},
 			ImagesDir: "/var/lib/govnocloud2/images",
 			Monitoring: struct {
-				Enabled          bool
-				GrafanaHost      string
-				PrometheusHost   string
-				AlertmanagerHost string
+				Enabled             bool
+				GrafanaHost         string
+				PrometheusHost      string
+				AlertmanagerHost    string
+				KubevirtManagerHost string
 			}{
-				Enabled:          true,
-				GrafanaHost:      "grafana.govno.cloud",
-				PrometheusHost:   "prometheus.govno.cloud",
-				AlertmanagerHost: "alertmanager.govno.cloud",
+				Enabled:             true,
+				GrafanaHost:         "grafana.govno.cloud",
+				PrometheusHost:      "prometheus.govno.cloud",
+				AlertmanagerHost:    "alertmanager.govno.cloud",
+				KubevirtManagerHost: "kubevirt-manager.govno.cloud",
 			},
 		},
 	}
@@ -216,6 +219,7 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Monitoring.GrafanaHost, "grafanahost", "", cfg.Install.Monitoring.GrafanaHost, "grafana host")
 	flags.StringVarP(&cfg.Install.Monitoring.PrometheusHost, "prometheushost", "", cfg.Install.Monitoring.PrometheusHost, "prometheus host")
 	flags.StringVarP(&cfg.Install.Monitoring.AlertmanagerHost, "alertmanagerhost", "", cfg.Install.Monitoring.AlertmanagerHost, "alertmanager host")
+	flags.StringVarP(&cfg.Install.Monitoring.KubevirtManagerHost, "kubevirtmanagerhost", "", cfg.Install.Monitoring.KubevirtManagerHost, "kubevirt manager host")
 }
 
 func setupUninstallFlags(cmd *cobra.Command) {
