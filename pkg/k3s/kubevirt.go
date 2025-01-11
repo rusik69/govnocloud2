@@ -48,7 +48,7 @@ func InstallKubeVirtManager(host, user, key string) error {
 	managerURL := "https://raw.githubusercontent.com/kubevirt-manager/kubevirt-manager/main/kubernetes/bundled.yaml"
 
 	// Install manager
-	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s", managerURL)
+	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s -n kubevirt", managerURL)
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
 		return fmt.Errorf("failed to install KubeVirt Manager: %w", err)
@@ -73,7 +73,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kubevirt-manager-ingress
-  namespace: kubevirt-manager
+  namespace: kubevirt
 spec:
   rules:
   - host: %s
