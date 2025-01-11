@@ -8,96 +8,77 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
-// KubeVirtConfig holds KubeVirt installation configuration
 type KubeVirtConfig struct {
-	Version     string
-	BaseURL     string
-	BinaryPath  string
-	Permissions string
-	Host        string
-	User        string
-	Key         string
+	Host    string
+	User    string
+	Key     string
+	Version string
 }
 
-// NewKubeVirtConfig creates a default KubeVirt configuration
 func NewKubeVirtConfig(host, user, key string) *KubeVirtConfig {
-	const version = "v1.4.0"
 	return &KubeVirtConfig{
-		Version:     version,
-		BaseURL:     fmt.Sprintf("https://github.com/kubevirt/kubevirt/releases/download/%s", version),
-		BinaryPath:  "/usr/local/bin/virtctl",
-		Permissions: "+x",
-		Host:        host,
-		User:        user,
-		Key:         key,
+		Host:    host,
+		User:    user,
+		Key:     key,
+		Version: "v1.4.0",
 	}
 }
 
-// InstallKubeVirt installs KubeVirt to k3s cluster.
 func InstallKubeVirt(host, user, key string) error {
 	cfg := NewKubeVirtConfig(host, user, key)
+	baseURL := fmt.Sprintf("https://github.com/kubevirt/kubevirt/releases/download/%s", cfg.Version)
 
-	// Install operator
-	if err := applyKubeVirtManifest(cfg, "kubevirt-operator.yaml"); err != nil {
-		return fmt.Errorf("failed to install KubeVirt operator: %w", err)
-	}
-
-	// Install CR
-	if err := applyKubeVirtManifest(cfg, "kubevirt-cr.yaml"); err != nil {
-		return fmt.Errorf("failed to install KubeVirt CR: %w", err)
+	// Install operator and CR
+	manifests := []string{"kubevirt-operator.yaml", "kubevirt-cr.yaml"}
+	for _, manifest := range manifests {
+		cmd := fmt.Sprintf("kubectl apply -f %s/%s --wait=true --timeout=300s", baseURL, manifest)
+		log.Println(cmd)
+		if out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
+			return fmt.Errorf("failed to apply %s: %w", manifest, err)
+		} else {
+			log.Println(out)
+		}
 	}
 
 	// Install virtctl
-	if err := installVirtctl(cfg); err != nil {
+	virtctlCmd := fmt.Sprintf("sudo curl -L -o /usr/local/bin/virtctl %s/virtctl-%s-linux-amd64 && sudo chmod +x /usr/local/bin/virtctl",
+		baseURL, cfg.Version)
+	log.Println(virtctlCmd)
+	if out, err := ssh.Run(virtctlCmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
 		return fmt.Errorf("failed to install virtctl: %w", err)
+	} else {
+		log.Println(out)
 	}
 
-	log.Println("sleeping 5 seconds")
-	time.Sleep(5 * time.Second)
-	log.Println("Waiting for KubeVirt to be ready")
 	// Wait for KubeVirt to be ready
-	cmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-operator -n kubevirt"
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
-		return fmt.Errorf("failed to wait for KubeVirt to be ready: %w", err)
+	time.Sleep(5 * time.Second)
+	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-operator -n kubevirt"
+	log.Println(waitCmd)
+	if _, err := ssh.Run(waitCmd, cfg.Host, cfg.Key, cfg.User, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for KubeVirt: %w", err)
 	}
-	// FIXME: wait for crds
-	// time.Sleep(30 * time.Second)
-	// Create kubevirt instance types
-	// for _, size := range types.VMSizes {
-	// 	cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %dMi | kubectl create -f -", size.Name, size.CPU, size.RAM)
-	// 	log.Println(cmd)
-	// 	if _, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60); err != nil {
-	// 		return fmt.Errorf("failed to create kubevirt instance type: %w", err)
-	// 	}
-	// }
-	return nil
-}
-
-// applyKubeVirtManifest applies a KubeVirt manifest using kubectl
-func applyKubeVirtManifest(cfg *KubeVirtConfig, manifest string) error {
-	url := fmt.Sprintf("%s/%s", cfg.BaseURL, manifest)
-	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s", url)
-	log.Println(cmd)
-	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
-	if err != nil {
-		return fmt.Errorf("failed to apply KubeVirt manifest: %w", err)
-	}
-	log.Println(out)
 
 	return nil
 }
 
-// installVirtctl downloads and installs the virtctl binary
-func installVirtctl(cfg *KubeVirtConfig) error {
-	// Download virtctl
-	virtctlURL := fmt.Sprintf("%s/virtctl-v1.4.0-linux-amd64", cfg.BaseURL)
-	cmd := fmt.Sprintf("sudo curl -L -o %s %s; sudo chmod +x %s", cfg.BinaryPath, virtctlURL, cfg.BinaryPath)
+func InstallKubeVirtManager(host, user, key string) error {
+	managerURL := "https://raw.githubusercontent.com/kubevirt-manager/kubevirt-manager/main/kubernetes/bundled.yaml"
+
+	// Install manager
+	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s", managerURL)
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
-	if err != nil {
-		return fmt.Errorf("failed to download virtctl: %w", err)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+		return fmt.Errorf("failed to install KubeVirt Manager: %w", err)
+	} else {
+		log.Println(out)
 	}
-	log.Println(out)
+
+	// Wait for manager to be ready
+	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager -n kubevirt-manager"
+	log.Println(waitCmd)
+	if _, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for KubeVirt Manager: %w", err)
+	}
+
 	return nil
 }

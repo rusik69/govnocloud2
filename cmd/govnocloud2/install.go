@@ -175,6 +175,16 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
+		log.Println("Installing KubeVirt Manager")
+		err = k3s.InstallKubeVirtManager(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
+
 		log.Println("Installing Longhorn")
 		err = k3s.InstallLonghorn(
 			cfg.Install.Master.Host,
