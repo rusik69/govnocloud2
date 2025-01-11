@@ -226,7 +226,6 @@ defaultRules:
 	if _, err := file.WriteString(valuesYaml); err != nil {
 		return "", fmt.Errorf("failed to write values file: %w", err)
 	}
-
 	return file.Name(), nil
 }
 

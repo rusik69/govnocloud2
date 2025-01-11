@@ -41,6 +41,16 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 		return fmt.Errorf("failed to wait for KubeVirt: %w", err)
 	}
 
+	// install kubevirt manager
+	if err := InstallKubeVirtManager(host, user, key); err != nil {
+		return fmt.Errorf("failed to install KubeVirt Manager: %w", err)
+	}
+
+	// create ingress
+	if err := CreateKubevirtManagerIngress(host, user, key, managerHost); err != nil {
+		return fmt.Errorf("failed to create ingress: %w", err)
+	}
+
 	return nil
 }
 
@@ -48,7 +58,7 @@ func InstallKubeVirtManager(host, user, key string) error {
 	managerURL := "https://raw.githubusercontent.com/kubevirt-manager/kubevirt-manager/main/kubernetes/bundled.yaml"
 
 	// Install manager
-	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s -n kubevirt", managerURL)
+	cmd := fmt.Sprintf("kubectl apply -f %s --wait=true --timeout=300s", managerURL)
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
 		return fmt.Errorf("failed to install KubeVirt Manager: %w", err)
@@ -57,7 +67,7 @@ func InstallKubeVirtManager(host, user, key string) error {
 	}
 
 	// Wait for manager to be ready
-	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager -n kubevirt"
+	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager"
 	log.Println(waitCmd)
 	if _, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for KubeVirt Manager: %w", err)
@@ -88,6 +98,23 @@ spec:
               number: 80
 `, managerHost)
 	log.Println(ingressYaml)
+	cmd := fmt.Sprintf("cat << 'EOF' > /tmp/kubevirt-manager-ingress.yaml\n%s\nEOF", ingressYaml)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+		return fmt.Errorf("failed to create ingress YAML: %w", err)
+	} else {
+		log.Println(out)
+	}
+	cmd = "kubectl apply -f /tmp/kubevirt-manager-ingress.yaml -n kubevirt"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+		return fmt.Errorf("failed to apply ingress: %w", err)
+	} else {
+		log.Println(out)
+	}
+
+	log.Println("KubeVirt Manager is accessible at:")
+	log.Printf("- KubeVirt Manager: http://%s", managerHost)
 
 	return nil
 }
