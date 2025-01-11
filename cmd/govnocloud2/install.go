@@ -171,7 +171,7 @@ var installCmd = &cobra.Command{
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
 			cfg.Install.Monitoring.KubevirtManagerHost,
-			"v1.4.1",
+			"v1.4.0",
 		)
 		if err != nil {
 			panic(err)
