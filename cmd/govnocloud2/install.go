@@ -56,7 +56,7 @@ var installCmd = &cobra.Command{
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
-			cfg.Install.Workers.Interface,
+			cfg.Install.Master.Interface,
 			workersMacsSplit,
 			workersIPsSplit,
 		)

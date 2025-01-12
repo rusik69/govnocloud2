@@ -24,6 +24,7 @@ type MasterConfig struct {
 	Host       string
 	KeyPath    string
 	PubKeyPath string
+	Interface  string
 }
 
 type WorkerConfig struct {
@@ -112,13 +113,14 @@ func initConfig() error {
 			KeyPath:    "~/.ssh/id_rsa",
 			PubKeyPath: "~/.ssh/id_rsa.pub",
 			Host:       "localhost",
+			Interface:  "enp0s31f6",
 		},
 		Kube: KubeConfig{
 			ConfigPath: filepath.Join(homeDir, ".kube/config"),
 		},
 		Worker: WorkerConfig{
 			IPRange:   "10.0.0.0/24",
-			Interface: "enp0s31f6",
+			Interface: "enp0s25",
 		},
 		Server: types.ServerConfig{
 			Host:       "0.0.0.0",
@@ -140,9 +142,11 @@ func initConfig() error {
 				Host       string
 				KeyPath    string
 				PubKeyPath string
+				Interface  string
 			}{
 				KeyPath:    "~/.ssh/id_rsa",
 				PubKeyPath: "~/.ssh/id_rsa.pub",
+				Interface:  "enp0s31f6",
 			},
 			Workers: struct {
 				IPs       string
