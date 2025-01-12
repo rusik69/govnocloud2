@@ -56,35 +56,31 @@ type ClientConfig struct {
 	Port string
 }
 
+type ServerConfig struct {
+	Host       string
+	Port       string
+	User       string
+	Password   string
+	Key        string
+	MasterHost string
+	ImageDir   string
+}
+
+type MonitoringConfig struct {
+	Enabled             bool
+	GrafanaHost         string
+	PrometheusHost      string
+	AlertmanagerHost    string
+	KubevirtManagerHost string
+}
+
 type InstallConfig struct {
-	Master struct {
-		Host       string
-		KeyPath    string
-		PubKeyPath string
-	}
-	Workers struct {
-		IPs       string
-		MACs      string
-		IPRange   string
-		Interface string
-	}
-	SSH struct {
-		User       string
-		Password   string
-		KeyPath    string
-		PubKeyPath string
-	}
-	Server struct {
-		Port string
-	}
+	Master     MasterConfig
+	Workers    WorkerConfig
+	SSH        SSHConfig
+	Server     ServerConfig
 	ImagesDir  string
-	Monitoring struct {
-		Enabled             bool
-		GrafanaHost         string
-		PrometheusHost      string
-		AlertmanagerHost    string
-		KubevirtManagerHost string
-	}
+	Monitoring MonitoringConfig
 }
 
 var (
@@ -138,44 +134,23 @@ func initConfig() error {
 			Port: "6969",
 		},
 		Install: InstallConfig{
-			Master: struct {
-				Host       string
-				KeyPath    string
-				PubKeyPath string
-				Interface  string
-			}{
+			Master: MasterConfig{
 				KeyPath:    "~/.ssh/id_rsa",
 				PubKeyPath: "~/.ssh/id_rsa.pub",
 				Interface:  "enp0s31f6",
 			},
-			Workers: struct {
-				IPs       string
-				MACs      string
-				IPRange   string
-				Interface string
-			}{
+			Workers: WorkerConfig{
 				IPRange:   "10.0.0.0/24",
 				Interface: "enp0s25",
 			},
-			SSH: struct {
-				User       string
-				Password   string
-				KeyPath    string
-				PubKeyPath string
-			}{
+			SSH: SSHConfig{
 				User:       "ubuntu",
 				Password:   "ubuntu",
 				KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
 				PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
 			},
 			ImagesDir: "/var/lib/govnocloud2/images",
-			Monitoring: struct {
-				Enabled             bool
-				GrafanaHost         string
-				PrometheusHost      string
-				AlertmanagerHost    string
-				KubevirtManagerHost string
-			}{
+			Monitoring: MonitoringConfig{
 				Enabled:             true,
 				GrafanaHost:         "grafana.govno.cloud",
 				PrometheusHost:      "prometheus.govno.cloud",
