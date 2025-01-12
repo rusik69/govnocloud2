@@ -118,7 +118,7 @@ func initConfig() error {
 		},
 		Worker: WorkerConfig{
 			IPRange:   "10.0.0.0/24",
-			Interface: "enp0s25",
+			Interface: "enp0s31f6",
 		},
 		Server: types.ServerConfig{
 			Host:       "0.0.0.0",
