@@ -113,6 +113,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 	for i := 0; i < maxRetries; i++ {
 		// List all CSI drivers for debugging
 		cmd = "kubectl get csidrivers"
+		log.Println(cmd)
 		out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0)
 		if err != nil {
 			return fmt.Errorf("failed to get CSI drivers: %w", err)
@@ -121,6 +122,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 
 		// Check for Longhorn CSI driver
 		cmd = "kubectl get csidriver driver.longhorn.io"
+		log.Println(cmd)
 		out, err = ssh.Run(cmd, master, keyPath, user, "", true, 0)
 		if err == nil {
 			log.Printf("CSI driver found:\n%s", out)
@@ -130,6 +132,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 		if i == maxRetries-1 {
 			// Get Longhorn manager logs for debugging
 			cmd = "kubectl -n longhorn-system logs -l app=longhorn-manager --tail=100"
+			log.Println(cmd)
 			out, _ := ssh.Run(cmd, master, keyPath, user, "", true, 0)
 			log.Printf("Longhorn manager logs:\n%s", out)
 			return fmt.Errorf("CSI driver not registered after %d attempts", maxRetries)

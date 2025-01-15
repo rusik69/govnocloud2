@@ -190,10 +190,11 @@ func DownloadVMImages(master, host, user, key, imagesDir string) error {
 // InstallK9s installs the K9s terminal UI for Kubernetes
 func InstallK9s(host, user, key string) error {
 	// Download K9s binary
-	cmd := fmt.Sprintf("curl -LO https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz && " +
-		"tar xzf k9s_Linux_amd64.tar.gz && " +
-		"sudo mv k9s /usr/local/bin/ && " +
-		"rm k9s_Linux_amd64.tar.gz LICENSE README.md")
+	version := "v0.32.7"
+	cmd := fmt.Sprintf("curl -LO https://github.com/derailed/k9s/releases/download/%s/k9s_%s_Linux_amd64.tar.gz && "+
+		"tar xzf k9s_%s_Linux_amd64.tar.gz && "+
+		"sudo mv k9s /usr/local/bin/ && "+
+		"rm k9s_%s_Linux_amd64.tar.gz LICENSE README.md", version, version, version, version)
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to install k9s: %v\nOutput: %s", err, out)
