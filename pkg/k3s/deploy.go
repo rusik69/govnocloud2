@@ -134,6 +134,11 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 		}
 	}
 
+	// Install K9s after K3s is deployed
+	if err := InstallK9s(host, user, key); err != nil {
+		return fmt.Errorf("failed to install k9s: %w", err)
+	}
+
 	return nil
 }
 
@@ -179,5 +184,21 @@ func DownloadVMImages(master, host, user, key, imagesDir string) error {
 			return fmt.Errorf("failed to download %s: %v\nOutput: %s", image.Name, err, out)
 		}
 	}
+	return nil
+}
+
+// InstallK9s installs the K9s terminal UI for Kubernetes
+func InstallK9s(host, user, key string) error {
+	// Download K9s binary
+	cmd := fmt.Sprintf("curl -LO https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz && " +
+		"tar xzf k9s_Linux_amd64.tar.gz && " +
+		"sudo mv k9s /usr/local/bin/ && " +
+		"rm k9s_Linux_amd64.tar.gz LICENSE README.md")
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to install k9s: %v\nOutput: %s", err, out)
+	}
+
+	log.Printf("K9s installed successfully on %s", host)
 	return nil
 }

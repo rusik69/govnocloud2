@@ -155,6 +155,16 @@ var installCmd = &cobra.Command{
 		log.Println("Nodes:")
 		log.Println(out)
 
+		log.Println("Installing K9s")
+		err = k3s.InstallK9s(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
+
 		log.Println("Installing Helm")
 		err = k3s.InstallHelm(
 			cfg.Install.Master.Host,
