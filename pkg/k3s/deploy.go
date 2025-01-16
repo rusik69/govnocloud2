@@ -226,7 +226,6 @@ func InstallDashboard(host, user, key, hostname string) error {
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to get dashboard pods: %v\nOutput: %s", err, out)
 	}
-	log.Println(out)
 	// create dashboard ingress
 	ingressYaml := fmt.Sprintf(`apiVersion: networking.k8s.io/v1
 kind: Ingress
