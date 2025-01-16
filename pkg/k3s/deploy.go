@@ -243,7 +243,7 @@ spec:
               service:
                 name: kubernetes-dashboard
                 port:
-				  number: 80`, hostname)
+                  number: 80`, hostname)
 	log.Println(ingressYaml)
 	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/kubernetes-dashboard-ingress.yaml\n%s\nEOF", ingressYaml)
 	log.Println(cmd)
