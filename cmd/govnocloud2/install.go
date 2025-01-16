@@ -20,7 +20,12 @@ var installCmd = &cobra.Command{
 		log.Println("workers macs: ", cfg.Install.Workers.MACs)
 		log.Println("user: ", cfg.Install.SSH.User)
 		log.Println("key: ", cfg.Install.SSH.KeyPath)
-
+		log.Println("dashboard host: ", cfg.Install.Dashboard.Host)
+		log.Println("grafana host: ", cfg.Install.Monitoring.GrafanaHost)
+		log.Println("prometheus host: ", cfg.Install.Monitoring.PrometheusHost)
+		log.Println("alertmanager host: ", cfg.Install.Monitoring.AlertmanagerHost)
+		log.Println("kubevirt manager host: ", cfg.Install.Monitoring.KubevirtManagerHost)
+		
 		if cfg.Install.Master.Host == "" {
 			panic("master is required")
 		}
@@ -170,6 +175,17 @@ var installCmd = &cobra.Command{
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		log.Println("Installing Kubernetes Dashboard")
+		err = k3s.InstallDashboard(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+			cfg.Install.Dashboard.Host,
 		)
 		if err != nil {
 			panic(err)

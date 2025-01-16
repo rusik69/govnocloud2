@@ -74,6 +74,10 @@ type MonitoringConfig struct {
 	KubevirtManagerHost string
 }
 
+type DashboardConfig struct {
+	Host string
+}
+
 type InstallConfig struct {
 	Master     MasterConfig
 	Workers    WorkerConfig
@@ -81,6 +85,7 @@ type InstallConfig struct {
 	Server     ServerConfig
 	ImagesDir  string
 	Monitoring MonitoringConfig
+	Dashboard  DashboardConfig
 }
 
 var (
@@ -157,6 +162,9 @@ func initConfig() error {
 				AlertmanagerHost:    "alertmanager.govno.cloud",
 				KubevirtManagerHost: "kubevirt-manager.govno.cloud",
 			},
+			Dashboard: DashboardConfig{
+				Host: "dashboard.govno.cloud",
+			},
 		},
 	}
 
@@ -199,6 +207,7 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Monitoring.PrometheusHost, "prometheushost", "", cfg.Install.Monitoring.PrometheusHost, "prometheus host")
 	flags.StringVarP(&cfg.Install.Monitoring.AlertmanagerHost, "alertmanagerhost", "", cfg.Install.Monitoring.AlertmanagerHost, "alertmanager host")
 	flags.StringVarP(&cfg.Install.Monitoring.KubevirtManagerHost, "kubevirtmanagerhost", "", cfg.Install.Monitoring.KubevirtManagerHost, "kubevirt manager host")
+	flags.StringVarP(&cfg.Install.Dashboard.Host, "dashboardhost", "", cfg.Install.Dashboard.Host, "dashboard host")
 }
 
 func setupUninstallFlags(cmd *cobra.Command) {

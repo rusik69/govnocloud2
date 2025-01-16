@@ -203,3 +203,52 @@ func InstallK9s(host, user, key string) error {
 	log.Printf("K9s installed successfully on %s", host)
 	return nil
 }
+
+// InstallDashboard installs the Kubernetes dashboard using helm chart
+func InstallDashboard(host, user, key, hostname string) error {
+	cmd := "helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to add helm repo: %v\nOutput: %s", err, out)
+	}
+	cmd = "helm repo update"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to update helm repo: %v\nOutput: %s", err, out)
+	}
+	cmd = "helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --namespace kubernetes-dashboard --create-namespace"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to install dashboard: %v\nOutput: %s", err, out)
+	}
+	cmd = "kubectl get pods -n kubernetes-dashboard"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to get dashboard pods: %v\nOutput: %s", err, out)
+	}
+	log.Println(out)
+	// create dashboard ingress
+	ingressYaml := fmt.Sprintf(`apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  rules:
+    - host: %s
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubernetes-dashboard
+                port: number: 80`, hostname)
+	log.Println(ingressYaml)
+	if out, err := ssh.Run(ingressYaml, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to create dashboard ingress: %v\nOutput: %s", err, out)
+	}
+	log.Printf("Dashboard installed successfully on %s", host)
+	return nil
+}
+
