@@ -244,10 +244,10 @@ spec:
                 name: kubernetes-dashboard
                 port: number: 80`, hostname)
 	log.Println(ingressYaml)
-	if out, err := ssh.Run(ingressYaml, host, key, user, "", true, 600); err != nil {
+	cmd = fmt.Sprintf("kubectl apply -f - <<EOF\n%s\nEOF", ingressYaml)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to create dashboard ingress: %v\nOutput: %s", err, out)
 	}
 	log.Printf("Dashboard installed successfully on %s", host)
 	return nil
 }
-
