@@ -267,13 +267,6 @@ func SetupNat(host, user, key, externalInterface, internalInterface string) erro
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to install iptables-persistent: %v\nOutput: %s", err, out)
 	}
-
-	// Enable iptables-persistent
-	cmd = "sudo systemctl enable --now iptables-persistent"
-	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to enable iptables-persistent: %v\nOutput: %s", err, out)
-	}
 	// Enable ip_forward
 	cmd = "sudo sysctl -w net.ipv4.ip_forward=1"
 	log.Println(cmd)
