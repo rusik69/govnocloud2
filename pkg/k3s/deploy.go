@@ -292,7 +292,7 @@ func SetupNat(host, user, key, externalInterface, internalInterface string) erro
 		return fmt.Errorf("failed to add established rule: %v\nOutput: %s", err, out)
 	}
 	// save iptables rules
-	cmd = "sudo iptables-save > /etc/iptables/rules.v4"
+	cmd = "sudo iptables-save | sudo tee /etc/iptables/rules.v4"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to save iptables rules: %v\nOutput: %s", err, out)
