@@ -258,3 +258,51 @@ spec:
 	log.Printf("Dashboard installed successfully on %s", host)
 	return nil
 }
+
+// SetupNat setups NAT
+func SetupNat(host, user, key, externalInterface, internalInterface string) error {
+	// Install iptables-persistent
+	cmd := "sudo apt install -y iptables-persistent"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to install iptables-persistent: %v\nOutput: %s", err, out)
+	}
+
+	// Enable iptables-persistent
+	cmd = "sudo systemctl enable --now iptables-persistent"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to enable iptables-persistent: %v\nOutput: %s", err, out)
+	}
+	// Enable ip_forward
+	cmd = "sudo sysctl -w net.ipv4.ip_forward=1"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to enable ip_forward: %v\nOutput: %s", err, out)
+	}
+	// add masquerade rule
+	cmd = fmt.Sprintf("sudo iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", externalInterface)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to add masquerade rule: %v\nOutput: %s", err, out)
+	}
+	// add forwarding rule
+	cmd = fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -j ACCEPT", internalInterface, externalInterface)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to add forwarding rule: %v\nOutput: %s", err, out)
+	}
+	// add established rule
+	cmd = "sudo iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to add established rule: %v\nOutput: %s", err, out)
+	}
+	// save iptables rules
+	cmd = "sudo iptables-save > /etc/iptables/rules.v4"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to save iptables rules: %v\nOutput: %s", err, out)
+	}
+	return nil
+}

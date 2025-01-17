@@ -86,6 +86,13 @@ type InstallConfig struct {
 	ImagesDir  string
 	Monitoring MonitoringConfig
 	Dashboard  DashboardConfig
+	Nat        NatConfig
+}
+
+type NatConfig struct {
+	Enabled           bool
+	ExternalInterface string
+	InternalInterface string
 }
 
 var (
@@ -165,6 +172,11 @@ func initConfig() error {
 			Dashboard: DashboardConfig{
 				Host: "dashboard.govno.cloud",
 			},
+			Nat: NatConfig{
+				Enabled:           true,
+				ExternalInterface: "wlp2s0",
+				InternalInterface: "enp0s31f6",
+			},
 		},
 	}
 
@@ -208,6 +220,9 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Monitoring.AlertmanagerHost, "alertmanagerhost", "", cfg.Install.Monitoring.AlertmanagerHost, "alertmanager host")
 	flags.StringVarP(&cfg.Install.Monitoring.KubevirtManagerHost, "kubevirtmanagerhost", "", cfg.Install.Monitoring.KubevirtManagerHost, "kubevirt manager host")
 	flags.StringVarP(&cfg.Install.Dashboard.Host, "dashboardhost", "", cfg.Install.Dashboard.Host, "dashboard host")
+	flags.BoolVarP(&cfg.Install.Nat.Enabled, "nat", "", cfg.Install.Nat.Enabled, "enable nat")
+	flags.StringVarP(&cfg.Install.Nat.ExternalInterface, "nat-external-interface", "", cfg.Install.Nat.ExternalInterface, "external interface")
+	flags.StringVarP(&cfg.Install.Nat.InternalInterface, "nat-internal-interface", "", cfg.Install.Nat.InternalInterface, "internal interface")
 }
 
 func setupUninstallFlags(cmd *cobra.Command) {
