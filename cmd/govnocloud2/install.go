@@ -70,6 +70,20 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
+		if cfg.Install.Nat.Enabled {
+			log.Println("Setting up NAT")
+			err = k3s.SetupNat(
+				cfg.Install.Master.Host,
+				cfg.Install.SSH.User,
+				cfg.Install.SSH.KeyPath,
+				cfg.Install.Nat.ExternalInterface,
+				cfg.Install.Nat.InternalInterface,
+			)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		log.Println("Deploying server on " + cfg.Install.Master.Host)
 		err = k3s.Deploy(
 			cfg.Install.Master.Host,
