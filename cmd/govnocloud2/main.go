@@ -160,7 +160,7 @@ func initConfig() error {
 				GrafanaHost:         "grafana.govno.cloud",
 				PrometheusHost:      "prometheus.govno.cloud",
 				AlertmanagerHost:    "alertmanager.govno.cloud",
-				KubevirtManagerHost: "kubevirt-manager.govno.cloud",
+				KubevirtManagerHost: "kubevirt.govno.cloud",
 			},
 			Dashboard: DashboardConfig{
 				Host: "dashboard.govno.cloud",
