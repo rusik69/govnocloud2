@@ -53,7 +53,7 @@ spec:
 
 	out, err := m.kubectl.Run("apply", "-f", tempFile.Name())
 	if err != nil {
-		return out, err
+		return string(out), err
 	}
 
 	return string(out), nil
