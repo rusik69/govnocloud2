@@ -59,7 +59,7 @@ func CreateVMHandler(c *gin.Context) {
 func CreateVolumeForVM(vm types.VM) error {
 	volume := types.Volume{
 		Name: vm.Name,
-		Size: vm.Size,
+		Size: fmt.Sprintf("%dGi", types.VMSizes[vm.Size].Disk),
 	}
 	out, err := volumeManager.CreateVolume(volume, vm.Namespace)
 	if err != nil {
