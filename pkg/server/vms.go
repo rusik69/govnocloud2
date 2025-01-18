@@ -63,7 +63,7 @@ func CreateVolumeForVM(vm types.VM) error {
 	}
 	out, err := volumeManager.CreateVolume(volume, vm.Namespace)
 	if err != nil {
-		return fmt.Errorf("failed to create volume for VM %s: %w", vm.Name, err)
+		return fmt.Errorf("failed to create volume for VM %s: %w %s", vm.Name, err, out)
 	}
 	log.Printf("volume created successfully: %s", out)
 	return nil
