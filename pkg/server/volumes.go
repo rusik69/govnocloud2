@@ -104,16 +104,19 @@ func (m *VolumeManager) GetVolume(name, namespace string) (types.Volume, error) 
 func CreateVolumeHandler(c *gin.Context) {
 	namespace := c.Param("namespace")
 	if namespace == "" {
+		log.Printf("namespace is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is required"})
 		return
 	}
 	volume := types.Volume{}
 	if err := c.ShouldBindJSON(&volume); err != nil {
+		log.Printf("failed to bind JSON: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	out, err := volumeManager.CreateVolume(volume, namespace)
 	if err != nil {
+		log.Printf("failed to create volume: %v\nOutput: %s", err, out)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -137,7 +140,7 @@ func DeleteVolumeHandler(c *gin.Context) {
 	}
 	out, err := volumeManager.DeleteVolume(name, namespace)
 	if err != nil {
-		log.Printf("failed to delete volume: %v", err)
+		log.Printf("failed to delete volume: %v\nOutput: %s", err, out)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
