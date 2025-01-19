@@ -99,9 +99,8 @@ spec:
           service:
             name: kubevirt-manager
             port:
-              number: 80
+              number: 8080
 `, managerHost)
-	log.Println(ingressYaml)
 	cmd := fmt.Sprintf("cat << 'EOF' > /tmp/kubevirt-manager-ingress.yaml\n%s\nEOF", ingressYaml)
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
