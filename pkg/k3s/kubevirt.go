@@ -83,7 +83,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kubevirt-manager-ingress
-  namespace: kubevirt
+  namespace: kubevirt-manager
 spec:
   rules:
   - host: %s
@@ -105,7 +105,7 @@ spec:
 	} else {
 		log.Println(out)
 	}
-	cmd = "kubectl apply -f /tmp/kubevirt-manager-ingress.yaml -n kubevirt"
+	cmd = "kubectl apply -f /tmp/kubevirt-manager-ingress.yaml -n kubevirt-manager"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
 		return fmt.Errorf("failed to apply ingress: %w", err)
