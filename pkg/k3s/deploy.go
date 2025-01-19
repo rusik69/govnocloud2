@@ -255,7 +255,8 @@ spec:
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to apply dashboard ingress: %v\nOutput: %s", err, out)
 	}
-	log.Printf("Dashboard installed successfully on %s", host)
+	log.Println("Kubernetes Dashboard is accessible at:")
+	log.Printf("- Dashboard: http://%s", hostname)
 	return nil
 }
 

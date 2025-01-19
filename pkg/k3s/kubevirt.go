@@ -84,7 +84,11 @@ kind: Ingress
 metadata:
   name: kubevirt-manager-ingress
   namespace: kubevirt-manager
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
 spec:
+  ingressClassName: traefik
   rules:
   - host: %s
     http:
