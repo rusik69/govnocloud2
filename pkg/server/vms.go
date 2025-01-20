@@ -69,6 +69,16 @@ func CreateVolumeForVM(vm types.VM) error {
 	return nil
 }
 
+// DeleteVolumeForVM deletes the volume for a VM
+func DeleteVolumeForVM(vm types.VM) error {
+	out, err := volumeManager.DeleteVolume(vm.Name, vm.Namespace)
+	if err != nil {
+		return fmt.Errorf("failed to delete volume for VM %s: %w %s", vm.Name, err, out)
+	}
+	log.Printf("volume deleted successfully: %s", out)
+	return nil
+}
+
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
 	// Create volume first
@@ -235,6 +245,19 @@ func DeleteVMHandler(c *gin.Context) {
 	if err := vmManager.DeleteVM(name, namespace); err != nil {
 		log.Printf("failed to delete VM %s in namespace %s: %v", name, namespace, err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete VM: %v", err))
+		return
+	}
+
+	vm, err := vmManager.GetVM(name, namespace)
+	if err != nil {
+		log.Printf("failed to get VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
+		return
+	}
+
+	if err := DeleteVolumeForVM(vm); err != nil {
+		log.Printf("failed to delete volume for VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete volume: %v", err))
 		return
 	}
 

@@ -241,9 +241,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kubernetes-dashboard
+                name: kubernetes-dashboard-web
                 port:
-                  number: 80`, hostname)
+                  number: 8000`, hostname)
 	log.Println(ingressYaml)
 	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/kubernetes-dashboard-ingress.yaml\n%s\nEOF", ingressYaml)
 	log.Println(cmd)
