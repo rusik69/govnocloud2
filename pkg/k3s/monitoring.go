@@ -278,7 +278,7 @@ spec:
           service:
             name: monitoring-kube-prometheus-prometheus
             port:
-              number: 9090
+              number: 8080
   - host: %s
     http:
       paths:
@@ -288,7 +288,7 @@ spec:
           service:
             name: monitoring-kube-prometheus-alertmanager
             port:
-              number: 9093
+              number: 8080
 `, cfg.GrafanaHost, cfg.PrometheusHost, cfg.AlertmanagerHost)
 
 	// Write and apply ingress configuration
