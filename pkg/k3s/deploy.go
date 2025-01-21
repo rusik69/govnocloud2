@@ -301,6 +301,7 @@ subjects:
 	if err != nil {
 		return "", fmt.Errorf("failed to get dashboard token: %v\nOutput: %s", err, out)
 	}
+	log.Println(out)
 	token := strings.TrimSpace(out)
 	return token, nil
 }
