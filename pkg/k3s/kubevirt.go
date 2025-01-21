@@ -24,7 +24,7 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 	}
 
 	// Install virtctl
-	virtctlCmd := fmt.Sprintf("sudo curl -L -o /usr/local/bin/virtctl %s/virtctl-%s-linux-amd64 && sudo chmod +x /usr/local/bin/virtctl",
+	virtctlCmd := fmt.Sprintf("sudo curl --no-progress-meter -L -o /usr/local/bin/virtctl %s/virtctl-%s-linux-amd64 && sudo chmod +x /usr/local/bin/virtctl",
 		baseURL, version)
 	log.Println(virtctlCmd)
 	if out, err := ssh.Run(virtctlCmd, host, key, user, "", true, 60); err != nil {

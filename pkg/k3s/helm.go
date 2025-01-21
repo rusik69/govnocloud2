@@ -35,7 +35,7 @@ func InstallHelm(host, user, key string) error {
 
 // installHelmWithConfig handles the actual Helm installation
 func installHelmWithConfig(cfg *HelmConfig) error {
-	cmd := fmt.Sprintf("curl -sfL %s | %s", cfg.ScriptURL, cfg.Shell)
+	cmd := fmt.Sprintf("curl --no-progress-meter -sfL %s | %s", cfg.ScriptURL, cfg.Shell)
 	out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("error installing Helm: %w", err)
