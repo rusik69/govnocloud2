@@ -257,7 +257,45 @@ spec:
 		return "", fmt.Errorf("failed to apply dashboard ingress: %v\nOutput: %s", err, out)
 	}
 	// get dashboard token
-	cmd = "kubectl -n kubernetes-dashboard create token kubernetes-dashboard-web"
+	saYaml := `apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard`
+	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/kubernetes-dashboard-sa.yaml\n%s\nEOF", saYaml)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return "", fmt.Errorf("failed to create dashboard service account: %v\nOutput: %s", err, out)
+	}
+	cmd = "kubectl apply -f /tmp/kubernetes-dashboard-sa.yaml -n kubernetes-dashboard --wait=true --timeout=300s"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return "", fmt.Errorf("failed to apply dashboard service account: %v\nOutput: %s", err, out)
+	}
+	crBindingRole := `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: admin-user
+    namespace: kubernetes-dashboard
+`
+	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/kubernetes-dashboard-crb.yaml\n%s\nEOF", crBindingRole)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return "", fmt.Errorf("failed to create dashboard cluster role binding: %v\nOutput: %s", err, out)
+	}
+	cmd = "kubectl apply -f /tmp/kubernetes-dashboard-crb.yaml -n kubernetes-dashboard --wait=true --timeout=300s"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return "", fmt.Errorf("failed to apply dashboard cluster role binding: %v\nOutput: %s", err, out)
+	}
+	cmd = "kubectl -n kubernetes-dashboard create token admin-user"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
