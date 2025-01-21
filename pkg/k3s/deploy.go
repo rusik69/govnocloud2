@@ -257,7 +257,7 @@ spec:
 		return "", fmt.Errorf("failed to apply dashboard ingress: %v\nOutput: %s", err, out)
 	}
 	// get dashboard token
-	cmd = "kubectl -n kubernetes-dashboard create token admin-user"
+	cmd = "kubectl -n kubernetes-dashboard create token kubernetes-dashboard-web"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
