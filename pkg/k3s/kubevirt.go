@@ -112,9 +112,6 @@ spec:
 	} else {
 		log.Println(out)
 	}
-
-	log.Println("KubeVirt Manager is accessible at:")
-	log.Printf("- KubeVirt Manager: http://%s", managerHost)
-
+	log.Println("KubeVirt Manager is successfully installed")
 	return nil
 }

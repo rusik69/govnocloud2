@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 	"github.com/rusik69/govnocloud2/pkg/types"
@@ -205,26 +206,26 @@ func InstallK9s(host, user, key string) error {
 }
 
 // InstallDashboard installs the Kubernetes dashboard using helm chart
-func InstallDashboard(host, user, key, hostname string) error {
+func InstallDashboard(host, user, key, hostname string) (string, error) {
 	cmd := "helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to add helm repo: %v\nOutput: %s", err, out)
+		return "", fmt.Errorf("failed to add helm repo: %v\nOutput: %s", err, out)
 	}
 	cmd = "helm repo update"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to update helm repo: %v\nOutput: %s", err, out)
+		return "", fmt.Errorf("failed to update helm repo: %v\nOutput: %s", err, out)
 	}
 	cmd = "helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --namespace kubernetes-dashboard --create-namespace"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to install dashboard: %v\nOutput: %s", err, out)
+		return "", fmt.Errorf("failed to install dashboard: %v\nOutput: %s", err, out)
 	}
 	cmd = "kubectl get pods -n kubernetes-dashboard"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to get dashboard pods: %v\nOutput: %s", err, out)
+		return "", fmt.Errorf("failed to get dashboard pods: %v\nOutput: %s", err, out)
 	}
 	// create dashboard ingress
 	ingressYaml := fmt.Sprintf(`apiVersion: networking.k8s.io/v1
@@ -248,16 +249,22 @@ spec:
 	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/kubernetes-dashboard-ingress.yaml\n%s\nEOF", ingressYaml)
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to create dashboard ingress: %v\nOutput: %s", err, out)
+		return "", fmt.Errorf("failed to create dashboard ingress: %v\nOutput: %s", err, out)
 	}
-	cmd = "kubectl apply -f /tmp/kubernetes-dashboard-ingress.yaml -n kubernetes-dashboard"
+	cmd = "kubectl apply -f /tmp/kubernetes-dashboard-ingress.yaml -n kubernetes-dashboard --wait=true --timeout=300s"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
-		return fmt.Errorf("failed to apply dashboard ingress: %v\nOutput: %s", err, out)
+		return "", fmt.Errorf("failed to apply dashboard ingress: %v\nOutput: %s", err, out)
 	}
-	log.Println("Kubernetes Dashboard is accessible at:")
-	log.Printf("- Dashboard: http://%s", hostname)
-	return nil
+	// get dashboard token
+	cmd = "kubectl -n kubernetes-dashboard create token admin-user"
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
+	if err != nil {
+		return "", fmt.Errorf("failed to get dashboard token: %v\nOutput: %s", err, out)
+	}
+	token := strings.TrimSpace(out)
+	return token, nil
 }
 
 // SetupNat setups NAT

@@ -10,7 +10,7 @@ import (
 )
 
 // InstallLonghorn installs Longhorn storage system into the Kubernetes cluster
-func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) error {
+func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost string) error {
 	log.Println("Installing Longhorn storage system...")
 
 	// Add the Longhorn Helm repository
@@ -145,7 +145,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath string) erro
 	log.Println("Installing Longhorn dashboard...")
 
 	// Create ingress for Longhorn dashboard
-	ingressYaml := `
+	ingressYaml := fmt.Sprintf(`
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -156,7 +156,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   rules:
-  - host: longhorn.govno.cloud
+  - host: %s
     http:
       paths:
       - path: /
@@ -166,7 +166,7 @@ spec:
             name: longhorn-frontend
             port:
               number: 80
-`
+`, ingressHost)
 
 	// Write ingress YAML to a temporary file on the master node
 	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/longhorn-ingress.yaml\n%s\nEOF", ingressYaml)

@@ -195,7 +195,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing Kubernetes Dashboard")
-		err = k3s.InstallDashboard(
+		dashboardToken, err := k3s.InstallDashboard(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -233,6 +233,7 @@ var installCmd = &cobra.Command{
 			workersIPsSplit,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
+			cfg.Install.Longhorn.Host,
 		)
 		if err != nil {
 			panic(err)
@@ -254,5 +255,12 @@ var installCmd = &cobra.Command{
 		} else {
 			log.Println("Monitoring is not enabled")
 		}
+		log.Printf("- Dashboard URL: http://%s", cfg.Install.Dashboard.Host)
+		log.Printf("- Dashboard Token: %s", dashboardToken)
+		log.Printf("- KubeVirt Manager URL: http://%s", cfg.Install.Monitoring.KubevirtManagerHost)
+		log.Printf("- Longhorn URL: http://%s", cfg.Install.Longhorn.Host)
+		log.Printf("- Prometheus URL: http://%s", cfg.Install.Monitoring.PrometheusHost)
+		log.Printf("- Alertmanager URL: http://%s", cfg.Install.Monitoring.AlertmanagerHost)
+		log.Printf("- Grafana URL: http://%s", cfg.Install.Monitoring.GrafanaHost)
 	},
 }

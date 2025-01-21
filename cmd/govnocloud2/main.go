@@ -86,6 +86,7 @@ type InstallConfig struct {
 	ImagesDir  string
 	Monitoring MonitoringConfig
 	Dashboard  DashboardConfig
+	Longhorn   LonghornConfig
 	Nat        NatConfig
 }
 
@@ -93,6 +94,10 @@ type NatConfig struct {
 	Enabled           bool
 	ExternalInterface string
 	InternalInterface string
+}
+
+type LonghornConfig struct {
+	Host string
 }
 
 var (
@@ -177,6 +182,9 @@ func initConfig() error {
 				ExternalInterface: "wlp2s0",
 				InternalInterface: "enp0s31f6",
 			},
+			Longhorn: LonghornConfig{
+				Host: "longhorn.govno.cloud",
+			},
 		},
 	}
 
@@ -220,6 +228,7 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Monitoring.AlertmanagerHost, "alertmanagerhost", "", cfg.Install.Monitoring.AlertmanagerHost, "alertmanager host")
 	flags.StringVarP(&cfg.Install.Monitoring.KubevirtManagerHost, "kubevirtmanagerhost", "", cfg.Install.Monitoring.KubevirtManagerHost, "kubevirt manager host")
 	flags.StringVarP(&cfg.Install.Dashboard.Host, "dashboardhost", "", cfg.Install.Dashboard.Host, "dashboard host")
+	flags.StringVarP(&cfg.Install.Longhorn.Host, "longhornhost", "", cfg.Install.Longhorn.Host, "longhorn host")
 	flags.BoolVarP(&cfg.Install.Nat.Enabled, "nat", "", cfg.Install.Nat.Enabled, "enable nat")
 	flags.StringVarP(&cfg.Install.Nat.ExternalInterface, "nat-external-interface", "", cfg.Install.Nat.ExternalInterface, "external interface")
 	flags.StringVarP(&cfg.Install.Nat.InternalInterface, "nat-internal-interface", "", cfg.Install.Nat.InternalInterface, "internal interface")

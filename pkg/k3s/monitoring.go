@@ -303,11 +303,6 @@ spec:
 	if out, err := ssh.Run(cmd, cfg.Host, cfg.Key, cfg.User, "", true, 0); err != nil {
 		return fmt.Errorf("failed to apply monitoring ingress: %s: %w", out, err)
 	}
-
-	log.Println("Monitoring stack is accessible at:")
-	log.Printf("- Grafana: http://%s", cfg.GrafanaHost)
-	log.Printf("- Prometheus: http://%s", cfg.PrometheusHost)
-	log.Printf("- Alertmanager: http://%s", cfg.AlertmanagerHost)
-
+	log.Println("Monitoring stack is successfully installed")
 	return nil
 }
