@@ -254,9 +254,6 @@ kind: Ingress
 metadata:
   name: monitoring-ingress
   namespace: monitoring
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   rules:
   - host: %s

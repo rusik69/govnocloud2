@@ -151,9 +151,6 @@ kind: Ingress
 metadata:
   name: longhorn-ingress
   namespace: longhorn-system
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
 spec:
   rules:
   - host: %s
