@@ -112,6 +112,14 @@ spec:
 	} else {
 		log.Println(out)
 	}
+	// remove kubevirt instance types
+	cmd = "for instancetype in $(kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'); do kubectl delete virtualmachineclusterinstancetype $instancetype; done"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+		return fmt.Errorf("failed to remove kubevirt instance types: %w", err)
+	} else {
+		log.Println(out)
+	}
 	log.Println("KubeVirt Manager is successfully installed")
 	return nil
 }

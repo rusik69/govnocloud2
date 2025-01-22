@@ -25,6 +25,7 @@ var installCmd = &cobra.Command{
 		log.Println("prometheus host: ", cfg.Install.Monitoring.PrometheusHost)
 		log.Println("alertmanager host: ", cfg.Install.Monitoring.AlertmanagerHost)
 		log.Println("kubevirt manager host: ", cfg.Install.Monitoring.KubevirtManagerHost)
+		log.Println("longhorn host: ", cfg.Install.Longhorn.Host)
 
 		if cfg.Install.Master.Host == "" {
 			panic("master is required")
