@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 func InstallKubeVirt(host, user, key, managerHost, version string) error {
@@ -119,6 +120,16 @@ spec:
 		return fmt.Errorf("failed to remove kubevirt instance types: %w", err)
 	} else {
 		log.Println(out)
+	}
+	// create virtualmachineinstancetypes based on vmsizes
+	for _, vmSize := range types.VMSizes {
+		cmd = fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %d", vmSize.Name, vmSize.CPU, vmSize.RAM)
+		log.Println(cmd)
+		if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+			return fmt.Errorf("failed to create virtualmachineinstancetype: %w", err)
+		} else {
+			log.Println(out)
+		}
 	}
 	log.Println("KubeVirt Manager is successfully installed")
 	return nil
