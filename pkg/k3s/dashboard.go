@@ -3,7 +3,6 @@ package k3s
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
@@ -105,6 +104,5 @@ subjects:
 		return "", fmt.Errorf("failed to get dashboard token: %v\nOutput: %s", err, out)
 	}
 	log.Println(out)
-	token := strings.TrimSpace(out)
-	return token, nil
+	return out, nil
 }
