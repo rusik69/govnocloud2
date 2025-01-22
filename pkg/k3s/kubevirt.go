@@ -101,35 +101,35 @@ spec:
 `, managerHost)
 	cmd := fmt.Sprintf("cat << 'EOF' > /tmp/kubevirt-manager-ingress.yaml\n%s\nEOF", ingressYaml)
 	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+	out, err := ssh.Run(cmd, host, key, user, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to create ingress YAML: %w", err)
-	} else {
-		log.Println(out)
 	}
+	log.Println(out)
 	cmd = "kubectl apply -f /tmp/kubevirt-manager-ingress.yaml -n kubevirt-manager"
 	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+	out, err = ssh.Run(cmd, host, key, user, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to apply ingress: %w", err)
-	} else {
-		log.Println(out)
 	}
+	log.Println(out)
 	// remove kubevirt instance types
 	cmd = "for instancetype in $(kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'); do kubectl delete virtualmachineclusterinstancetype $instancetype; done"
 	log.Println(cmd)
-	if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+	out, err = ssh.Run(cmd, host, key, user, "", true, 60)
+	if err != nil {
 		return fmt.Errorf("failed to remove kubevirt instance types: %w", err)
-	} else {
-		log.Println(out)
 	}
+	log.Println(out)
 	// create virtualmachineinstancetypes based on vmsizes
 	for _, vmSize := range types.VMSizes {
 		cmd = fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %d", vmSize.Name, vmSize.CPU, vmSize.RAM)
 		log.Println(cmd)
-		if out, err := ssh.Run(cmd, host, key, user, "", true, 60); err != nil {
+		out, err = ssh.Run(cmd, host, key, user, "", true, 60)
+		if err != nil {
 			return fmt.Errorf("failed to create virtualmachineinstancetype: %w", err)
-		} else {
-			log.Println(out)
 		}
+		log.Println(out)
 	}
 	log.Println("KubeVirt Manager is successfully installed")
 	return nil
