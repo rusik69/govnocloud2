@@ -114,6 +114,7 @@ spec:
 		return fmt.Errorf("failed to apply ingress: %w", err)
 	}
 	log.Println(out)
+	time.Sleep(60 * time.Second)
 	// get kubevirt instance types
 	cmd = "kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'"
 	log.Println(cmd)
