@@ -218,11 +218,44 @@ func SetupNat(host, user, key, externalInterface, internalInterface string) erro
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to enable ip_forward: %v\nOutput: %s", err, out)
 	}
+	// check if masquerade rule exists
+	cmd = fmt.Sprintf("sudo iptables -t nat -C POSTROUTING -o %s -j MASQUERADE 2>/dev/null || echo 'rule_not_found'", externalInterface)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to check masquerade rule: %v\nOutput: %s", err, out)
+	} else if out == "rule_not_found" {
+		log.Println("Masquerade rule not found, adding it")
+	} else {
+		log.Println("Masquerade rule already exists")
+		return nil
+	}
 	// add masquerade rule
 	cmd = fmt.Sprintf("sudo iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", externalInterface)
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return fmt.Errorf("failed to add masquerade rule: %v\nOutput: %s", err, out)
+	}
+	// check if forward rule exists
+	cmd = fmt.Sprintf("sudo iptables -C FORWARD -i %s -o %s -j ACCEPT 2>/dev/null || echo 'rule_not_found'", internalInterface, externalInterface)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to check forward rule: %v\nOutput: %s", err, out)
+	} else if out == "rule_not_found" {
+		log.Println("Forward rule not found, adding it")
+	} else {
+		log.Println("Forward rule already exists")
+		return nil
+	}
+	// check if established rule exists
+	cmd = "sudo iptables -C FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || echo 'rule_not_found'"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return fmt.Errorf("failed to check established rule: %v\nOutput: %s", err, out)
+	} else if out == "rule_not_found" {
+		log.Println("Established rule not found, adding it")
+	} else {
+		log.Println("Established rule already exists")
+		return nil
 	}
 	// add forwarding rule
 	cmd = fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -j ACCEPT", internalInterface, externalInterface)
