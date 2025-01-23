@@ -114,7 +114,14 @@ spec:
 		return fmt.Errorf("failed to apply ingress: %w", err)
 	}
 	log.Println(out)
-	time.Sleep(60 * time.Second)
+	// wait for kubevirt instance types to be ready
+	cmd = "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager -n kubevirt-manager"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, host, key, user, "", true, 300)
+	if err != nil {
+		return fmt.Errorf("failed to wait for kubevirt instance types: %w %s", err, out)
+	}
+	log.Println(out)
 	// get kubevirt instance types
 	cmd = "kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'"
 	log.Println(cmd)
