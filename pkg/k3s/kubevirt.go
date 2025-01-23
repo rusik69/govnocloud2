@@ -133,13 +133,15 @@ spec:
 	instanceTypes := strings.Split(out, " ")
 	// remove kubevirt instance types
 	for _, instanceType := range instanceTypes {
-		cmd = fmt.Sprintf("kubectl delete virtualmachineclusterinstancetype %s", instanceType)
-		log.Println(cmd)
-		out, err = ssh.Run(cmd, host, key, user, "", true, 60)
-		if err != nil {
-			return fmt.Errorf("failed to delete kubevirt instance type: %w", err)
+		if instanceType != " " {
+			cmd = fmt.Sprintf("kubectl delete virtualmachineclusterinstancetype %s", instanceType)
+			log.Println(cmd)
+			out, err = ssh.Run(cmd, host, key, user, "", true, 60)
+			if err != nil {
+				return fmt.Errorf("failed to delete kubevirt instance type: %w", err)
+			}
+			log.Println(out)
 		}
-		log.Println(out)
 	}
 	// create virtualmachineinstancetypes based on vmsizes
 	for _, vmSize := range types.VMSizes {
