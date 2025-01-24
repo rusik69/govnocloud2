@@ -97,7 +97,7 @@ subjects:
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return "", fmt.Errorf("failed to apply dashboard cluster role binding: %v\nOutput: %s", err, out)
 	}
-	cmd = "kubectl -n kubernetes-dashboard create token admin-user"
+	cmd = "kubectl -n kubernetes-dashboard create token admin-user | base64"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
