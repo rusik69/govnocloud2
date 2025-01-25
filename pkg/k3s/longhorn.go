@@ -65,7 +65,8 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 	}
 
 	// Get list of nodes
-	cmd = "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
+	cmd = "kubectl get nodes -o jsonpath='{.items[?(@.metadata.labels.node-role\\.kubernetes\\.io/master!=\"\")].metadata.name}'"
+	log.Println(cmd)
 	out, err = ssh.Run(cmd, master, keyPath, user, "", true, 0)
 	if err != nil {
 		return fmt.Errorf("failed to get nodes: %w", err)
