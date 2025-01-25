@@ -97,12 +97,29 @@ subjects:
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return "", fmt.Errorf("failed to apply dashboard cluster role binding: %v\nOutput: %s", err, out)
 	}
-	cmd = "kubectl -n kubernetes-dashboard create token admin-user | base64"
+	tokenSecret := `apiVersion: v1
+kind: Secret
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/service-account.name: "admin-user"   
+type: kubernetes.io/service-account-token`
+	cmd = fmt.Sprintf("cat << 'EOF' > /tmp/kubernetes-dashboard-token-secret.yaml\n%s\nEOF", tokenSecret)
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return "", fmt.Errorf("failed to create dashboard token secret: %v\nOutput: %s", err, out)
+	}
+	cmd = "kubectl apply -f /tmp/kubernetes-dashboard-token-secret.yaml -n kubernetes-dashboard --wait=true --timeout=300s"
+	log.Println(cmd)
+	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
+		return "", fmt.Errorf("failed to apply dashboard token secret: %v\nOutput: %s", err, out)
+	}
+	cmd = "kubectl -n kubernetes-dashboard get secret admin-user -o jsonpath='{.data.token}' | base64 -d"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
 		return "", fmt.Errorf("failed to get dashboard token: %v\nOutput: %s", err, out)
 	}
-	log.Println(out)
 	return out, nil
 }
