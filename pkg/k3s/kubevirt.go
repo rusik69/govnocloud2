@@ -145,7 +145,7 @@ spec:
 	}
 	// create virtualmachineinstancetypes based on vmsizes
 	for _, vmSize := range types.VMSizes {
-		cmd = fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %d", vmSize.Name, vmSize.CPU, vmSize.RAM)
+		cmd = fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %d | kubectl apply -f -", vmSize.Name, vmSize.CPU, vmSize.RAM)
 		log.Println(cmd)
 		out, err = ssh.Run(cmd, host, key, user, "", true, 60)
 		if err != nil {

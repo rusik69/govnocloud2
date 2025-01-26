@@ -115,7 +115,7 @@ type: kubernetes.io/service-account-token`
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 600); err != nil {
 		return "", fmt.Errorf("failed to apply dashboard token secret: %v\nOutput: %s", err, out)
 	}
-	cmd = "kubectl -n kubernetes-dashboard get secret admin-user -o jsonpath='{.data.token}' | base64 -d"
+	cmd = "kubectl -n kubernetes-dashboard get secret admin-user -o jsonpath='{.data.token}'"
 	log.Println(cmd)
 	out, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
