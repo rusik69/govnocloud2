@@ -122,6 +122,8 @@ spec:
 		return fmt.Errorf("failed to wait for kubevirt instance types: %w %s", err, out)
 	}
 	log.Println(out)
+	log.Println("sleep 120 seconds")
+	time.Sleep(120 * time.Second)
 	// get kubevirt instance types
 	cmd = "kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'"
 	log.Println(cmd)
