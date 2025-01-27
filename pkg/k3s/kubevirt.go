@@ -120,7 +120,7 @@ spec:
 	}
 	log.Println(out)
 	// wait for kubevirt instance types to be ready
-	cmd = "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager -n kubevirt-manager"
+	cmd = "kubectl wait --for=condition=ready --timeout=300s pod -n kubevirt-manager"
 	log.Println(cmd)
 	out, err = ssh.Run(cmd, host, key, user, "", true, 300)
 	if err != nil {
