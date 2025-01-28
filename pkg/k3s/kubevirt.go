@@ -34,15 +34,23 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 		log.Println(out)
 	}
 
-	// Wait for KubeVirt to be ready
+	// Wait for KubeVirt operator to be ready
 	time.Sleep(5 * time.Second)
-
-	// Wait for virt-operator
-	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-operator -n kubevirt"
-	log.Println(waitCmd)
-	if _, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
+	waitOperatorCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-operator -n kubevirt"
+	log.Println(waitOperatorCmd)
+	if _, err := ssh.Run(waitOperatorCmd, host, key, user, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for virt-operator: %w", err)
 	}
+
+	// Wait for KubeVirt CR to be ready
+	waitKVCmd := "kubectl wait --for=condition=Available --timeout=300s kubevirt kubevirt -n kubevirt"
+	log.Println(waitKVCmd)
+	if _, err := ssh.Run(waitKVCmd, host, key, user, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for KubeVirt CR: %w", err)
+	}
+
+	// Additional wait to ensure all components are created
+	time.Sleep(30 * time.Second)
 
 	// Wait for virt-api
 	waitApiCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-api -n kubevirt"
