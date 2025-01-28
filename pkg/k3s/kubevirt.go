@@ -3,7 +3,6 @@ package k3s
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
@@ -54,9 +53,9 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 	}
 
 	// create virtualmachineinstancetypes
-	// if err := CreateVirtualMachineInstanceTypes(host, user, key); err != nil {
-	// 	return fmt.Errorf("failed to create virtualmachineinstancetypes: %w", err)
-	// }
+	if err := CreateVirtualMachineInstanceTypes(host, user, key); err != nil {
+		return fmt.Errorf("failed to create virtualmachineinstancetypes: %w", err)
+	}
 
 	return nil
 }
@@ -116,40 +115,11 @@ spec:
 }
 
 func CreateVirtualMachineInstanceTypes(host, user, key string) error {
-	// wait for kubevirt instance types to be ready
-	cmd := "kubectl wait --for=condition=ready --timeout=300s pod -n kubevirt-manager"
-	log.Println(cmd)
-	out, err := ssh.Run(cmd, host, key, user, "", true, 300)
-	if err != nil {
-		return fmt.Errorf("failed to wait for kubevirt instance types: %w %s", err, out)
-	}
-	log.Println(out)
-	// get kubevirt instance types
-	cmd = "kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'"
-	log.Println(cmd)
-	out, err = ssh.Run(cmd, host, key, user, "", true, 60)
-	if err != nil {
-		return fmt.Errorf("failed to get kubevirt instance types: %w", err)
-	}
-	log.Println(out)
-	instanceTypes := strings.Split(out, " ")
-	// remove kubevirt instance types
-	for _, instanceType := range instanceTypes {
-		if instanceType != "" {
-			cmd = fmt.Sprintf("kubectl delete virtualmachineclusterinstancetype %s", instanceType)
-			log.Println(cmd)
-			out, err = ssh.Run(cmd, host, key, user, "", true, 60)
-			if err != nil {
-				return fmt.Errorf("failed to delete kubevirt instance type: %w", err)
-			}
-			log.Println(out)
-		}
-	}
 	// create virtualmachineinstancetypes based on vmsizes
 	for _, vmSize := range types.VMSizes {
-		cmd = fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %d | kubectl apply -f -", vmSize.Name, vmSize.CPU, vmSize.RAM)
+		cmd := fmt.Sprintf("virtctl create instancetype --name %s --cpu %d --memory %d | kubectl apply -f -", vmSize.Name, vmSize.CPU, vmSize.RAM)
 		log.Println(cmd)
-		out, err = ssh.Run(cmd, host, key, user, "", true, 60)
+		out, err := ssh.Run(cmd, host, key, user, "", true, 60)
 		if err != nil {
 			return fmt.Errorf("failed to create virtualmachineinstancetype: %w", err)
 		}
