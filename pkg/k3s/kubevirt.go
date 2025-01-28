@@ -54,9 +54,9 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 	}
 
 	// create virtualmachineinstancetypes
-	if err := CreateVirtualMachineInstanceTypes(host, user, key); err != nil {
-		return fmt.Errorf("failed to create virtualmachineinstancetypes: %w", err)
-	}
+	// if err := CreateVirtualMachineInstanceTypes(host, user, key); err != nil {
+	// 	return fmt.Errorf("failed to create virtualmachineinstancetypes: %w", err)
+	// }
 
 	return nil
 }
@@ -112,22 +112,22 @@ spec:
 		return fmt.Errorf("failed to apply ingress: %w", err)
 	}
 	log.Println(out)
-	// wait for kubevirt instance types to be ready
-	cmd = "kubectl wait --for=condition=ready --timeout=300s pod -n kubevirt-manager"
-	log.Println(cmd)
-	out, err = ssh.Run(cmd, host, key, user, "", true, 300)
-	if err != nil {
-		return fmt.Errorf("failed to wait for kubevirt instance types: %w %s", err, out)
-	}
-	log.Println(out)
 	return nil
 }
 
 func CreateVirtualMachineInstanceTypes(host, user, key string) error {
-	// get kubevirt instance types
-	cmd := "kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'"
+	// wait for kubevirt instance types to be ready
+	cmd := "kubectl wait --for=condition=ready --timeout=300s pod -n kubevirt-manager"
 	log.Println(cmd)
-	out, err := ssh.Run(cmd, host, key, user, "", true, 60)
+	out, err := ssh.Run(cmd, host, key, user, "", true, 300)
+	if err != nil {
+		return fmt.Errorf("failed to wait for kubevirt instance types: %w %s", err, out)
+	}
+	log.Println(out)
+	// get kubevirt instance types
+	cmd = "kubectl get virtualmachineclusterinstancetypes -o jsonpath='{.items[*].metadata.name}'"
+	log.Println(cmd)
+	out, err = ssh.Run(cmd, host, key, user, "", true, 60)
 	if err != nil {
 		return fmt.Errorf("failed to get kubevirt instance types: %w", err)
 	}
