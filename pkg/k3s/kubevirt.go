@@ -73,13 +73,6 @@ func InstallKubeVirtManager(host, user, key string) error {
 		log.Println(out)
 	}
 
-	// Wait for manager to be ready
-	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager -n kubevirt-manager"
-	log.Println(waitCmd)
-	if _, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
-		return fmt.Errorf("failed to wait for KubeVirt Manager: %w", err)
-	}
-
 	return nil
 }
 
