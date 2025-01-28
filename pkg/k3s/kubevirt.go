@@ -36,15 +36,38 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 
 	// Wait for KubeVirt to be ready
 	time.Sleep(5 * time.Second)
+
+	// Wait for virt-operator
 	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-operator -n kubevirt"
 	log.Println(waitCmd)
 	if _, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
-		return fmt.Errorf("failed to wait for KubeVirt: %w", err)
+		return fmt.Errorf("failed to wait for virt-operator: %w", err)
+	}
+
+	// Wait for virt-api
+	waitApiCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-api -n kubevirt"
+	log.Println(waitApiCmd)
+	if _, err := ssh.Run(waitApiCmd, host, key, user, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for virt-api: %w", err)
+	}
+
+	// Wait for virt-controller
+	waitControllerCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l kubevirt.io=virt-controller -n kubevirt"
+	log.Println(waitControllerCmd)
+	if _, err := ssh.Run(waitControllerCmd, host, key, user, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for virt-controller: %w", err)
 	}
 
 	// install kubevirt manager
 	if err := InstallKubeVirtManager(host, user, key); err != nil {
 		return fmt.Errorf("failed to install KubeVirt Manager: %w", err)
+	}
+
+	// Wait for kubevirt-manager deployment
+	waitManagerCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app=kubevirt-manager -n kubevirt-manager"
+	log.Println(waitManagerCmd)
+	if _, err := ssh.Run(waitManagerCmd, host, key, user, "", true, 300); err != nil {
+		return fmt.Errorf("failed to wait for kubevirt-manager: %w", err)
 	}
 
 	// create ingress
