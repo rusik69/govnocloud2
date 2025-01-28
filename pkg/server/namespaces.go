@@ -10,7 +10,8 @@ import (
 
 // NamespaceManager handles namespace operations
 type NamespaceManager struct {
-	kubectl KubectlRunner
+	kubectl            KubectlRunner
+	reservedNamespaces []string
 }
 
 // CreateNamespace creates a new namespace
@@ -47,7 +48,8 @@ func (m *NamespaceManager) GetNamespace(name string) (types.Namespace, error) {
 // NewNamespaceManager creates a new namespace manager
 func NewNamespaceManager() *NamespaceManager {
 	return &NamespaceManager{
-		kubectl: &DefaultKubectlRunner{},
+		kubectl:            &DefaultKubectlRunner{},
+		reservedNamespaces: []string{"default", "longhorn-system", "kube-system", "kube-public", "kube-node-lease", "cnpg-system", "clickhouse-system", "kubevirt-manager", "kubevirt"},
 	}
 }
 
