@@ -1,7 +1,9 @@
 package server
 
 import (
+	"log"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +34,15 @@ func (m *NamespaceManager) ListNamespaces() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(namespaces), " "), nil
+	ns := strings.Split(string(namespaces), " ")
+	res := []string{}
+	// check if namespace is reserved
+	for _, n := range ns {
+		if !slices.Contains(m.reservedNamespaces, n) {
+			res = append(res, n)
+		}
+	}
+	return res, nil
 }
 
 // GetNamespace gets details of a specific namespace
@@ -57,14 +67,23 @@ func NewNamespaceManager() *NamespaceManager {
 func CreateNamespaceHandler(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
+		log.Println("namespace name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
+		return
+	}
+	// check if namespace is reserved
+	if slices.Contains(namespaceManager.reservedNamespaces, name) {
+		log.Println("namespace is reserved")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
 	}
 	err := namespaceManager.CreateNamespace(name)
 	if err != nil {
+		log.Println("failed to create namespace", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("namespace created successfully")
 	c.JSON(http.StatusOK, gin.H{"message": "namespace created successfully"})
 }
 
@@ -75,11 +94,19 @@ func DeleteNamespaceHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
 		return
 	}
+	// check if namespace is reserved
+	if slices.Contains(namespaceManager.reservedNamespaces, name) {
+		log.Println("namespace is reserved")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
+		return
+	}
 	err := namespaceManager.DeleteNamespace(name)
 	if err != nil {
+		log.Println("failed to delete namespace", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("namespace deleted successfully")
 	c.JSON(http.StatusOK, gin.H{"message": "namespace deleted successfully"})
 }
 
@@ -87,9 +114,11 @@ func DeleteNamespaceHandler(c *gin.Context) {
 func ListNamespacesHandler(c *gin.Context) {
 	namespaces, err := namespaceManager.ListNamespaces()
 	if err != nil {
+		log.Println("failed to list namespaces", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("namespaces listed successfully")
 	c.JSON(http.StatusOK, gin.H{"namespaces": namespaces})
 }
 
@@ -97,13 +126,22 @@ func ListNamespacesHandler(c *gin.Context) {
 func GetNamespaceHandler(c *gin.Context) {
 	name := c.Param("name")
 	if name == "" {
+		log.Println("namespace name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
+		return
+	}
+	// check if namespace is reserved
+	if slices.Contains(namespaceManager.reservedNamespaces, name) {
+		log.Println("namespace is reserved")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
 	}
 	namespace, err := namespaceManager.GetNamespace(name)
 	if err != nil {
+		log.Println("failed to get namespace", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("namespace retrieved successfully")
 	c.JSON(http.StatusOK, gin.H{"namespace": namespace})
 }
