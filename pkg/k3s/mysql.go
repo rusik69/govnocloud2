@@ -27,12 +27,5 @@ func InstallMySQL(host, user, key string) error {
 		log.Println(out)
 	}
 
-	// Wait for operator to be ready
-	waitCmd := "kubectl wait --for=condition=ready --timeout=300s pod -l app.kubernetes.io/name=mysql-operator -n mysql-operator"
-	log.Println(waitCmd)
-	if _, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
-		return fmt.Errorf("failed to wait for MySQL operator: %w", err)
-	}
-
 	return nil
 }
