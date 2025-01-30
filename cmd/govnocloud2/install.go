@@ -260,6 +260,16 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
+		log.Println("Installing MySQL operator")
+		err = k3s.InstallMySQL(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
+
 		if cfg.Install.Monitoring.Enabled {
 			log.Println("Installing monitoring stack")
 			err = k3s.DeployPrometheus(

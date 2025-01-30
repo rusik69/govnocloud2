@@ -7,6 +7,7 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 )
 
+// InstallCNPG installs CloudNativePG operator
 func InstallCNPG(host, user, key string) error {
 	// Add CloudNativePG Helm repository
 	addRepoCmd := "helm repo add cnpg https://cloudnative-pg.github.io/charts && helm repo update"

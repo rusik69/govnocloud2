@@ -59,7 +59,7 @@ func (m *NamespaceManager) GetNamespace(name string) (types.Namespace, error) {
 func NewNamespaceManager() *NamespaceManager {
 	return &NamespaceManager{
 		kubectl:            &DefaultKubectlRunner{},
-		reservedNamespaces: []string{"default", "longhorn-system", "kube-system", "kube-public", "kube-node-lease", "cnpg-system", "clickhouse-system", "kubevirt-manager", "kubevirt", "kubernetes-dashboard", "monitoring"},
+		reservedNamespaces: []string{"default", "longhorn-system", "kube-system", "kube-public", "kube-node-lease", "cnpg-system", "clickhouse-system", "kubevirt-manager", "kubevirt", "kubernetes-dashboard", "monitoring", "mysql-operator"},
 	}
 }
 
