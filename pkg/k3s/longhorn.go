@@ -48,11 +48,6 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		"sudo mkdir -p /var/lib/longhorn ; " +
 		"sudo mount /dev/sda /var/lib/longhorn"
 
-	log.Println(cmd)
-	if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
-		return fmt.Errorf("failed to prepare node %s: %w", master, err)
-	}
-
 	for _, nodeIP := range nodeIPs {
 		// Install required packages
 		cmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
