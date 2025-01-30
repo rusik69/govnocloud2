@@ -81,4 +81,7 @@ var VMImages = map[string]VMImage{
 	"ubuntu24": VMImage{
 		Image: "quay.io/containerdisks/ubuntu:24.04",
 	},
+	"fedora41": VMImage{
+		Image: "quay.io/containerdisks/fedora:41",
+	},
 }

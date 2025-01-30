@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/rusik69/govnocloud2/pkg/ssh"
-	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 type GovnocloudServiceConfig struct {
@@ -167,24 +166,6 @@ func Suspend(ips []string, master, user, password, key string) {
 			continue
 		}
 	}
-}
-
-// DownloadVMImages downloads the VM images
-func DownloadVMImages(master, host, user, key, imagesDir string) error {
-	// check if imagesDir exists on host and create if not
-	cmd := fmt.Sprintf("ssh %s@%s 'sudo mkdir -p %s'", user, host, imagesDir)
-	log.Println(cmd)
-	if out, err := ssh.Run(cmd, master, key, user, "", false, 600); err != nil {
-		return fmt.Errorf("failed to create images directory: %v\nOutput: %s", err, out)
-	}
-	for _, image := range types.VMImages {
-		cmd := fmt.Sprintf("sudo wget -O %s %s", imagesDir+"/"+image.FileName, image.Image)
-		log.Println(cmd)
-		if out, err := ssh.Run(cmd, host, key, user, "", false, 600); err != nil {
-			return fmt.Errorf("failed to download %s: %v\nOutput: %s", image.Name, err, out)
-		}
-	}
-	return nil
 }
 
 // InstallK9s installs the K9s terminal UI for Kubernetes

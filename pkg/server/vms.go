@@ -88,7 +88,6 @@ func (m *VMManager) CreateVM(vm types.VM) error {
 
 	vmSize := types.VMSizes[vm.Size]
 	vmImage := types.VMImages[vm.Image]
-	imagePath := server.config.ImageDir + "/" + vmImage.FileName
 	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -116,7 +115,7 @@ spec:
       - name: rootdisk
         containerDisk:
           image: %s`,
-		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, imagePath)
+		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.Image)
 	log.Println(vmConfig)
 	// Write config to temporary file
 	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
