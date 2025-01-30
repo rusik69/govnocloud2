@@ -178,7 +178,7 @@ func DownloadVMImages(master, host, user, key, imagesDir string) error {
 		return fmt.Errorf("failed to create images directory: %v\nOutput: %s", err, out)
 	}
 	for _, image := range types.VMImages {
-		cmd := fmt.Sprintf("sudo wget -O %s %s", imagesDir+"/"+image.FileName, image.URL)
+		cmd := fmt.Sprintf("sudo wget -O %s %s", imagesDir+"/"+image.FileName, image.Image)
 		log.Println(cmd)
 		if out, err := ssh.Run(cmd, host, key, user, "", false, 600); err != nil {
 			return fmt.Errorf("failed to download %s: %v\nOutput: %s", image.Name, err, out)
