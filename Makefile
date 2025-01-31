@@ -38,7 +38,7 @@ suspendmac:
 	bin/govnocloud2-darwin-arm64 tool suspend --ips 10.0.0.2,10.0.0.3,10.0.0.4 --master 192.168.1.64
 
 logs:
-	journalctl _SYSTEMD_INVOCATION_ID=`systemctl show -p InvocationID --value govnocloud2.service`
+	sudo journalctl _SYSTEMD_INVOCATION_ID=`systemctl show -p InvocationID --value govnocloud2.service`
 
 deploymac:
 	make get buildmac wolmac uninstallmac installmac test
