@@ -6,11 +6,7 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/client"
 )
 
-const (
-	testHost      = "localhost"
-	testPort      = "6969"
-	testNamespace = "default"
-)
+
 
 func TestCreateVM(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)

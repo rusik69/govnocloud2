@@ -8,7 +8,7 @@ import (
 
 func TestCreateNamespace(t *testing.T) {
 	client := client.NewClient(testHost, testPort)
-	err := client.CreateNamespace("test")
+	err := client.CreateNamespace(testNamespace2)
 	if err != nil {
 		t.Fatalf("error creating namespace: %v", err)
 	}
@@ -17,7 +17,7 @@ func TestCreateNamespace(t *testing.T) {
 
 func TestGetNamespace(t *testing.T) {
 	client := client.NewClient(testHost, testPort)
-	namespace, err := client.GetNamespace("test")
+	namespace, err := client.GetNamespace(testNamespace2)
 	if err != nil {
 		t.Fatalf("error getting namespace: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestListNamespaces(t *testing.T) {
 
 func TestDeleteNamespace(t *testing.T) {
 	client := client.NewClient(testHost, testPort)
-	err := client.DeleteNamespace("test")
+	err := client.DeleteNamespace(testNamespace2)
 	if err != nil {
 		t.Fatalf("error deleting namespace: %v", err)
 	}
