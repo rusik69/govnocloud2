@@ -3,7 +3,6 @@ package server
 import (
 	"log"
 	"net/http"
-	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -12,8 +11,7 @@ import (
 
 // NamespaceManager handles namespace operations
 type NamespaceManager struct {
-	kubectl            KubectlRunner
-	reservedNamespaces []string
+	kubectl KubectlRunner
 }
 
 // CreateNamespace creates a new namespace
@@ -38,7 +36,7 @@ func (m *NamespaceManager) ListNamespaces() ([]string, error) {
 	res := []string{}
 	// check if namespace is reserved
 	for _, n := range ns {
-		if !slices.Contains(m.reservedNamespaces, n) {
+		if !types.ReservedNamespaces[n] {
 			res = append(res, n)
 		}
 	}
@@ -58,9 +56,7 @@ func (m *NamespaceManager) GetNamespace(name string) (types.Namespace, error) {
 // NewNamespaceManager creates a new namespace manager
 func NewNamespaceManager() *NamespaceManager {
 	return &NamespaceManager{
-		kubectl:            &DefaultKubectlRunner{},
-		reservedNamespaces: []string{"default", "longhorn-system", "kube-system", "kube-public", "kube-node-lease", "cnpg-system", "clickhouse-system", "kubevirt-manager", "kubevirt", "kubernetes-dashboard", "monitoring", "mysql-operator"},
-	}
+		kubectl: &DefaultKubectlRunner{}}
 }
 
 // CreateNamespaceHandler creates a new namespace
@@ -72,7 +68,7 @@ func CreateNamespaceHandler(c *gin.Context) {
 		return
 	}
 	// check if namespace is reserved
-	if slices.Contains(namespaceManager.reservedNamespaces, name) {
+	if types.ReservedNamespaces[name] {
 		log.Println("namespace is reserved")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
@@ -95,7 +91,7 @@ func DeleteNamespaceHandler(c *gin.Context) {
 		return
 	}
 	// check if namespace is reserved
-	if slices.Contains(namespaceManager.reservedNamespaces, name) {
+	if types.ReservedNamespaces[name] {
 		log.Println("namespace is reserved")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
@@ -131,7 +127,7 @@ func GetNamespaceHandler(c *gin.Context) {
 		return
 	}
 	// check if namespace is reserved
-	if slices.Contains(namespaceManager.reservedNamespaces, name) {
+	if types.ReservedNamespaces[name] {
 		log.Println("namespace is reserved")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return

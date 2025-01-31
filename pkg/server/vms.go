@@ -168,7 +168,14 @@ func (m *VMManager) ListVMs(namespace string) ([]string, error) {
 
 	// Split the space-separated output into slice
 	names := strings.Fields(string(out))
-	return names, nil
+	// Filter out reserved namespaces
+	res := []string{}
+	for _, name := range names {
+		if !types.ReservedNamespaces[name] {
+			res = append(res, name)
+		}
+	}
+	return res, nil
 }
 
 // Add this struct before the GetVM function
@@ -238,6 +245,13 @@ func DeleteVMHandler(c *gin.Context) {
 	if namespace == "" {
 		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+
+	// Check if namespace is reserved
+	if types.ReservedNamespaces[namespace] {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
 		return
 	}
 

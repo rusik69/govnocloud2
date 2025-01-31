@@ -32,6 +32,12 @@ func ListContainersHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
 	containers, err := containerManager.ListContainers(namespace)
 	if err != nil {
 		log.Printf("failed to list containers: %v", err)
@@ -54,6 +60,12 @@ func CreateContainerHandler(c *gin.Context) {
 	if name == "" {
 		log.Printf("name is required")
 		respondWithError(c, http.StatusBadRequest, "name is required")
+		return
+	}
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
 		return
 	}
 	var container types.Container
@@ -86,6 +98,12 @@ func GetContainerHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
 	container, err := containerManager.GetContainer(name, namespace)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get container: %v", err))
@@ -115,6 +133,12 @@ func DeleteContainerHandler(c *gin.Context) {
 	if namespace == "" {
 		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
 		return
 	}
 

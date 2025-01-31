@@ -27,7 +27,19 @@ func NewDBManager() *DBManager {
 
 // ListDBsHandler handles requests to list databases
 func ListDBsHandler(c *gin.Context) {
-	dbs, err := dbManager.ListDBs()
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	dbs, err := dbManager.ListDBs(namespace)
 	if err != nil {
 		log.Printf("failed to list databases: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to list databases: %v", err)})
@@ -38,6 +50,18 @@ func ListDBsHandler(c *gin.Context) {
 
 // CreateDBHandler handles requests to create a new database
 func CreateDBHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
 	var db types.DB
 	if err := c.BindJSON(&db); err != nil {
 		log.Printf("invalid request: %v", err)
@@ -63,7 +87,21 @@ func GetDBHandler(c *gin.Context) {
 		return
 	}
 
-	db, err := dbManager.GetDB(name)
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+
+	db, err := dbManager.GetDB(name, namespace)
 	if err != nil {
 		log.Printf("failed to get database: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get database: %v", err))
@@ -92,6 +130,13 @@ func DeleteDBHandler(c *gin.Context) {
 	if namespace == "" {
 		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+
+	// Check if namespace is reserved
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
 		return
 	}
 
@@ -146,8 +191,8 @@ spec:
 }
 
 // ListDBs returns a list of databases
-func (m *DBManager) ListDBs() ([]types.DB, error) {
-	out, err := m.kubectl.Run("get", "pods", "-l", "type=database", "-o", "json")
+func (m *DBManager) ListDBs(namespace string) ([]types.DB, error) {
+	out, err := m.kubectl.Run("get", "pods", "-l", "type=database", "-o", "json", "-n", namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list databases: %w", err)
 	}
@@ -208,8 +253,8 @@ func (m *DBManager) CreateDB(db *types.DB) error {
 }
 
 // GetDB retrieves database details
-func (m *DBManager) GetDB(name string) (*types.DB, error) {
-	out, err := m.kubectl.Run("get", "pod", name, "-o", "json")
+func (m *DBManager) GetDB(name, namespace string) (*types.DB, error) {
+	out, err := m.kubectl.Run("get", "pod", name, "-o", "json", "-n", namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database pod: %w", err)
 	}
