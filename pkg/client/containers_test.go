@@ -53,8 +53,4 @@ func TestDeleteContainer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error deleting container: %v", err)
 	}
-	err = cli.DeleteNamespace(testNamespace)
-	if err != nil {
-		t.Fatalf("error deleting namespace: %v", err)
-	}
 }
