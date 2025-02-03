@@ -10,7 +10,7 @@ import (
 )
 
 // InstallLonghorn installs Longhorn storage system into the Kubernetes cluster
-func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost string) error {
+func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost, disk string) error {
 	log.Println("Installing Longhorn storage system...")
 
 	// Add the Longhorn Helm repository
@@ -43,10 +43,10 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		"sudo systemctl enable --now iscsid ; " +
 		"sudo umount /mnt ; sudo umount /var/lib/longhorn ; " +
 		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 ; " +
-		"sudo blockdev --rereadpt /dev/sda ; " +
-		"sudo mkfs.ext4 /dev/sda ; " +
+		"sudo blockdev --rereadpt /dev/" + disk + " ; " +
+		"sudo mkfs.ext4 /dev/" + disk + " ; " +
 		"sudo mkdir -p /var/lib/longhorn ; " +
-		"sudo mount /dev/sda /var/lib/longhorn"
+		"sudo mount /dev/" + disk + " /var/lib/longhorn"
 
 	for _, nodeIP := range nodeIPs {
 		// Install required packages

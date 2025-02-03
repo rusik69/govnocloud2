@@ -235,6 +235,7 @@ var installCmd = &cobra.Command{
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
 			cfg.Install.Longhorn.Host,
+			cfg.Install.Longhorn.Disk,
 		)
 		if err != nil {
 			panic(err)
