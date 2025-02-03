@@ -42,7 +42,7 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		"sudo systemctl disable --now multipathd.service ; " +
 		"sudo systemctl enable --now iscsid ; " +
 		"sudo umount /mnt ; sudo umount /var/lib/longhorn ; " +
-		"sudo dd if=/dev/zero of=/dev/sda bs=1M count=100 ; " +
+		"sudo dd if=/dev/zero of=/dev/" + disk + " bs=1M count=100 ; " +
 		"sudo blockdev --rereadpt /dev/" + disk + " ; " +
 		"sudo mkfs.ext4 /dev/" + disk + " ; " +
 		"sudo mkdir -p /var/lib/longhorn ; " +
