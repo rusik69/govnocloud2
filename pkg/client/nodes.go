@@ -118,3 +118,20 @@ func (c *Client) RestartNode(name string) error {
 
 	return nil
 }
+
+// UpgradeNode upgrades a node
+func (c *Client) UpgradeNode(name string) error {
+	resp, err := c.httpClient.Get(
+		fmt.Sprintf("%s/nodes/%s/upgrade", c.baseURL, name),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to upgrade node: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}

@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rusik69/govnocloud2/pkg/ssh"
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
@@ -288,7 +289,7 @@ func SuspendNodeHandler(c *gin.Context) {
 // SuspendNode suspends a node
 func (m *NodeManager) SuspendNode(host, user, key string) error {
 	cmd := fmt.Sprintf("ssh -i %s %s@%s 'sudo systemctl suspend'", key, user, host)
-	_, err := m.kubectl.Run(cmd)
+	_, err := ssh.Run(cmd, host, key, user, "", true, 10)
 	if err != nil {
 		return fmt.Errorf("failed to suspend node: %w", err)
 	}
@@ -310,5 +311,28 @@ func ResumeNodeHandler(c *gin.Context) {
 
 // ResumeNode resumes a node
 func (m *NodeManager) ResumeNode(host, user, key string) error {
+	return nil
+}
+
+// UpgradeNodeHandler handles HTTP requests to upgrade a node
+func UpgradeNodeHandler(c *gin.Context) {
+	hostName := c.Param("host")
+	if hostName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
+		return
+	}
+	if err := nodeManager.UpgradeNode(hostName, server.config.User, server.config.Key); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to upgrade node: %v", err)})
+		return
+	}
+}
+
+// UpgradeNode upgrades a node
+func (m *NodeManager) UpgradeNode(host, user, key string) error {
+	cmd := fmt.Sprintf("ssh -i %s %s@%s 'sudo apt-get update && sudo apt-get upgrade -y'", key, user, host)
+	_, err := ssh.Run(cmd, host, key, user, "", true, 600)
+	if err != nil {
+		return fmt.Errorf("failed to upgrade node: %w", err)
+	}
 	return nil
 }
