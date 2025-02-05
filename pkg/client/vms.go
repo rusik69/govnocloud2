@@ -136,7 +136,10 @@ func (c *Client) DeleteVM(name, namespace string) error {
 // WaitVM waits for a VM to be ready
 func (c *Client) WaitVM(name, namespace string) error {
 	url := fmt.Sprintf("%s/vms/%s/%s/wait", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	client := &http.Client{
+		Timeout: 10 * time.Minute,
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("error waiting for VM: %w", err)
 	}
