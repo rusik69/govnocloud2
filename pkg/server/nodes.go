@@ -18,10 +18,16 @@ import (
 type NodeManager struct {
 	kubectl KubectlRunner
 	k3sup   K3supRunner
+	virtctl VirtctlRunner
 }
 
 // KubectlRunner interface for executing kubectl commands
 type KubectlRunner interface {
+	Run(args ...string) ([]byte, error)
+}
+
+// VirtctlRunner interface for executing virtctl commands
+type VirtctlRunner interface {
 	Run(args ...string) ([]byte, error)
 }
 
@@ -33,8 +39,15 @@ type K3supRunner interface {
 // DefaultKubectlRunner implements KubectlRunner using exec.Command
 type DefaultKubectlRunner struct{}
 
+// DefaultVirtctlRunner implements VirtctlRunner using exec.Command
+type DefaultVirtctlRunner struct{}
+
 func (k *DefaultKubectlRunner) Run(args ...string) ([]byte, error) {
 	return exec.Command("kubectl", args...).Output()
+}
+
+func (k *DefaultVirtctlRunner) Run(args ...string) ([]byte, error) {
+	return exec.Command("virtctl", args...).Output()
 }
 
 // DefaultK3supRunner implements K3supRunner using exec.Command

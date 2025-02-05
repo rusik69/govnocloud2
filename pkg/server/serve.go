@@ -66,6 +66,10 @@ func (s *Server) setupRoutes() {
 			vms.GET("/:namespace", ListVMsHandler)
 			vms.GET("/:namespace/:name", GetVMHandler)
 			vms.DELETE("/:namespace/:name", DeleteVMHandler)
+			vms.GET("/:namespace/:name/start", StartVMHandler)
+			vms.GET("/:namespace/:name/stop", StopVMHandler)
+			vms.GET("/:namespace/:name/restart", RestartVMHandler)
+			vms.GET("/:namespace/:name/wait", WaitVMHandler)
 		}
 
 		// Node endpoints

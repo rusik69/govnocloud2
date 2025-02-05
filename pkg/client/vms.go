@@ -132,3 +132,71 @@ func (c *Client) DeleteVM(name, namespace string) error {
 
 	return nil
 }
+
+// WaitVM waits for a VM to be ready
+func (c *Client) WaitVM(name, namespace string) error {
+	url := fmt.Sprintf("%s/vms/%s/%s/wait", c.baseURL, namespace, name)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return fmt.Errorf("error waiting for VM: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error waiting for VM: status=%s body=%s", resp.Status, string(body))
+	}
+
+	return nil
+}
+
+// StartVM starts a VM
+func (c *Client) StartVM(name, namespace string) error {
+	url := fmt.Sprintf("%s/vms/%s/%s/start", c.baseURL, namespace, name)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return fmt.Errorf("error starting VM: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error starting VM: status=%s body=%s", resp.Status, string(body))
+	}
+
+	return nil
+}
+
+// StopVM stops a VM
+func (c *Client) StopVM(name, namespace string) error {
+	url := fmt.Sprintf("%s/vms/%s/%s/stop", c.baseURL, namespace, name)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return fmt.Errorf("error stopping VM: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error stopping VM: status=%s body=%s", resp.Status, string(body))
+	}
+
+	return nil
+}
+
+// RestartVM restarts a VM
+func (c *Client) RestartVM(name, namespace string) error {
+	url := fmt.Sprintf("%s/vms/%s/%s/restart", c.baseURL, namespace, name)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return fmt.Errorf("error restarting VM: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error restarting VM: status=%s body=%s", resp.Status, string(body))
+	}
+
+	return nil
+}

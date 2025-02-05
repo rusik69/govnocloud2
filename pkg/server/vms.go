@@ -18,12 +18,14 @@ import (
 // VMManager handles VM operations
 type VMManager struct {
 	kubectl KubectlRunner
+	virtctl VirtctlRunner
 }
 
 // NewVMManager creates a new VM manager instance
 func NewVMManager() *VMManager {
 	return &VMManager{
 		kubectl: &DefaultKubectlRunner{},
+		virtctl: &DefaultVirtctlRunner{},
 	}
 }
 
@@ -283,6 +285,154 @@ func (m *VMManager) DeleteVM(name, namespace string) error {
 	out, err := m.kubectl.Run("delete", "VirtualMachine", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to delete VM %s in namespace %s: %s %w", name, namespace, out, err)
+	}
+	return nil
+}
+
+// StartVMHandler handles VM start requests
+func StartVMHandler(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("VM name is required")
+		respondWithError(c, http.StatusBadRequest, "VM name is required")
+		return
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// check if namespace is reserved
+	if types.ReservedNamespaces[namespace] {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	if err := vmManager.StartVM(name, namespace); err != nil {
+		log.Printf("failed to start VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to start VM: %v", err))
+		return
+	}
+	respondWithSuccess(c, gin.H{"message": "VM started successfully"})
+}
+
+// StartVM starts a virtual machine
+func (m *VMManager) StartVM(name, namespace string) error {
+	out, err := m.kubectl.Run("start", "VirtualMachine", name, "-n", namespace)
+	if err != nil {
+		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
+	}
+	return nil
+}
+
+// StopVMHandler handles VM stop requests
+func StopVMHandler(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("VM name is required")
+		respondWithError(c, http.StatusBadRequest, "VM name is required")
+		return
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// check if namespace is reserved
+	if types.ReservedNamespaces[namespace] {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	if err := vmManager.StopVM(name, namespace); err != nil {
+		log.Printf("failed to stop VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to stop VM: %v", err))
+		return
+	}
+	respondWithSuccess(c, gin.H{"message": "VM stopped successfully"})
+}
+
+// StopVM stops a virtual machine
+func (m *VMManager) StopVM(name, namespace string) error {
+	out, err := m.virtctl.Run("stop", "VirtualMachine", name, "-n", namespace)
+	if err != nil {
+		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
+	}
+	return nil
+}
+
+// RestartVMHandler handles VM restart requests
+func RestartVMHandler(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("VM name is required")
+		respondWithError(c, http.StatusBadRequest, "VM name is required")
+		return
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// check if namespace is reserved
+	if types.ReservedNamespaces[namespace] {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	if err := vmManager.RestartVM(name, namespace); err != nil {
+		log.Printf("failed to restart VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to restart VM: %v", err))
+		return
+	}
+	respondWithSuccess(c, gin.H{"message": "VM restarted successfully"})
+}
+
+// RestartVM restarts a virtual machine
+func (m *VMManager) RestartVM(name, namespace string) error {
+	out, err := m.virtctl.Run("restart", "VirtualMachine", name, "-n", namespace)
+	if err != nil {
+		return fmt.Errorf("failed to restart VM %s in namespace %s: %s %w", name, namespace, out, err)
+	}
+	return nil
+}
+
+// WaitVMHandler handles VM wait requests
+func WaitVMHandler(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		log.Printf("VM name is required")
+		respondWithError(c, http.StatusBadRequest, "VM name is required")
+		return
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	// check if namespace is reserved
+	if types.ReservedNamespaces[namespace] {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	if err := vmManager.WaitVM(name, namespace); err != nil {
+		log.Printf("failed to wait for VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to wait for VM: %v", err))
+		return
+	}
+	respondWithSuccess(c, gin.H{"message": "VM waited successfully"})
+}
+
+// WaitVM waits for a virtual machine to be ready
+func (m *VMManager) WaitVM(name, namespace string) error {
+	out, err := m.kubectl.Run("wait", "virtualmachine.kubevirt.io", name, "-n", namespace, "--for=condition=ready")
+	if err != nil {
+		return fmt.Errorf("failed to wait for VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	return nil
 }
