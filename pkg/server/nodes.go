@@ -18,7 +18,6 @@ import (
 type NodeManager struct {
 	kubectl KubectlRunner
 	k3sup   K3supRunner
-	virtctl VirtctlRunner
 }
 
 // KubectlRunner interface for executing kubectl commands
