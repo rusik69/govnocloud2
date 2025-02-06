@@ -430,7 +430,7 @@ func WaitVMHandler(c *gin.Context) {
 
 // WaitVM waits for a virtual machine to be ready
 func (m *VMManager) WaitVM(name, namespace string) error {
-	out, err := m.kubectl.Run("wait", "virtualmachine.kubevirt.io", name, "-n", namespace, "--for=condition=ready")
+	out, err := m.kubectl.Run("wait", "virtualmachine.kubevirt.io", name, "-n", namespace, "--for=condition=ready", "--timeout=5m")
 	if err != nil {
 		return fmt.Errorf("failed to wait for VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
