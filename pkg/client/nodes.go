@@ -120,9 +120,9 @@ func (c *Client) RestartNode(name string) error {
 }
 
 // UpgradeNode upgrades a node
-func (c *Client) UpgradeNode(name string) error {
+func (c *Client) UpgradeNode(ip string) error {
 	resp, err := c.httpClient.Get(
-		fmt.Sprintf("%s/nodes/%s/upgrade", c.baseURL, name),
+		fmt.Sprintf("%s/nodes/%s/upgrade", c.baseURL, ip),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to upgrade node: %w", err)
