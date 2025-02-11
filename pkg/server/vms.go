@@ -356,7 +356,7 @@ func StopVMHandler(c *gin.Context) {
 
 // StopVM stops a virtual machine
 func (m *VMManager) StopVM(name, namespace string) error {
-	out, err := m.virtctl.Run("stop", "VirtualMachine", name, "-n", namespace)
+	out, err := m.virtctl.Run("stop", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}

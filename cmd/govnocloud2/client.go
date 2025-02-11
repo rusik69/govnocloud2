@@ -127,6 +127,9 @@ func handleNodes(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Println("node restarted successfully")
+
+	default:
+		panic("unknown action: " + args[0])
 	}
 }
 
@@ -173,6 +176,48 @@ func handleVMs(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Printf("%+v\n", vm)
+
+	case "wait":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		err := c.WaitVM(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("VM waited successfully")
+
+	case "stop":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		err := c.StopVM(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("VM stopped successfully")
+
+	case "start":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		err := c.StartVM(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("VM started successfully")
+
+	case "restart":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		err := c.RestartVM(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("VM restarted successfully")
+	default:
+		panic("unknown action: " + args[0])
 	}
 }
 
@@ -223,6 +268,9 @@ func handleContainers(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Printf("%+v\n", container)
+
+	default:
+		panic("unknown action: " + args[0])
 	}
 }
 
@@ -269,6 +317,9 @@ func handleVolumes(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Printf("%+v\n", volume)
+
+	default:
+		panic("unknown action: " + args[0])
 	}
 }
 
@@ -312,6 +363,9 @@ func handleNamespaces(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Printf("%+v\n", ns)
+
+	default:
+		panic("unknown action: " + args[0])
 	}
 }
 
@@ -358,6 +412,9 @@ func handleDBs(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Printf("%+v\n", db)
+
+	default:
+		panic("unknown action: " + args[0])
 	}
 }
 
