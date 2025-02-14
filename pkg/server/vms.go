@@ -116,7 +116,19 @@ spec:
       volumes:
       - name: rootdisk
         containerDisk:
-          image: %s`,
+          image: %s
+      accessCredentials:
+      - sshPublicKey:
+          source:
+            secret:
+              secretName: cloud-init
+      cloudInitNoCloud:
+        userData: |
+          #cloud-config
+          password: ubuntu
+          chpasswd:
+            expire: false
+          ssh_pwauth: true`,
 		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.Image)
 	log.Println(vmConfig)
 	// Write config to temporary file

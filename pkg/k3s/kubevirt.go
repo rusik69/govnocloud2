@@ -83,11 +83,15 @@ func InstallKubeVirt(host, user, key, managerHost, version string) error {
 		return fmt.Errorf("failed to create ingress: %w", err)
 	}
 
+	// remove default virtualmachineinstancetypes
+	if err := RemoveDefaultVirtualMachineInstanceTypes(host, user, key); err != nil {
+		return fmt.Errorf("failed to remove default virtualmachineinstancetypes: %w", err)
+	}
+
 	// create virtualmachineinstancetypes
 	if err := CreateVirtualMachineInstanceTypes(host, user, key); err != nil {
 		return fmt.Errorf("failed to create virtualmachineinstancetypes: %w", err)
 	}
-
 	return nil
 }
 
@@ -157,5 +161,17 @@ func CreateVirtualMachineInstanceTypes(host, user, key string) error {
 		log.Println(out)
 	}
 	log.Println("KubeVirt Manager is successfully installed")
+	return nil
+}
+
+func RemoveDefaultVirtualMachineInstanceTypes(host, user, key string) error {
+	// remove default virtualmachineinstancetypes
+	cmd := "kubectl delete virtualmachineclusterinstancetype --all"
+	log.Println(cmd)
+	out, err := ssh.Run(cmd, host, key, user, "", true, 60)
+	if err != nil {
+		return fmt.Errorf("failed to remove default virtualmachineinstancetypes: %w", err)
+	}
+	log.Println(out)
 	return nil
 }
