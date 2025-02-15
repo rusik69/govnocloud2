@@ -139,8 +139,10 @@ func initConfig() error {
 		Server: types.ServerConfig{
 			Host:       "0.0.0.0",
 			Port:       "6969",
-			ImageDir:   "/var/lib/govnocloud2/images",
 			MasterHost: "10.0.0.1",
+			User:       "ubuntu",
+			Password:   "ubuntu",
+			Key:        "/home/ubuntu/.ssh/id_rsa",
 		},
 		Web: WebConfig{
 			Host: "0.0.0.0",

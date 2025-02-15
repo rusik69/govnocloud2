@@ -7,5 +7,4 @@ type ServerConfig struct {
 	Password   string
 	Key        string
 	MasterHost string
-	ImageDir   string
 }
