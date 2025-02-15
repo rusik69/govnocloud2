@@ -93,14 +93,15 @@ func handleNodes(c *client.Client, args []string) {
 		fmt.Printf("%+v\n", node)
 
 	case "add":
-		if len(args) < 5 {
-			panic("required: name host user key")
+		if len(args) < 6 {
+			panic("required: name host masterhost user key")
 		}
 		node := types.Node{
-			Name: args[1],
-			Host: args[2],
-			User: args[3],
-			Key:  args[4],
+			Name:       args[1],
+			Host:       args[2],
+			MasterHost: args[3],
+			User:       args[4],
+			Key:        args[5],
 		}
 		err := c.AddNode(node)
 		if err != nil {
