@@ -40,13 +40,28 @@ func TestDeleteNode(t *testing.T) {
 func TestAddNode(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
 	err := cli.AddNode(types.Node{
-		Name: "node-10-0-0-2",
-		Host: "10.0.0.2",
-		User: "root",
-		Key:  "~/.ssh/id_rsa",
+		Name:       "node-10-0-0-2",
+		Host:       "10.0.0.2",
+		MasterHost: "10.0.0.1",
+		User:       "ubuntu",
+		Key:        "/home/ubuntu/.ssh/id_rsa",
 	})
 	if err != nil {
 		t.Fatalf("error adding node: %v", err)
+	}
+	nodes, err := cli.ListNodes()
+	if err != nil {
+		t.Fatalf("error listing nodes: %v", err)
+	}
+	t.Logf("nodes: %v", nodes)
+	found := false
+	for _, node := range nodes {
+		if node == "node-10-0-0-2" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("node not found")
 	}
 }
 
