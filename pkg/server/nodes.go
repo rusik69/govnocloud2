@@ -346,7 +346,7 @@ func UpgradeNodeHandler(c *gin.Context) {
 
 // UpgradeNode upgrades a node
 func (m *NodeManager) UpgradeNode(host, user, key string) error {
-	cmd := fmt.Sprintf("ssh -i %s %s@%s 'sudo apt-get update && sudo apt-get upgrade -y'", key, user, host)
+	cmd := "sudo apt-get update && sudo apt-get upgrade -y"
 	log.Printf("upgrading node %s with command %s", host, cmd)
 	_, err := ssh.Run(cmd, host, key, user, "", true, 600)
 	if err != nil {
