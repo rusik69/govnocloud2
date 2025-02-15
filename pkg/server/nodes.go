@@ -69,6 +69,7 @@ func NewNodeManager() *NodeManager {
 func ListNodesHandler(c *gin.Context) {
 	nodes, err := nodeManager.ListNodes()
 	if err != nil {
+		log.Printf("failed to list nodes: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to list nodes: %v", err),
 		})
@@ -99,12 +100,14 @@ func (m *NodeManager) ListNodes() ([]string, error) {
 func GetNodeHandler(c *gin.Context) {
 	nodeName := c.Param("name")
 	if nodeName == "" {
+		log.Printf("node name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "node name is required"})
 		return
 	}
 
 	node, err := nodeManager.GetNode(nodeName)
 	if err != nil {
+		log.Printf("failed to get node %s: %v", nodeName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to get node %s: %v", nodeName, err),
 		})
@@ -164,11 +167,13 @@ func (m *NodeManager) GetNode(name string) (*types.Node, error) {
 func DeleteNodeHandler(c *gin.Context) {
 	nodeName := c.Param("name")
 	if nodeName == "" {
+		log.Printf("node name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "node name is required"})
 		return
 	}
 
 	if err := nodeManager.DeleteNode(nodeName); err != nil {
+		log.Printf("failed to delete node %s: %v", nodeName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to delete node %s: %v", nodeName, err),
 		})
@@ -180,10 +185,11 @@ func DeleteNodeHandler(c *gin.Context) {
 
 // DeleteNode removes a node from the cluster
 func (m *NodeManager) DeleteNode(name string) error {
-	_, err := m.kubectl.Run("delete", "node", name)
+	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh"
+	out, err := ssh.Run(cmd, name, server.config.Key, server.config.User, "", true, 600)
 	if err != nil {
-		log.Printf("failed to delete node: %v", err)
-		return fmt.Errorf("failed to delete node: %w", err)
+		log.Printf("failed to uninstall k3s node: %v, output: %s", err, out)
+		return fmt.Errorf("failed to uninstall k3s node: %w", err)
 	}
 	return nil
 }
@@ -224,11 +230,13 @@ func (m *NodeManager) AddNode(node types.Node) error {
 func RestartNodeHandler(c *gin.Context) {
 	nodeName := c.Param("name")
 	if nodeName == "" {
+		log.Printf("node name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "node name is required"})
 		return
 	}
 
 	if err := nodeManager.RestartNode(nodeName); err != nil {
+		log.Printf("failed to restart node %s: %v", nodeName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to restart node: %v", err)})
 		return
 	}
@@ -280,10 +288,12 @@ func (m *NodeManager) RestartNode(name string) error {
 func SuspendNodeHandler(c *gin.Context) {
 	hostName := c.Param("host")
 	if hostName == "" {
+		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
 	if err := nodeManager.SuspendNode(hostName, server.config.User, server.config.Key); err != nil {
+		log.Printf("failed to suspend node %s: %v", hostName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to suspend node: %v", err)})
 		return
 	}
@@ -303,10 +313,12 @@ func (m *NodeManager) SuspendNode(host, user, key string) error {
 func ResumeNodeHandler(c *gin.Context) {
 	hostName := c.Param("host")
 	if hostName == "" {
+		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
 	if err := nodeManager.ResumeNode(hostName, server.config.User, server.config.Key); err != nil {
+		log.Printf("failed to resume node %s: %v", hostName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to resume node: %v", err)})
 		return
 	}
@@ -321,10 +333,12 @@ func (m *NodeManager) ResumeNode(host, user, key string) error {
 func UpgradeNodeHandler(c *gin.Context) {
 	hostName := c.Param("host")
 	if hostName == "" {
+		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
 	if err := nodeManager.UpgradeNode(hostName, server.config.User, server.config.Key); err != nil {
+		log.Printf("failed to upgrade node %s: %v", hostName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to upgrade node: %v", err)})
 		return
 	}
