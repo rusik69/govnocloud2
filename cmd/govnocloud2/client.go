@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
-	"github.com/rusik69/govnocloud2/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -96,14 +95,7 @@ func handleNodes(c *client.Client, args []string) {
 		if len(args) < 6 {
 			panic("required: name host masterhost user key")
 		}
-		node := types.Node{
-			Name:       args[1],
-			Host:       args[2],
-			MasterHost: args[3],
-			User:       args[4],
-			Key:        args[5],
-		}
-		err := c.AddNode(node)
+		err := c.AddNode(args[1], args[2], args[3], args[4], args[5])
 		if err != nil {
 			panic(err)
 		}
