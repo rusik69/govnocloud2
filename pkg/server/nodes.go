@@ -192,17 +192,20 @@ func (m *NodeManager) DeleteNode(name string) error {
 func AddNodeHandler(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
+		log.Printf("failed to read request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read request body"})
 		return
 	}
 	log.Println(string(body))
 	var node types.Node
 	if err := json.Unmarshal(body, &node); err != nil {
+		log.Printf("failed to parse request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse request body"})
 		return
 	}
 
 	if err := nodeManager.AddNode(node); err != nil {
+		log.Printf("failed to add node: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to add node: %v", err)})
 		return
 	}
@@ -212,7 +215,7 @@ func AddNodeHandler(c *gin.Context) {
 func (m *NodeManager) AddNode(node types.Node) error {
 	out, err := m.k3sup.Run("join", "--ip", node.Host, "--server-ip", node.MasterHost, "--user", node.User, "--server-user", node.User, "--key", node.Key, "--k3s-extra-args", "--node-name", "node-"+node.Host)
 	if err != nil {
-		return fmt.Errorf("failed to add node: %s: %w", out, err)
+		return fmt.Errorf("%s: %w", out, err)
 	}
 	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
-	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 // TestListNodes tests the ListNodes method
@@ -39,13 +38,7 @@ func TestDeleteNode(t *testing.T) {
 // TestAddNode tests the AddNode method
 func TestAddNode(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	err := cli.AddNode(types.Node{
-		Name:       "node-10-0-0-2",
-		Host:       "10.0.0.2",
-		MasterHost: "10.0.0.1",
-		User:       "ubuntu",
-		Key:        "/home/ubuntu/.ssh/id_rsa",
-	})
+	err := cli.AddNode("node-10-0-0-2", "10.0.0.2", "10.0.0.1", "", "")
 	if err != nil {
 		t.Fatalf("error adding node: %v", err)
 	}

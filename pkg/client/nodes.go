@@ -64,7 +64,20 @@ func (c *Client) GetNode(name string) (*types.Node, error) {
 }
 
 // AddNode adds a new node to the cluster
-func (c *Client) AddNode(node types.Node) error {
+func (c *Client) AddNode(name, host, masterHost, user, key string) error {
+	node := types.Node{
+		Name:       name,
+		Host:       host,
+		MasterHost: masterHost,
+		User:       user,
+		Key:        key,
+	}
+	if user == "" {
+		node.User = "ubuntu"
+	}
+	if key == "" {
+		node.Key = "/home/ubuntu/.ssh/id_rsa"
+	}
 	nodeJSON, err := json.Marshal(node)
 	if err != nil {
 		return fmt.Errorf("failed to marshal node: %w", err)
@@ -84,7 +97,7 @@ func (c *Client) AddNode(node types.Node) error {
 		return fmt.Errorf("failed to add node: %s %w", string(body), err)
 	}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
