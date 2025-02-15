@@ -255,7 +255,6 @@ func setupServerFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Server.Password, "password", "", cfg.Server.Password, "ssh password")
 	flags.StringVarP(&cfg.Server.Key, "key", "", cfg.Server.Key, "ssh key")
 	flags.StringVarP(&cfg.Server.MasterHost, "master", "", cfg.Server.MasterHost, "master host")
-	flags.StringVarP(&cfg.Server.ImageDir, "imagesdir", "", cfg.Server.ImageDir, "images directory")
 }
 
 func setupClientFlags(cmd *cobra.Command) {
