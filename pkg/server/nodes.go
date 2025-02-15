@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rusik69/govnocloud2/pkg/k3s"
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
@@ -18,7 +19,6 @@ import (
 // NodeManager handles node operations
 type NodeManager struct {
 	kubectl KubectlRunner
-	k3sup   K3supRunner
 }
 
 // KubectlRunner interface for executing kubectl commands
@@ -50,18 +50,10 @@ func (k *DefaultVirtctlRunner) Run(args ...string) ([]byte, error) {
 	return exec.Command("virtctl", args...).Output()
 }
 
-// DefaultK3supRunner implements K3supRunner using exec.Command
-type DefaultK3supRunner struct{}
-
-func (k *DefaultK3supRunner) Run(args ...string) ([]byte, error) {
-	return exec.Command("k3sup", args...).Output()
-}
-
 // NewNodeManager creates a new NodeManager instance
 func NewNodeManager() *NodeManager {
 	return &NodeManager{
 		kubectl: &DefaultKubectlRunner{},
-		k3sup:   &DefaultK3supRunner{},
 	}
 }
 
@@ -172,7 +164,15 @@ func DeleteNodeHandler(c *gin.Context) {
 		return
 	}
 
-	if err := nodeManager.DeleteNode(nodeName); err != nil {
+	node, err := nodeManager.GetNode(nodeName)
+	if err != nil {
+		log.Printf("failed to get node %s: %v", nodeName, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("failed to get node %s: %v", nodeName, err),
+		})
+	}
+
+	if err := nodeManager.DeleteNode(node.Host); err != nil {
 		log.Printf("failed to delete node %s: %v", nodeName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("failed to delete node %s: %v", nodeName, err),
@@ -188,8 +188,7 @@ func (m *NodeManager) DeleteNode(name string) error {
 	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh"
 	out, err := ssh.Run(cmd, name, server.config.Key, server.config.User, "", true, 600)
 	if err != nil {
-		log.Printf("failed to uninstall k3s node: %v, output: %s", err, out)
-		return fmt.Errorf("failed to uninstall k3s node: %w", err)
+		return fmt.Errorf("failed to uninstall k3s node: %w %s", err, out)
 	}
 	return nil
 }
@@ -219,9 +218,9 @@ func AddNodeHandler(c *gin.Context) {
 
 // AddNode adds a node to the cluster
 func (m *NodeManager) AddNode(node types.Node) error {
-	out, err := m.k3sup.Run("join", "--ip", node.Host, "--server-ip", node.MasterHost, "--user", node.User, "--server-user", node.User, "--key", node.Key, "--k3s-extra-args", "--node-name", "node-"+node.Host)
+	err := k3s.DeployNode(node.Host, node.User, node.Key, node.Password, node.MasterHost)
 	if err != nil {
-		return fmt.Errorf("%s: %w", out, err)
+		return fmt.Errorf("failed to add node: %w", err)
 	}
 	return nil
 }
