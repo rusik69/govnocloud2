@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/rusik69/govnocloud2/pkg/types"
@@ -13,7 +14,12 @@ import (
 func (c *Client) ListNodes() ([]string, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/nodes", c.baseURL))
 	if err != nil {
-		return nil, fmt.Errorf("failed to list nodes: %w", err)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+		defer resp.Body.Close()
+		return nil, fmt.Errorf("failed to list nodes: %s %w", string(body), err)
 	}
 	defer resp.Body.Close()
 
@@ -33,7 +39,12 @@ func (c *Client) ListNodes() ([]string, error) {
 func (c *Client) GetNode(name string) (*types.Node, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/nodes/%s", c.baseURL, name))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get node: %w", err)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+		defer resp.Body.Close()
+		return nil, fmt.Errorf("failed to get node: %s %w", string(body), err)
 	}
 	defer resp.Body.Close()
 
@@ -65,9 +76,13 @@ func (c *Client) AddNode(node types.Node) error {
 		bytes.NewBuffer(nodeJSON),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to add node: %w", err)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %w", err)
+		}
+		defer resp.Body.Close()
+		return fmt.Errorf("failed to add node: %s %w", string(body), err)
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -89,7 +104,12 @@ func (c *Client) DeleteNode(name string) error {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to delete node: %w", err)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %w", err)
+		}
+		defer resp.Body.Close()
+		return fmt.Errorf("failed to delete node: %s %w", string(body), err)
 	}
 	defer resp.Body.Close()
 
@@ -108,7 +128,12 @@ func (c *Client) RestartNode(name string) error {
 		nil,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to restart node: %w", err)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %w", err)
+		}
+		defer resp.Body.Close()
+		return fmt.Errorf("failed to restart node: %s %w", string(body), err)
 	}
 	defer resp.Body.Close()
 
@@ -125,7 +150,12 @@ func (c *Client) UpgradeNode(ip string) error {
 		fmt.Sprintf("%s/nodes/%s/upgrade", c.baseURL, ip),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to upgrade node: %w", err)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %w", err)
+		}
+		defer resp.Body.Close()
+		return fmt.Errorf("failed to upgrade node: %s %w", string(body), err)
 	}
 	defer resp.Body.Close()
 
