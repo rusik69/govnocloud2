@@ -61,7 +61,7 @@ func TestAddNode(t *testing.T) {
 // TestUpgradeNode tests the UpgradeNode method
 func TestUpgradeNode(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
-	err := cli.UpgradeNode("10.0.0.2")
+	err := cli.UpgradeNode("10-0-0-2")
 	if err != nil {
 		t.Fatalf("error upgrading node: %v", err)
 	}

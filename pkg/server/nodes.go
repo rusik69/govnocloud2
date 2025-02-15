@@ -286,7 +286,7 @@ func (m *NodeManager) RestartNode(name string) error {
 
 // SuspendNodeHandler handles HTTP requests to suspend a node
 func SuspendNodeHandler(c *gin.Context) {
-	hostName := c.Param("host")
+	hostName := c.Param("name")
 	if hostName == "" {
 		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
@@ -311,7 +311,7 @@ func (m *NodeManager) SuspendNode(host, user, key string) error {
 
 // ResumeNodeHandler handles HTTP requests to resume a node
 func ResumeNodeHandler(c *gin.Context) {
-	hostName := c.Param("host")
+	hostName := c.Param("name")
 	if hostName == "" {
 		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
@@ -331,7 +331,7 @@ func (m *NodeManager) ResumeNode(host, user, key string) error {
 
 // UpgradeNodeHandler handles HTTP requests to upgrade a node
 func UpgradeNodeHandler(c *gin.Context) {
-	hostName := c.Param("host")
+	hostName := c.Param("name")
 	if hostName == "" {
 		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
