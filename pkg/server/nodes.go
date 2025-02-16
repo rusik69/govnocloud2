@@ -336,7 +336,13 @@ func UpgradeNodeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
-	if err := nodeManager.UpgradeNode(hostName, server.config.User, server.config.Key); err != nil {
+	node, err := nodeManager.GetNode(hostName)
+	if err != nil {
+		log.Printf("failed to get node %s: %v", hostName, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to get node: %v", err)})
+		return
+	}
+	if err := nodeManager.UpgradeNode(node.Host, node.User, node.Key); err != nil {
 		log.Printf("failed to upgrade node %s: %v", hostName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to upgrade node: %v", err)})
 		return
