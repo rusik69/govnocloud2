@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
 )
@@ -56,6 +57,7 @@ func TestAddNode(t *testing.T) {
 	if !found {
 		t.Fatalf("node not found")
 	}
+	time.Sleep(10 * time.Second)
 }
 
 // TestUpgradeNode tests the UpgradeNode method
