@@ -43,11 +43,11 @@ type DefaultKubectlRunner struct{}
 type DefaultVirtctlRunner struct{}
 
 func (k *DefaultKubectlRunner) Run(args ...string) ([]byte, error) {
-	return exec.Command("kubectl", args...).Output()
+	return exec.Command("kubectl", args...).CombinedOutput()
 }
 
 func (k *DefaultVirtctlRunner) Run(args ...string) ([]byte, error) {
-	return exec.Command("virtctl", args...).Output()
+	return exec.Command("virtctl", args...).CombinedOutput()
 }
 
 // NewNodeManager creates a new NodeManager instance

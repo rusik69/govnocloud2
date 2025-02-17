@@ -57,20 +57,6 @@ func CreateVMHandler(c *gin.Context) {
 	respondWithSuccess(c, gin.H{"message": "VM created successfully"})
 }
 
-// CreateVolumeForVM creates a new volume for a VM
-func CreateVolumeForVM(vm types.VM) error {
-	volume := types.Volume{
-		Name: vm.Name,
-		Size: fmt.Sprintf("%dGi", types.VMSizes[vm.Size].Disk),
-	}
-	out, err := volumeManager.CreateVolume(volume, vm.Namespace)
-	if err != nil {
-		return fmt.Errorf("failed to create volume for VM %s: %w %s", vm.Name, err, out)
-	}
-	log.Printf("volume created successfully: %s", out)
-	return nil
-}
-
 // DeleteVolumeForVM deletes the volume for a VM
 func DeleteVolumeForVM(vm types.VM) error {
 	out, err := volumeManager.DeleteVolume(vm.Name, vm.Namespace)
@@ -83,11 +69,6 @@ func DeleteVolumeForVM(vm types.VM) error {
 
 // CreateVM creates a new virtual machine
 func (m *VMManager) CreateVM(vm types.VM) error {
-	// Create volume first
-	if err := CreateVolumeForVM(vm); err != nil {
-		return fmt.Errorf("failed to create volume: %w", err)
-	}
-
 	vmSize := types.VMSizes[vm.Size]
 	vmImage := types.VMImages[vm.Image]
 	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
@@ -113,6 +94,7 @@ spec:
           requests:
             memory: %dMi
             cpu: %d
+            storage: %dGi
       volumes:
       - name: rootdisk
         containerDisk:
@@ -129,7 +111,7 @@ spec:
           chpasswd:
             expire: false
           ssh_pwauth: true`,
-		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.Image)
+		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmSize.Disk, vmImage.Image)
 	log.Println(vmConfig)
 	// Write config to temporary file
 	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
