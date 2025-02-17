@@ -90,6 +90,9 @@ spec:
           - name: rootdisk
             disk:
               bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
         resources:
           requests:
             memory: %dMi
@@ -99,18 +102,14 @@ spec:
       - name: rootdisk
         containerDisk:
           image: %s
-      accessCredentials:
-      - sshPublicKey:
-          source:
-            secret:
-              secretName: cloud-init
-      cloudInitNoCloud:
-        userData: |
-          #cloud-config
-          password: ubuntu
-          chpasswd:
-            expire: false
-          ssh_pwauth: true`,
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: ubuntu
+            chpasswd:
+              expire: false
+            ssh_pwauth: true`,
 		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmSize.Disk, vmImage.Image)
 	log.Println(vmConfig)
 	// Write config to temporary file
