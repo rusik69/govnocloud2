@@ -312,7 +312,7 @@ func StartVMHandler(c *gin.Context) {
 
 // StartVM starts a virtual machine
 func (m *VMManager) StartVM(name, namespace string) error {
-	out, err := m.kubectl.Run("start", "VirtualMachine", name, "-n", namespace)
+	out, err := m.virtctl.Run("start", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
