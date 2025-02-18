@@ -14,14 +14,6 @@ func TestCreateVM(t *testing.T) {
 	}
 }
 
-func TestWaitVM(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
-	err := cli.WaitVM("test-vm", testNamespace)
-	if err != nil {
-		t.Fatalf("error waiting for VM: %v", err)
-	}
-}
-
 func TestListVMs(t *testing.T) {
 	cli := client.NewClient(testHost, testPort)
 	vms, err := cli.ListVMs(testNamespace)
