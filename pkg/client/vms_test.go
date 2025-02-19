@@ -2,7 +2,6 @@ package client_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
 )
