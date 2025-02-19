@@ -13,7 +13,6 @@ func TestCreateVM(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating VM: %v", err)
 	}
-	time.Sleep(10 * time.Second)
 }
 
 func TestListVMs(t *testing.T) {

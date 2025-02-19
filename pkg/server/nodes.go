@@ -43,10 +43,12 @@ type DefaultKubectlRunner struct{}
 type DefaultVirtctlRunner struct{}
 
 func (k *DefaultKubectlRunner) Run(args ...string) ([]byte, error) {
+	log.Printf("running kubectl command: %v", args)
 	return exec.Command("kubectl", args...).CombinedOutput()
 }
 
 func (k *DefaultVirtctlRunner) Run(args ...string) ([]byte, error) {
+	log.Printf("running virtctl command: %v", args)
 	return exec.Command("virtctl", args...).CombinedOutput()
 }
 
