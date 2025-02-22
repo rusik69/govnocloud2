@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"govnocloud2/pkg/types"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
 // CreateLLM creates a new LLM deployment
