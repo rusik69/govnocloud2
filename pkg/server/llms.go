@@ -49,7 +49,20 @@ func CreateLLMHandler(c *gin.Context) {
 
 	var llm types.LLM
 	if err := c.BindJSON(&llm); err != nil {
+		log.Printf("invalid request body: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request body: %v", err))
+		return
+	}
+
+	if llm.Type == "" {
+		log.Printf("type is required")
+		respondWithError(c, http.StatusBadRequest, "type is required")
+		return
+	}
+
+	if _, ok := types.LLMTypes[llm.Type]; !ok {
+		log.Printf("invalid type: %s", llm.Type)
+		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid type: %s", llm.Type))
 		return
 	}
 
@@ -132,6 +145,7 @@ func DeleteLLMHandler(c *gin.Context) {
 
 // CreateLLM creates a new LLM deployment
 func (m *LLMManager) CreateLLM(llm types.LLM) error {
+	llmType := types.LLMTypes[llm.Type]
 	llmConfig := fmt.Sprintf(`apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -158,7 +172,7 @@ spec:
             memory: "%dGi"
             cpu: "%d"`,
 		llm.Name, llm.Namespace, llm.Name, llm.Name,
-		llm.Image, llm.Memory, llm.CPU, llm.Memory, llm.CPU)
+		llmType.Image, llmType.Memory, llmType.CPU, llmType.Memory, llmType.CPU)
 
 	tmpfile, err := os.CreateTemp("", "llm-*.yaml")
 	if err != nil {
