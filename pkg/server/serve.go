@@ -112,6 +112,12 @@ func (s *Server) setupRoutes() {
 			namespaces.GET("/:name", GetNamespaceHandler)
 			namespaces.DELETE("/:name", DeleteNamespaceHandler)
 		}
+		llms := v0.Group("/llms")
+		{
+			llms.POST("/:namespace/:name", CreateLLMHandler)
+			llms.GET("/:namespace/:name", GetLLMHandler)
+			llms.DELETE("/:namespace/:name", DeleteLLMHandler)
+		}
 	}
 
 	// Version endpoint

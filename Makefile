@@ -57,9 +57,9 @@ run-web-mac:
 	DEBUG=true bin/govnocloud2-darwin-arm64 web
 
 create-vm-mac:
-	./bin/govnocloud2-darwin-arm64 client vms create test ubuntu24 small test --host 192.168.1.83
+	./bin/govnocloud2-darwin-arm64 client vms create test-vm ubuntu24 small test --host 192.168.1.83
 
 stop-vm-mac:
-	./bin/govnocloud2-darwin-arm64 client vms stop test test --host 192.168.1.83
+	./bin/govnocloud2-darwin-arm64 client vms stop test-vm test --host 192.168.1.83
 
 all: get build
