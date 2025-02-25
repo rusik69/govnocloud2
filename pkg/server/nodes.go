@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -49,7 +50,9 @@ func (k *DefaultKubectlRunner) Run(args ...string) ([]byte, error) {
 
 func (k *DefaultVirtctlRunner) Run(args ...string) ([]byte, error) {
 	log.Printf("running virtctl command: %v", args)
-	return exec.Command("virtctl", args...).CombinedOutput()
+	cmd := exec.Command("virtctl", args...)
+	cmd.Env = append(os.Environ(), "KUBECONFIG=/etc/rancher/k3s/k3s.yaml")
+	return cmd.CombinedOutput()
 }
 
 // NewNodeManager creates a new NodeManager instance
