@@ -97,7 +97,6 @@ spec:
           requests:
             memory: %dMi
             cpu: %d
-            storage: %dGi
       volumes:
       - name: rootdisk
         containerDisk:
@@ -110,7 +109,7 @@ spec:
             chpasswd:
               expire: false
             ssh_pwauth: true`,
-		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmSize.Disk, vmImage.Image)
+		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.Image)
 	log.Println(vmConfig)
 	// Write config to temporary file
 	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
