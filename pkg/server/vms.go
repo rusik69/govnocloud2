@@ -131,6 +131,12 @@ spec:
 		return fmt.Errorf("failed to create VM %s: %s: %w", vm.Name, out, err)
 	}
 
+	// wait for VM to start
+	out, err = m.kubectl.Run("wait", "--for=condition=Ready=true", fmt.Sprintf("virtualmachine.kubevirt.io/%s", vm.Name), "-n", vm.Namespace, "--timeout=1m")
+	if err != nil {
+		return fmt.Errorf("failed waiting for VM %s to start in namespace %s: %s %w", vm.Name, vm.Namespace, out, err)
+	}
+
 	return nil
 }
 
@@ -314,6 +320,11 @@ func (m *VMManager) StartVM(name, namespace string) error {
 	out, err := m.virtctl.Run("start", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
+	}
+	// wait for VM to start
+	out, err = m.kubectl.Run("wait", "--for=condition=Ready=true", fmt.Sprintf("virtualmachine.kubevirt.io/%s", name), "-n", namespace, "--timeout=1m")
+	if err != nil {
+		return fmt.Errorf("failed waiting for VM %s to start in namespace %s: %s %w", name, namespace, out, err)
 	}
 	return nil
 }
