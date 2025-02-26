@@ -132,7 +132,7 @@ spec:
 	}
 
 	// wait for VM to start
-	out, err = m.kubectl.Run("wait", "--for=condition=Ready=true", fmt.Sprintf("virtualmachine.kubevirt.io/%s", vm.Name), "-n", vm.Namespace, "--timeout=1m")
+	out, err = m.kubectl.Run("wait", "--for=condition=Ready=true", fmt.Sprintf("virtualmachine.kubevirt.io/%s", vm.Name), "-n", vm.Namespace, "--timeout=5m")
 	if err != nil {
 		return fmt.Errorf("failed waiting for VM %s to start in namespace %s: %s %w", vm.Name, vm.Namespace, out, err)
 	}
