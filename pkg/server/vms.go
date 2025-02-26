@@ -353,7 +353,7 @@ func (m *VMManager) StopVM(name, namespace string) error {
 		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	// wait for VM to stop
-	out, err = m.kubectl.Run("wait", "--for=condition=Status=Stopped", fmt.Sprintf("virtualmachine.kubevirt.io/%s", name), "-n", namespace, "--timeout=1m")
+	out, err = m.kubectl.Run("wait", "--for=condition=Ready=false", fmt.Sprintf("virtualmachine.kubevirt.io/%s", name), "-n", namespace, "--timeout=1m")
 	if err != nil {
 		return fmt.Errorf("failed waiting for VM %s to stop in namespace %s: %s %w", name, namespace, out, err)
 	}
