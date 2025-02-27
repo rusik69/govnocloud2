@@ -28,7 +28,7 @@ jobs:
       run: make get build
       
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: govnocloud2-artifacts
         path: |
@@ -41,7 +41,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: govnocloud2-artifacts
         path: bin/
