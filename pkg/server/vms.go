@@ -317,15 +317,18 @@ func StartVMHandler(c *gin.Context) {
 
 // StartVM starts a virtual machine
 func (m *VMManager) StartVM(name, namespace string) error {
+	log.Printf("starting VM %s in namespace %s", name, namespace)
 	out, err := m.virtctl.Run("start", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	// wait for VM to start
-	out, err = m.kubectl.Run("wait", "--for=condition=Ready=true", fmt.Sprintf("virtualmachine.kubevirt.io/%s", name), "-n", namespace, "--timeout=1m")
+	log.Printf("waiting for VM %s to start in namespace %s", name, namespace)
+	out, err = m.kubectl.Run("wait", "--for=condition=Ready=true", fmt.Sprintf("virtualmachine.kubevirt.io/%s", name), "-n", namespace, "--timeout=5m")
 	if err != nil {
 		return fmt.Errorf("failed waiting for VM %s to start in namespace %s: %s %w", name, namespace, out, err)
 	}
+	log.Printf("VM %s started successfully in namespace %s", name, namespace)
 	return nil
 }
 
@@ -359,15 +362,18 @@ func StopVMHandler(c *gin.Context) {
 
 // StopVM stops a virtual machine
 func (m *VMManager) StopVM(name, namespace string) error {
+	log.Printf("stopping VM %s in namespace %s", name, namespace)
 	out, err := m.virtctl.Run("stop", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	// wait for VM to stop
+	log.Printf("waiting for VM %s to stop in namespace %s", name, namespace)
 	out, err = m.kubectl.Run("wait", "--for=condition=Ready=false", fmt.Sprintf("virtualmachine.kubevirt.io/%s", name), "-n", namespace, "--timeout=5m")
 	if err != nil {
 		return fmt.Errorf("failed waiting for VM %s to stop in namespace %s: %s %w", name, namespace, out, err)
 	}
+	log.Printf("VM %s stopped successfully in namespace %s", name, namespace)
 	return nil
 }
 
@@ -401,10 +407,12 @@ func RestartVMHandler(c *gin.Context) {
 
 // RestartVM restarts a virtual machine
 func (m *VMManager) RestartVM(name, namespace string) error {
+	log.Printf("restarting VM %s in namespace %s", name, namespace)
 	out, err := m.virtctl.Run("restart", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to restart VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
+	log.Printf("VM %s restarted successfully in namespace %s", name, namespace)
 	return nil
 }
 
@@ -438,9 +446,11 @@ func WaitVMHandler(c *gin.Context) {
 
 // WaitVM waits for a virtual machine to be ready
 func (m *VMManager) WaitVM(name, namespace string) error {
+	log.Printf("waiting for VM %s to be ready in namespace %s", name, namespace)
 	out, err := m.kubectl.Run("wait", "VirtualMachine", name, "-n", namespace, "--for=condition=ready", "--timeout=10m")
 	if err != nil {
 		return fmt.Errorf("failed to wait for VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
+	log.Printf("VM %s is ready in namespace %s", name, namespace)
 	return nil
 }
