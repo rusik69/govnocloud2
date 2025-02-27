@@ -17,7 +17,7 @@ jobs:
           version: latest
           args: --timeout=5m
           skip-cache: true
-  test:
+  build:
     needs: lint
     runs-on: self-hosted
     steps:
@@ -27,6 +27,13 @@ jobs:
     - name: build
       run: make get build
       
+  install:
+    needs: build
+    runs-on: self-hosted
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: wol
       run: make wol
       
@@ -35,7 +42,17 @@ jobs:
       
     - name: install
       run: make install
-      
+    
+    - name: suspend
+      run: make suspend
+      if: failure()
+
+    timeout-minutes: 20
+
+  test:
+    needs: install
+    runs-on: self-hosted
+    steps:
     - name: test
       run: make test
       
@@ -46,4 +63,5 @@ jobs:
     - name: Suspend
       run: make suspend
       if: always()
+
     timeout-minutes: 60
