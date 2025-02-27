@@ -27,12 +27,24 @@ jobs:
     - name: build
       run: make get build
       
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: govnocloud2-artifacts
+        path: |
+          bin/
   install:
     needs: build
     runs-on: self-hosted
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: govnocloud2-artifacts
+        path: bin/
 
     - name: wol
       run: make wol
@@ -48,7 +60,6 @@ jobs:
       if: failure()
 
     timeout-minutes: 20
-
   test:
     needs: install
     runs-on: self-hosted
