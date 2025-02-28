@@ -435,7 +435,7 @@ func RestartVMHandler(c *gin.Context) {
 // RestartVM restarts a virtual machine
 func (m *VMManager) RestartVM(name, namespace string) error {
 	log.Printf("stopping VM %s in namespace %s", name, namespace)
-	out, err := m.virtctl.Run("stop", name, "-n", namespace, "--grace-period=1")
+	out, err := m.virtctl.Run("stop", name, "-n", namespace, "--grace-period=1", "--force=true")
 	if err != nil {
 		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}

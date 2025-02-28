@@ -51,10 +51,10 @@ update-deps:
 	go mod verify
 
 run-web:
-	DEBUG=true bin/govnocloud2-linux-amd64 web
+	DEBUG=true bin/govnocloud2-linux-amd64 web 
 
 run-web-mac:
-	DEBUG=true bin/govnocloud2-darwin-arm64 web
+	DEBUG=true bin/govnocloud2-darwin-arm64 web --webpath pkg/web/templates
 
 create-vm-mac:
 	./bin/govnocloud2-darwin-arm64 client vms create test-vm ubuntu24 small test --host 192.168.1.83

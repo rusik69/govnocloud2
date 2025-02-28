@@ -267,7 +267,7 @@ func setupWebFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
 	flags.StringVarP(&cfg.Web.Host, "host", "", cfg.Web.Host, "listen host")
 	flags.StringVarP(&cfg.Web.Port, "port", "", cfg.Web.Port, "listen port")
-	flags.StringVarP(&cfg.Web.Path, "path", "", cfg.Web.Path, "web path")
+	flags.StringVarP(&cfg.Web.Path, "webpath", "", cfg.Web.Path, "web path")
 }
 
 func setupToolFlags() {

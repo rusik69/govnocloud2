@@ -2,10 +2,8 @@ package web
 
 import (
 	"embed"
-	"html/template"
 	"log"
 	"net/http"
-	"path"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -39,33 +37,34 @@ func Listen(host, port, webPath string) error {
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 	}))
 
-	// Load templates
-	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
-		"webpath": func() string { return webPath },
-	}).ParseFS(templates, "templates/*"))
-	router.SetHTMLTemplate(tmpl)
-
-	// Setup routes
-	group := router.Group(webPath)
-
 	// Redirect root to nodes page
-	group.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, path.Join(webPath, "nodes"))
+	router.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "nodes")
 	})
 
-	// Setup page routes
-	for route, title := range pages {
-		route := route
-		title := title
-		group.GET("/"+route, func(c *gin.Context) {
-			data := NewPageData()
-			data.Title = "GovnoCloud Dashboard - " + title
-			data.Description = "Manage your " + title
-			data.WebPath = webPath
-			c.HTML(http.StatusOK, route+".html", data)
-		})
-	}
+	router.GET("/vms", func(c *gin.Context) {
+		c.HTML(http.StatusOK, webPath+"/vms.html", gin.H{})
+	})
 
+	router.GET("/containers", func(c *gin.Context) {
+		c.HTML(http.StatusOK, webPath+"/containers.html", gin.H{})
+	})
+
+	router.GET("/dbs", func(c *gin.Context) {
+		c.HTML(http.StatusOK, webPath+"/dbs.html", gin.H{})
+	})
+
+	router.GET("/volumes", func(c *gin.Context) {
+		c.HTML(http.StatusOK, webPath+"/volumes.html", gin.H{})
+	})
+
+	router.GET("/namespaces", func(c *gin.Context) {
+		c.HTML(http.StatusOK, webPath+"/namespaces.html", gin.H{})
+	})
+
+	router.GET("/nodes", func(c *gin.Context) {
+		c.HTML(http.StatusOK, webPath+"/nodes.html", gin.H{})
+	})
 	log.Printf("Starting web server on %s:%s (path: %s)", host, port, webPath)
 	return router.Run(host + ":" + port)
 }
