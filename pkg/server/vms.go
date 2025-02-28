@@ -283,7 +283,7 @@ func DeleteVMHandler(c *gin.Context) {
 
 // DeleteVM removes a virtual machine
 func (m *VMManager) DeleteVM(name, namespace string) error {
-	out, err := m.kubectl.Run("delete", "VirtualMachine", name, "-n", namespace)
+	out, err := m.kubectl.Run("delete", "VirtualMachineInstance", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to delete VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
@@ -434,12 +434,18 @@ func RestartVMHandler(c *gin.Context) {
 
 // RestartVM restarts a virtual machine
 func (m *VMManager) RestartVM(name, namespace string) error {
-	log.Printf("restarting VM %s in namespace %s", name, namespace)
-	out, err := m.virtctl.Run("restart", name, "-n", namespace)
+	log.Printf("stopping VM %s in namespace %s", name, namespace)
+	out, err := m.virtctl.Run("stop", name, "-n", namespace)
 	if err != nil {
-		return fmt.Errorf("failed to restart VM %s in namespace %s: %s %w", name, namespace, out, err)
+		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
-	log.Printf("VM %s restarted successfully in namespace %s", name, namespace)
+	log.Printf("VM %s stopped successfully in namespace %s", name, namespace)
+	log.Printf("starting VM %s in namespace %s", name, namespace)
+	out, err = m.virtctl.Run("start", name, "-n", namespace)
+	if err != nil {
+		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
+	}
+	log.Printf("VM %s started successfully in namespace %s", name, namespace)
 	return nil
 }
 
