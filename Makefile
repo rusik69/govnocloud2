@@ -62,6 +62,8 @@ create-vm-mac:
 stop-vm-mac:
 	./bin/govnocloud2-darwin-arm64 client vms stop test-vm test --host 192.168.1.83
 
+start-vm-mac:
+	./bin/govnocloud2-darwin-arm64 client vms start test-vm test --host 192.168.1.83
 exec:
 	chmod +x bin/*
 

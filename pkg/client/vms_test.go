@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
 )
@@ -49,6 +50,7 @@ func TestStopVM(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error stopping VM: %v", err)
 	}
+	time.Sleep(10 * time.Second)
 }
 
 func TestStartVM(t *testing.T) {

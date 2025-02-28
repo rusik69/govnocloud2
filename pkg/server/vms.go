@@ -310,6 +310,7 @@ func StartVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
 		return
 	}
+	// check if VM is already running
 	vm, err := vmManager.GetVM(name, namespace)
 	if err != nil {
 		log.Printf("failed to get VM %s in namespace %s: %v", name, namespace, err)
@@ -364,6 +365,18 @@ func StopVMHandler(c *gin.Context) {
 	if types.ReservedNamespaces[namespace] {
 		log.Printf("namespace %s is reserved", namespace)
 		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	// check if VM is already stopped
+	vm, err := vmManager.GetVM(name, namespace)
+	if err != nil {
+		log.Printf("failed to get VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
+		return
+	}
+	if vm.Status == "Stopped" {
+		log.Printf("VM %s is already stopped in namespace %s", name, namespace)
+		respondWithSuccess(c, gin.H{"message": "VM is already stopped"})
 		return
 	}
 	if err := vmManager.StopVM(name, namespace); err != nil {
