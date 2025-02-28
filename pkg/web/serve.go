@@ -1,25 +1,12 @@
 package web
 
 import (
-	"embed"
 	"log"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
-
-//go:embed templates/*
-var templates embed.FS
-
-var pages = map[string]string{
-	"nodes":      "Nodes",
-	"vms":        "Virtual Machines",
-	"volumes":    "Volumes",
-	"containers": "Containers",
-	"dbs":        "Databases",
-	"namespaces": "Namespaces",
-}
 
 func Listen(host, port, webPath string) error {
 	router := gin.New()
