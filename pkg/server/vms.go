@@ -190,6 +190,7 @@ type VMTemplate struct {
 			} `json:"metadata"`
 		} `json:"template"`
 	} `json:"spec"`
+	PrintableStatus string `json:"printableStatus"`
 }
 
 // GetVMHandler handles VM retrieval requests
@@ -226,9 +227,11 @@ func (m *VMManager) GetVM(name, namespace string) (types.VM, error) {
 		return types.VM{}, fmt.Errorf("failed to parse VM %s: %w", out, err)
 	}
 	vm := types.VM{
-		Name:  VMTemplate.Metadata.Name,
-		Size:  VMTemplate.Spec.Template.Metadata.Labels["kubevirt.io/size"],
-		Image: VMTemplate.Spec.Template.Metadata.Labels["kubevirt.io/image"],
+		Name:      VMTemplate.Metadata.Name,
+		Namespace: namespace,
+		Size:      VMTemplate.Spec.Template.Metadata.Labels["kubevirt.io/size"],
+		Image:     VMTemplate.Spec.Template.Metadata.Labels["kubevirt.io/image"],
+		Status:    VMTemplate.PrintableStatus,
 	}
 	return vm, nil
 }
@@ -305,6 +308,17 @@ func StartVMHandler(c *gin.Context) {
 	if types.ReservedNamespaces[namespace] {
 		log.Printf("namespace %s is reserved", namespace)
 		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+	vm, err := vmManager.GetVM(name, namespace)
+	if err != nil {
+		log.Printf("failed to get VM %s in namespace %s: %v", name, namespace, err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
+		return
+	}
+	if vm.Status == "Running" {
+		log.Printf("VM %s is already running in namespace %s", name, namespace)
+		respondWithSuccess(c, gin.H{"message": "VM is already running"})
 		return
 	}
 	if err := vmManager.StartVM(name, namespace); err != nil {
