@@ -14,7 +14,7 @@ func InstallOllama(host, user, key string) error {
 	} else {
 		log.Println(out)
 	}
-	waitCmd := "kubectl wait -n ollama-operator-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/ollama-operator-controller-manager"
+	waitCmd := "kubectl wait -n ollama-operator-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/ollama-operator-controller-manager --timeout=300s"
 	if out, err := ssh.Run(waitCmd, host, key, user, "", true, 300); err != nil {
 		return fmt.Errorf("failed to wait for ollama: %w", err)
 	} else {
