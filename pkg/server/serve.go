@@ -117,6 +117,7 @@ func (s *Server) setupRoutes() {
 			llms.POST("/:namespace/:name", CreateLLMHandler)
 			llms.GET("/:namespace/:name", GetLLMHandler)
 			llms.DELETE("/:namespace/:name", DeleteLLMHandler)
+			llms.GET("/:namespace", ListLLMsHandler)
 		}
 	}
 

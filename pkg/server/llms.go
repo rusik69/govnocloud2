@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -146,33 +147,14 @@ func DeleteLLMHandler(c *gin.Context) {
 // CreateLLM creates a new LLM deployment
 func (m *LLMManager) CreateLLM(llm types.LLM) error {
 	llmType := types.LLMTypes[llm.Type]
-	llmConfig := fmt.Sprintf(`apiVersion: apps/v1
-kind: Deployment
+	llmConfig := fmt.Sprintf(`apiVersion: ollama.ayaka.io/v1
+kind: Model
 metadata:
   name: %s
   namespace: %s
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: %s
-  template:
-    metadata:
-      labels:
-        app: %s
-    spec:
-      containers:
-      - name: llm
-        image: %s
-        resources:
-          requests:
-            memory: "%dGi"
-            cpu: "%d"
-          limits:
-            memory: "%dGi"
-            cpu: "%d"`,
-		llm.Name, llm.Namespace, llm.Name, llm.Name,
-		llmType.Image, llmType.Memory, llmType.CPU, llmType.Memory, llmType.CPU)
+  image: %s`,
+		llm.Name, llm.Namespace, llmType.Type)
 
 	tmpfile, err := os.CreateTemp("", "llm-*.yaml")
 	if err != nil {
@@ -197,24 +179,92 @@ spec:
 
 // GetLLM retrieves an LLM deployment
 func (m *LLMManager) GetLLM(namespace, name string) (*types.LLM, error) {
-	out, err := m.kubectl.Run("get", "deployment", name, "-n", namespace, "-o", "json")
+	out, err := m.kubectl.Run("get", "Model", name, "-n", namespace, "-o", "json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get LLM %s: %s: %w", name, out, err)
 	}
 
 	// Parse the JSON output and create an LLM object
-	llm := &types.LLM{}
-	// Add parsing logic here based on your needs
+	model := struct {
+		Spec struct {
+			Image string `json:"image"`
+		} `json:"spec"`
+	}{}
+	if err := json.Unmarshal(out, &model); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal LLM: %w", err)
+	}
+
+	llm := &types.LLM{
+		Name:      name,
+		Namespace: namespace,
+		Type:      model.Spec.Image,
+	}
 
 	return llm, nil
 }
 
-// DeleteLLM deletes an LLM deployment
+// DeleteLLM deletes LLM
 func (m *LLMManager) DeleteLLM(namespace, name string) error {
-	out, err := m.kubectl.Run("delete", "deployment", name, "-n", namespace)
+	out, err := m.kubectl.Run("delete", "Model", name, "-n", namespace)
 	if err != nil {
 		return fmt.Errorf("failed to delete LLM %s: %s: %w", name, out, err)
 	}
 
 	return nil
+}
+
+// ListLLMsHandler handles list llms request
+func ListLLMsHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+
+	if namespace == "" {
+		log.Printf("namespace is required")
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+
+	if _, ok := types.ReservedNamespaces[namespace]; ok {
+		log.Printf("namespace %s is reserved", namespace)
+		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+		return
+	}
+
+	llms, err := llmManager.ListLLMs(namespace)
+	if err != nil {
+		log.Printf("failed to list LLMs: %v", err)
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list LLMs: %v", err))
+		return
+	}
+
+	respondWithSuccess(c, llms)
+}
+
+// ListLLMs lists all LLMs in a namespace
+func (m *LLMManager) ListLLMs(namespace string) ([]types.LLM, error) {
+	out, err := m.kubectl.Run("get", "Model", "-n", namespace, "-o", "json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to list LLMs: %s: %w", out, err)
+	}
+	models := []struct {
+		Metadata struct {
+			Name string `json:"name"`
+		} `json:"metadata"`
+		Spec struct {
+			Image string `json:"image"`
+		} `json:"spec"`
+	}{}
+	if err := json.Unmarshal(out, &models); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal LLMs: %w", err)
+	}
+
+	llms := []types.LLM{}
+	for _, model := range models {
+		llms = append(llms, types.LLM{
+			Name:      model.Metadata.Name,
+			Namespace: namespace,
+			Type:      model.Spec.Image,
+		})
+	}
+
+	return llms, nil
 }

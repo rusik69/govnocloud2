@@ -2,12 +2,9 @@ package client_test
 
 import (
 	"testing"
-
-	"github.com/rusik69/govnocloud2/pkg/client"
 )
 
 func TestCreateDB(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	err := cli.CreateDB("test-db", testNamespace, "postgres", "small")
 	if err != nil {
 		t.Fatalf("error creating DB: %v", err)
@@ -15,7 +12,6 @@ func TestCreateDB(t *testing.T) {
 }
 
 func TestGetDB(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	db, err := cli.GetDB("test-db", testNamespace)
 	if err != nil {
 		t.Fatalf("error getting DB: %v", err)
@@ -24,7 +20,6 @@ func TestGetDB(t *testing.T) {
 }
 
 func TestListDBs(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	dbs, err := cli.ListDBs(testNamespace)
 	if err != nil {
 		t.Fatalf("error listing DBs: %v", err)
@@ -33,7 +28,6 @@ func TestListDBs(t *testing.T) {
 }
 
 func TestDeleteDB(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	err := cli.DeleteDB("test-db", testNamespace)
 	if err != nil {
 		t.Fatalf("error deleting DB: %v", err)

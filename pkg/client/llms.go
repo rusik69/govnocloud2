@@ -106,3 +106,35 @@ func (c *Client) GetLLM(namespace, name string) (types.LLM, error) {
 	}
 	return types.LLM{}, nil
 }
+
+// ListLLMs lists all LLMs in a namespace
+func (c *Client) ListLLMs(namespace string) ([]types.LLM, error) {
+	url := fmt.Sprintf("%s/llms/%s", c.baseURL, namespace)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error listing LLMs: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to list LLMs: %s %s", resp.Status, string(body))
+	}
+
+	llms := []types.LLM{}
+	if err := json.Unmarshal(body, &llms); err != nil {
+		return nil, fmt.Errorf("error unmarshalling LLMs: %w", err)
+	}
+	return llms, nil
+}

@@ -3,13 +3,10 @@ package client_test
 import (
 	"testing"
 	"time"
-
-	"github.com/rusik69/govnocloud2/pkg/client"
 )
 
 // TestListNodes tests the ListNodes method
 func TestListNodes(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	nodes, err := cli.ListNodes()
 	if err != nil {
 		t.Fatalf("error listing nodes: %v", err)
@@ -19,7 +16,6 @@ func TestListNodes(t *testing.T) {
 
 // TestGetNode tests the GetNode method
 func TestGetNode(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	node, err := cli.GetNode("node-10-0-0-2")
 	if err != nil {
 		t.Fatalf("error getting node: %v", err)
@@ -29,7 +25,6 @@ func TestGetNode(t *testing.T) {
 
 // TestDeleteNode tests the DeleteNode method
 func TestDeleteNode(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	err := cli.DeleteNode("node-10-0-0-2")
 	if err != nil {
 		t.Fatalf("error deleting node: %v", err)
@@ -38,7 +33,6 @@ func TestDeleteNode(t *testing.T) {
 
 // TestAddNode tests the AddNode method
 func TestAddNode(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	err := cli.AddNode("node-10-0-0-2", "10.0.0.2", "10.0.0.1", "", "")
 	if err != nil {
 		t.Fatalf("error adding node: %v", err)
@@ -62,7 +56,6 @@ func TestAddNode(t *testing.T) {
 
 // TestUpgradeNode tests the UpgradeNode method
 func TestUpgradeNode(t *testing.T) {
-	cli := client.NewClient(testHost, testPort)
 	err := cli.UpgradeNode("10-0-0-2")
 	if err != nil {
 		t.Fatalf("error upgrading node: %v", err)

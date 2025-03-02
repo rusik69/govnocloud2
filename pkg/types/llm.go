@@ -4,16 +4,13 @@ type LLM struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 	Type      string `json:"type"`
-	Image     string `json:"image"`
-	Memory    int    `json:"memory"`
-	CPU       int    `json:"cpu"`
 }
 
 var LLMTypes = map[string]LLM{
-	"llama3": LLM{
-		Name:   "llama3",
-		Image:  "llama3",
-		Memory: 1024,
-		CPU:    1,
+	"deepseek-r1-1.5b": LLM{
+		Type: "deepseek-r1-1.5b",
+	},
+	"deepseek-r1-7b": LLM{
+		Type: "deepseek-r1-7b",
 	},
 }
