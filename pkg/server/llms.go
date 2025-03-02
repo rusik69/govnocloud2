@@ -262,9 +262,9 @@ func (m *LLMManager) ListLLMs(namespace string) ([]types.LLM, error) {
 	llms := []types.LLM{}
 	for _, model := range models {
 		llms = append(llms, types.LLM{
-			Name:      model.Metadata.Name,
+			Name:      model.Items[0].Metadata.Name,
 			Namespace: namespace,
-			Type:      model.Spec.Image,
+			Type:      model.Items[0].Spec.Image,
 		})
 	}
 
