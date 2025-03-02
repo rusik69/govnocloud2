@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
@@ -241,32 +242,34 @@ func ListLLMsHandler(c *gin.Context) {
 
 // ListLLMs lists all LLMs in a namespace
 func (m *LLMManager) ListLLMs(namespace string) ([]types.LLM, error) {
-	out, err := m.kubectl.Run("get", "Model", "-n", namespace, "-o", "json")
+	out, err := m.kubectl.Run("get", "Model", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name},{.items[*].spec.image}")
 	if err != nil {
 		return nil, fmt.Errorf("failed to list LLMs: %s: %w", out, err)
 	}
-	models := []struct {
-		Items []struct {
-			Metadata struct {
-				Name string `json:"name"`
-			} `json:"metadata"`
-			Spec struct {
-				Image string `json:"image"`
-			} `json:"spec"`
-		} `json:"items"`
-	}{}
-	if err := json.Unmarshal(out, &models); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal LLMs: %w", err)
+	if len(out) == 0 {
+		return []types.LLM{}, nil
 	}
 
-	llms := []types.LLM{}
-	for _, model := range models {
-		llms = append(llms, types.LLM{
-			Name:      model.Items[0].Metadata.Name,
+	parts := strings.Split(string(out), ",")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("unexpected output format from kubectl")
+	}
+
+	names := strings.Fields(parts[0])
+	images := strings.Fields(parts[1])
+
+	if len(names) != len(images) {
+		return nil, fmt.Errorf("mismatched number of names and images")
+	}
+
+	models := make([]types.LLM, len(names))
+	for i := range names {
+		models[i] = types.LLM{
+			Name:      names[i],
 			Namespace: namespace,
-			Type:      model.Items[0].Spec.Image,
-		})
+			Type:      images[i],
+		}
 	}
-
-	return llms, nil
+	log.Printf("models: %+v", models)
+	return models, nil
 }
