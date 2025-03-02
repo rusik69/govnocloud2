@@ -37,6 +37,7 @@ func NewServer(config types.ServerConfig) *Server {
 	nodeManager = NewNodeManager()
 	dbManager = NewDBManager()
 	llmManager = NewLLMManager()
+
 	// Configure CORS to allow all origins
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}

@@ -246,12 +246,14 @@ func (m *LLMManager) ListLLMs(namespace string) ([]types.LLM, error) {
 		return nil, fmt.Errorf("failed to list LLMs: %s: %w", out, err)
 	}
 	models := []struct {
-		Metadata struct {
-			Name string `json:"name"`
-		} `json:"metadata"`
-		Spec struct {
-			Image string `json:"image"`
-		} `json:"spec"`
+		Items []struct {
+			Metadata struct {
+				Name string `json:"name"`
+			} `json:"metadata"`
+			Spec struct {
+				Image string `json:"image"`
+			} `json:"spec"`
+		} `json:"items"`
 	}{}
 	if err := json.Unmarshal(out, &models); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal LLMs: %w", err)

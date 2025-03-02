@@ -81,7 +81,7 @@ func (c *Client) DeleteLLM(namespace, name string) error {
 }
 
 // GetLLM gets an LLM
-func (c *Client) GetLLM(namespace, name string) (types.LLM, error) {
+func (c *Client) GetLLM(name, namespace string) (types.LLM, error) {
 	url := fmt.Sprintf("%s/llms/%s/%s", c.baseURL, namespace, name)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
