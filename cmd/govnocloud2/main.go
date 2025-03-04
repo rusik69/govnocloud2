@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -270,7 +271,7 @@ func setupWebFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Web.Path, "webpath", "", cfg.Web.Path, "web path")
 }
 
-func setupToolFlags() {
+func setupToolFlags(wolCmd, suspendCmd *cobra.Command) {
 	wolFlags := wolCmd.Flags()
 	wolFlags.StringVarP(&cfg.Worker.MACs, "macs", "", "", "comma separated mac addresses")
 	wolFlags.StringVarP(&cfg.Worker.IPRange, "iprange", "", "", "ip range")
@@ -284,6 +285,7 @@ func setupToolFlags() {
 }
 
 func init() {
+	log.SetFlags(0)
 	if err := initConfig(); err != nil {
 		panic(err)
 	}
@@ -294,7 +296,7 @@ func init() {
 	setupServerFlags(serverCmd)
 	setupClientFlags(clientCmd)
 	setupWebFlags(webCmd)
-	setupToolFlags()
+	setupToolFlags(wolCmd, suspendCmd)
 }
 
 func main() {
