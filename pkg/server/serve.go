@@ -121,6 +121,11 @@ func (s *Server) setupRoutes() {
 			llms.DELETE("/:namespace/:name", DeleteLLMHandler)
 			llms.GET("/:namespace", ListLLMsHandler)
 		}
+		portforward := v0.Group("/portforward")
+		{
+			portforward.GET("/:type/:namespace/:name/start", PortForwardStartHandler)
+			portforward.GET("/:type/:namespace/:name/stop", PortForwardStopHandler)
+		}
 	}
 
 	// Version endpoint
