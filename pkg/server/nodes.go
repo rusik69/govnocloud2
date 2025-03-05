@@ -124,13 +124,13 @@ func GetNodeHandler(c *gin.Context) {
 // GetNode retrieves details of a specific node
 func (m *NodeManager) GetNode(name string) (*types.Node, error) {
 	// Get node IP
-	ipOut, err := m.kubectl.Run("get", "node", name, "-o", "'jsonpath={.status.addresses[?(@.type==\"InternalIP\")].address}'")
+	ipOut, err := m.kubectl.Run("get", "node", name, "-o", "jsonpath={.status.addresses[?(@.type==\"InternalIP\")].address}")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node IP: %w", err)
 	}
 
 	// Get node status
-	statusOut, err := m.kubectl.Run("get", "node", name, "-o", "'jsonpath={.status.conditions[?(@.type==\"Ready\")].status}'")
+	statusOut, err := m.kubectl.Run("get", "node", name, "-o", "jsonpath={.status.conditions[?(@.type==\"Ready\")].status}")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node status: %w", err)
 	}
