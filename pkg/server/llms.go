@@ -242,7 +242,7 @@ func ListLLMsHandler(c *gin.Context) {
 		return
 	}
 
-	respondWithSuccess(c, llms)
+	c.JSON(http.StatusOK, llms)
 }
 
 // ListLLMs lists all LLMs in a namespace
