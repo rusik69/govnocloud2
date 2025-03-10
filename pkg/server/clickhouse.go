@@ -125,10 +125,12 @@ metadata:
   name: %s
   namespace: %s
 spec:
-  clickhouse:
-    shards: %d
-    replicas: %d
-`, cluster.Name, namespace, cluster.Shards, cluster.Replicas)
+  configuration:
+    clusters:
+      - name: %s
+        shards: %d
+        replicas: %d
+`, cluster.Name, namespace, cluster.Name, cluster.Shards, cluster.Replicas)
 	log.Println(manifest)
 	tmpFile, err := os.CreateTemp("", "clickhouse-*.yaml")
 	if err != nil {
