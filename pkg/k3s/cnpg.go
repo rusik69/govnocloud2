@@ -34,5 +34,14 @@ func InstallCNPG(host, user, key string) error {
 		return fmt.Errorf("failed to wait for CNPG operator: %w", err)
 	}
 
+	// kubectl plugin install
+	installPluginCmd := "curl -sSfL https://github.com/cloudnative-pg/cloudnative-pg/raw/main/hack/install-cnpg-plugin.sh | sudo sh -s -- -b /usr/local/bin"
+	log.Println(installPluginCmd)
+	if out, err := ssh.Run(installPluginCmd, host, key, user, "", true, 60); err != nil {
+		return fmt.Errorf("failed to install CNPG plugin: %w", err)
+	} else {
+		log.Println(out)
+	}
+
 	return nil
 }

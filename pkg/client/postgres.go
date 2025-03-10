@@ -12,13 +12,14 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
-// CreateDB creates a database.
-func (c *Client) CreateDB(name, namespace, dbType, dbSize string) error {
-	db := types.DB{
+// CreatePostgres creates a postgres cluster.
+func (c *Client) CreatePostgres(name, namespace, size string, replicas int, storage int) error {
+	db := types.Postgres{
 		Name:      name,
 		Namespace: namespace,
-		Type:      dbType,
-		Size:      dbSize,
+		Size:      size,
+		Replicas:  replicas,
+		Storage:   storage,
 	}
 
 	data, err := json.Marshal(db)
@@ -26,7 +27,7 @@ func (c *Client) CreateDB(name, namespace, dbType, dbSize string) error {
 		return fmt.Errorf("error marshaling database: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/dbs/%s/%s", c.baseURL, namespace, name)
+	url := fmt.Sprintf("%s/postgres/%s/%s", c.baseURL, namespace, name)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -51,28 +52,28 @@ func (c *Client) CreateDB(name, namespace, dbType, dbSize string) error {
 	return nil
 }
 
-// GetDB gets a database.
-func (c *Client) GetDB(name, namespace string) (types.DB, error) {
-	url := fmt.Sprintf("%s/dbs/%s/%s", c.baseURL, namespace, name)
+// GetPostgres gets a postgres cluster.
+func (c *Client) GetPostgres(name, namespace string) (types.Postgres, error) {
+	url := fmt.Sprintf("%s/postgres/%s/%s", c.baseURL, namespace, name)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
-		return types.DB{}, fmt.Errorf("error getting database: %w", err)
+		return types.Postgres{}, fmt.Errorf("error getting postgres cluster: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return types.DB{}, fmt.Errorf("error getting database: status=%s body=%s", resp.Status, string(body))
+		return types.Postgres{}, fmt.Errorf("error getting postgres cluster: status=%s body=%s", resp.Status, string(body))
 	}
 
-	var db types.DB
+	var db types.Postgres
 	err = json.NewDecoder(resp.Body).Decode(&db)
 	return db, err
 }
 
-// ListDBs lists databases.
-func (c *Client) ListDBs(namespace string) ([]types.DB, error) {
-	url := fmt.Sprintf("%s/dbs/%s", c.baseURL, namespace)
+// ListPostgres lists postgres clusters.
+func (c *Client) ListPostgres(namespace string) ([]types.Postgres, error) {
+	url := fmt.Sprintf("%s/postgres/%s", c.baseURL, namespace)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error listing databases: %w", err)
@@ -81,31 +82,31 @@ func (c *Client) ListDBs(namespace string) ([]types.DB, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("error listing databases: status=%s body=%s", resp.Status, string(body))
+		return nil, fmt.Errorf("error listing postgres clusters: status=%s body=%s", resp.Status, string(body))
 	}
 
-	var dbs []types.DB
+	var dbs []types.Postgres
 	err = json.NewDecoder(resp.Body).Decode(&dbs)
 	return dbs, err
 }
 
-// DeleteDB deletes a database.
-func (c *Client) DeleteDB(name, namespace string) error {
-	url := fmt.Sprintf("%s/dbs/%s/%s", c.baseURL, namespace, name)
+// DeletePostgres deletes a postgres cluster.
+func (c *Client) DeletePostgres(name, namespace string) error {
+	url := fmt.Sprintf("%s/postgres/%s/%s", c.baseURL, namespace, name)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		return fmt.Errorf("error deleting database: %w", err)
+		return fmt.Errorf("error deleting postgres cluster: %w", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("error deleting database: %w", err)
+		return fmt.Errorf("error deleting postgres cluster: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("error deleting database: status=%s body=%s", resp.Status, string(body))
+		return fmt.Errorf("error deleting postgres cluster: status=%s body=%s", resp.Status, string(body))
 	}
 
 	return nil

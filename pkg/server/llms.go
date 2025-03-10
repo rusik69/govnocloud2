@@ -17,8 +17,6 @@ type LLMManager struct {
 	kubectl KubectlRunner
 }
 
-var llmManager *LLMManager
-
 // NewLLMManager creates a new LLM manager instance
 func NewLLMManager() *LLMManager {
 	return &LLMManager{

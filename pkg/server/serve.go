@@ -24,7 +24,10 @@ var containerManager *ContainerManager
 var volumeManager *VolumeManager
 var namespaceManager *NamespaceManager
 var nodeManager *NodeManager
-var dbManager *DBManager
+var postgresManager *PostgresManager
+var mysqlManager *MysqlManager
+var clickhouseManager *ClickhouseManager
+var llmManager *LLMManager
 
 // NewServer creates a new server instance
 func NewServer(config types.ServerConfig) *Server {
@@ -35,7 +38,9 @@ func NewServer(config types.ServerConfig) *Server {
 	volumeManager = NewVolumeManager()
 	namespaceManager = NewNamespaceManager()
 	nodeManager = NewNodeManager()
-	dbManager = NewDBManager()
+	postgresManager = NewPostgresManager()
+	mysqlManager = NewMysqlManager()
+	clickhouseManager = NewClickhouseManager()
 	llmManager = NewLLMManager()
 
 	// Configure CORS to allow all origins
@@ -86,12 +91,26 @@ func (s *Server) setupRoutes() {
 			nodes.GET("/:name/resume", ResumeNodeHandler)
 			nodes.GET("/:name/upgrade", UpgradeNodeHandler)
 		}
-		dbs := v0.Group("/dbs")
+		postgres := v0.Group("/postgres")
 		{
-			dbs.GET("/:namespace", ListDBsHandler)
-			dbs.POST("/:namespace/:name", CreateDBHandler)
-			dbs.GET("/:namespace/:name", GetDBHandler)
-			dbs.DELETE("/:namespace/:name", DeleteDBHandler)
+			postgres.GET("/:namespace", ListPostgresHandler)
+			postgres.POST("/:namespace/:name", CreatePostgresHandler)
+			postgres.GET("/:namespace/:name", GetPostgresHandler)
+			postgres.DELETE("/:namespace/:name", DeletePostgresHandler)
+		}
+		mysql := v0.Group("/mysql")
+		{
+			mysql.GET("/:namespace", ListMysqlHandler)
+			mysql.POST("/:namespace/:name", CreateMysqlHandler)
+			mysql.GET("/:namespace/:name", GetMysqlHandler)
+			mysql.DELETE("/:namespace/:name", DeleteMysqlHandler)
+		}
+		clickhouse := v0.Group("/clickhouse")
+		{
+			clickhouse.GET("/:namespace", ListClickhouseHandler)
+			clickhouse.POST("/:namespace/:name", CreateClickhouseHandler)
+			clickhouse.GET("/:namespace/:name", GetClickhouseHandler)
+			clickhouse.DELETE("/:namespace/:name", DeleteClickhouseHandler)
 		}
 		containers := v0.Group("/containers")
 		{
