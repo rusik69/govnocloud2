@@ -174,7 +174,7 @@ spec:
       cpu: %d
   storage:
     size: %dGi
-`, postgres.Name, size, postgres.Replicas, size.RAM, size.CPU, size.RAM, size.CPU, postgres.Storage)
+`, postgres.Name, postgres.Size, postgres.Replicas, size.RAM, size.CPU, size.RAM, size.CPU, postgres.Storage)
 
 	return pod, nil
 }

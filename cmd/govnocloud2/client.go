@@ -46,11 +46,23 @@ var clientCmd = &cobra.Command{
 			}
 			handleContainers(c, args[1:])
 
-		case "dbs":
+		case "clickhouse":
 			if len(args) < 2 {
-				panic("dbs subcommand required [list|get|create|delete]")
+				panic("clickhouse subcommand required [list|get|create|delete]")
 			}
-			handleDBs(c, args[1:])
+			handleClickhouse(c, args[1:])
+
+		case "postgres":
+			if len(args) < 2 {
+				panic("postgres subcommand required [list|get|create|delete]")
+			}
+			handlePostgres(c, args[1:])
+
+		case "mysql":
+			if len(args) < 2 {
+				panic("mysql subcommand required [list|get|create|delete]")
+			}
+			handleMysql(c, args[1:])
 
 		case "volumes":
 			if len(args) < 2 {
@@ -362,13 +374,114 @@ func handleNamespaces(c *client.Client, args []string) {
 	}
 }
 
-func handleDBs(c *client.Client, args []string) {
+func handleClickhouse(c *client.Client, args []string) {
 	switch args[0] {
 	case "list":
 		if len(args) < 2 {
 			panic("namespace required")
 		}
-		dbs, err := c.ListDBs(args[1])
+		clickhouses, err := c.ListClickhouse(args[1])
+		if err != nil {
+			panic(err)
+		}
+		for _, ch := range clickhouses {
+			fmt.Printf("%+v\n", ch)
+		}
+
+	case "create":
+		if len(args) < 4 {
+			panic("required: name namespace replicas")
+		}
+		replicas, _ := strconv.Atoi(args[3])
+		err := c.CreateClickhouse(args[1], args[2], replicas)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("clickhouse created successfully")
+
+	case "delete":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		err := c.DeleteClickhouse(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("clickhouse deleted successfully")
+
+	case "get":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		ch, err := c.GetClickhouse(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%+v\n", ch)
+
+	default:
+		panic("unknown action: " + args[0])
+	}
+}
+
+func handlePostgres(c *client.Client, args []string) {
+	switch args[0] {
+	case "list":
+		if len(args) < 2 {
+			panic("namespace required")
+		}
+		dbs, err := c.ListPostgres(args[1])
+		if err != nil {
+			panic(err)
+		}
+		for _, db := range dbs {
+			fmt.Printf("%+v\n", db)
+		}
+
+	case "create":
+		if len(args) < 6 {
+			panic("required: name namespace size instances routerInstances")
+		}
+		instances, _ := strconv.Atoi(args[4])
+		routerInstances, _ := strconv.Atoi(args[5])
+		err := c.CreatePostgres(args[1], args[2], args[3], instances, routerInstances)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("postgres created successfully")
+
+	case "delete":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		err := c.DeletePostgres(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("postgres deleted successfully")
+
+	case "get":
+		if len(args) < 3 {
+			panic("required: name namespace")
+		}
+		db, err := c.GetPostgres(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%+v\n", db)
+
+	default:
+		panic("unknown action: " + args[0])
+	}
+}
+
+func handleMysql(c *client.Client, args []string) {
+	switch args[0] {
+	case "list":
+		if len(args) < 2 {
+			panic("namespace required")
+		}
+		dbs, err := c.ListMysql(args[1])
 		if err != nil {
 			panic(err)
 		}
@@ -378,29 +491,31 @@ func handleDBs(c *client.Client, args []string) {
 
 	case "create":
 		if len(args) < 5 {
-			panic("required: name namespace type size")
+			panic("required: name namespace instances routerInstances")
 		}
-		err := c.CreateDB(args[1], args[2], args[3], args[4])
+		instances, _ := strconv.Atoi(args[3])
+		routerInstances, _ := strconv.Atoi(args[4])
+		err := c.CreateMysql(args[1], args[2], instances, routerInstances)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("database created successfully")
+		fmt.Println("mysql created successfully")
 
 	case "delete":
 		if len(args) < 3 {
 			panic("required: name namespace")
 		}
-		err := c.DeleteDB(args[1], args[2])
+		err := c.DeleteMysql(args[1], args[2])
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("database deleted successfully")
+		fmt.Println("mysql deleted successfully")
 
 	case "get":
 		if len(args) < 3 {
 			panic("required: name namespace")
 		}
-		db, err := c.GetDB(args[1], args[2])
+		db, err := c.GetMysql(args[1], args[2])
 		if err != nil {
 			panic(err)
 		}
