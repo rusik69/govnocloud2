@@ -138,8 +138,8 @@ func (m *MysqlManager) CreateCluster(namespace string, mysql types.Mysql) error 
 	if _, err := tempFile.WriteString(manifestBody); err != nil {
 		return err
 	}
-	if _, err := m.kubectl.Run("apply", "-f", tempFile.Name(), "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
-		return err
+	if out, err := m.kubectl.Run("apply", "-f", tempFile.Name(), "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
+		return fmt.Errorf("failed to create mysql cluster: %w %s", err, out)
 	}
 	return nil
 }

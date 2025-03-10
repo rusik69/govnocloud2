@@ -232,8 +232,8 @@ func (m *PostgresManager) CreateCluster(postgres *types.Postgres) error {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
-	if _, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", postgres.Namespace, "--wait=true", "--timeout=300s"); err != nil {
-		return fmt.Errorf("failed to create database pod: %w", err)
+	if out, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", postgres.Namespace, "--wait=true", "--timeout=300s"); err != nil {
+		return fmt.Errorf("failed to create database pod: %w %s", err, out)
 	}
 
 	return nil

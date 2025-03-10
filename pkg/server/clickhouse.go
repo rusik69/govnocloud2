@@ -141,10 +141,9 @@ spec:
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
-	if _, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
-		return fmt.Errorf("failed to create clickhouse cluster: %w", err)
+	if out, err := m.kubectl.Run("apply", "-f", tmpFile.Name(), "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
+		return fmt.Errorf("failed to create clickhouse cluster: %w %s", err, out)
 	}
-
 	return nil
 }
 
@@ -152,9 +151,8 @@ spec:
 func (m *ClickhouseManager) GetCluster(namespace, name string) (types.Clickhouse, error) {
 	out, err := m.kubectl.Run("get", "ClickHouseInstallation", name, "-o", "json", "-n", namespace)
 	if err != nil {
-		return types.Clickhouse{}, fmt.Errorf("failed to get clickhouse cluster: %w", err)
+		return types.Clickhouse{}, fmt.Errorf("failed to get clickhouse cluster: %w %s", err, out)
 	}
-	log.Println(out)
 	cluster := types.ClickhouseInstallation{}
 	if err := json.Unmarshal([]byte(out), &cluster); err != nil {
 		return types.Clickhouse{}, fmt.Errorf("failed to unmarshal clickhouse cluster: %w", err)
@@ -191,8 +189,8 @@ func (m *ClickhouseManager) ListClusters(namespace string) ([]types.Clickhouse, 
 
 // DeleteCluster deletes a clickhouse cluster
 func (m *ClickhouseManager) DeleteCluster(namespace, name string) error {
-	if _, err := m.kubectl.Run("delete", "ClickHouseInstallation", name, "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
-		return fmt.Errorf("failed to delete clickhouse cluster: %w", err)
+	if out, err := m.kubectl.Run("delete", "ClickHouseInstallation", name, "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
+		return fmt.Errorf("failed to delete clickhouse cluster: %w %s", err, out)
 	}
 	return nil
 }
