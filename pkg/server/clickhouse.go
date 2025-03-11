@@ -128,8 +128,9 @@ spec:
   configuration:
     clusters:
       - name: %s
-        shardsCount: %d
-        replicasCount: %d
+	  	layout:
+          shardsCount: %d
+          replicasCount: %d
 `, cluster.Name, namespace, cluster.Name, cluster.Shards, cluster.Replicas)
 	log.Println(manifest)
 	tmpFile, err := os.CreateTemp("", "clickhouse-*.yaml")
