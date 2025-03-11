@@ -128,7 +128,7 @@ spec:
   configuration:
     clusters:
       - name: %s
-	  	layout:
+        layout:
           shardsCount: %d
           replicasCount: %d
 `, cluster.Name, namespace, cluster.Name, cluster.Shards, cluster.Replicas)

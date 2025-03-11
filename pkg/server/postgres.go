@@ -221,7 +221,7 @@ func (m *PostgresManager) CreateCluster(postgres *types.Postgres) error {
 		return fmt.Errorf("failed to generate pod manifest: %w", err)
 	}
 	log.Println(cluster)
-	tmpFile, err := os.CreateTemp("", "db-*.yaml")
+	tmpFile, err := os.CreateTemp("", "postgres-*.yaml")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
