@@ -11,6 +11,7 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
+
 // ClickhouseManager handles clickhouse operations
 type ClickhouseManager struct {
 	kubectl KubectlRunner

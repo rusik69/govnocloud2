@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
@@ -10,6 +11,10 @@ var cli *client.Client
 
 func init() {
 	cli = client.NewClient(testHost, testPort)
+	err := cli.CreateNamespace(testNamespace)
+	if err != nil {
+		log.Fatalf("error creating namespace: %v", err)
+	}
 }
 
 const (
@@ -21,11 +26,7 @@ const (
 
 // TestCreateContainer tests the CreateContainer function.
 func TestCreateContainer(t *testing.T) {
-	err := cli.CreateNamespace(testNamespace)
-	if err != nil {
-		t.Fatalf("error creating namespace: %v", err)
-	}
-	err = cli.CreateContainer("test-container", "k8s.gcr.io/pause", testNamespace, 1024, 1024, 1024, 80)
+	err := cli.CreateContainer("test-container", "k8s.gcr.io/pause", testNamespace, 1024, 1024, 1024, 80)
 	if err != nil {
 		t.Fatalf("error creating container: %v", err)
 	}
