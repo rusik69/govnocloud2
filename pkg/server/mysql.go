@@ -120,15 +120,14 @@ func DeleteMysqlHandler(c *gin.Context) {
 
 // CreateCluster creates a new mysql cluster
 func (m *MysqlManager) CreateCluster(namespace string, mysql types.Mysql) error {
-	manifestBody := fmt.Sprintf(`
-	apiVersion: mysql.oracle.com/v1alpha1
-	kind: MysqlCluster
-	metadata:
-	  name: %s
-	spec:
-	  instances: %d
-	  routerInstances: %d
-	`, mysql.Name, mysql.Instances, mysql.RouterInstances)
+	manifestBody := fmt.Sprintf(`apiVersion: mysql.oracle.com/v1alpha1
+kind: MysqlCluster
+metadata:
+  name: %s
+spec:
+  instances: %d
+  routerInstances: %d
+`, mysql.Name, mysql.Instances, mysql.RouterInstances)
 	tempFile, err := os.CreateTemp("", "mysql-manifest.yaml")
 	if err != nil {
 		return err
