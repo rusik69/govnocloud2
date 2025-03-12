@@ -27,5 +27,13 @@ func InstallMySQL(host, user, key string) error {
 		log.Println(out)
 	}
 
+	// wait for crds to be created
+	waitForCrdsCmd := "kubectl wait --for condition=established --timeout=600s crd/mysqlclusters.mysql.oracle.com"
+	log.Println(waitForCrdsCmd)
+	if out, err := ssh.Run(waitForCrdsCmd, host, key, user, "", true, 60); err != nil {
+		return fmt.Errorf("failed to wait for crds: %w", err)
+	} else {
+		log.Println(out)
+	}
 	return nil
 }
