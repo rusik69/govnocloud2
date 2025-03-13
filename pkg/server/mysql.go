@@ -126,7 +126,9 @@ metadata:
   name: %s
 spec:
   instances: %d
-  routerInstances: %d
+  router:
+    instances: %d
+  tlsUseSelfSigned: true
 `, mysql.Name, mysql.Instances, mysql.RouterInstances)
 	tempFile, err := os.CreateTemp("", "mysql-manifest.yaml")
 	if err != nil {
