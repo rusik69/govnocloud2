@@ -120,16 +120,38 @@ func DeleteMysqlHandler(c *gin.Context) {
 
 // CreateCluster creates a new mysql cluster
 func (m *MysqlManager) CreateCluster(namespace string, mysql types.Mysql) error {
+	secretBody := `apiVersion: v1
+kind: Secret
+metadata:
+  name: ` + mysql.Name + `-mypwds
+stringData:
+  rootUser: root
+  rootHost: '%'
+  rootPassword: password
+`
+	tempSecretFile, err := os.CreateTemp("", "mysql-secret.yaml")
+	if err != nil {
+		return err
+	}
+	defer tempSecretFile.Close()
+	defer os.Remove(tempSecretFile.Name())
+	if _, err := tempSecretFile.WriteString(secretBody); err != nil {
+		return err
+	}
+	if out, err := m.kubectl.Run("apply", "-f", tempSecretFile.Name(), "-n", namespace, "--wait=true", "--timeout=300s"); err != nil {
+		return fmt.Errorf("failed to create mysql secret: %w %s", err, out)
+	}
 	manifestBody := fmt.Sprintf(`apiVersion: mysql.oracle.com/v2
 kind: InnoDBCluster
 metadata:
   name: %s
 spec:
+  secretName: %s-mypwds
   instances: %d
   router:
     instances: %d
   tlsUseSelfSigned: true
-`, mysql.Name, mysql.Instances, mysql.RouterInstances)
+`, mysql.Name, mysql.Name, mysql.Instances, mysql.RouterInstances)
 	tempFile, err := os.CreateTemp("", "mysql-manifest.yaml")
 	if err != nil {
 		return err
