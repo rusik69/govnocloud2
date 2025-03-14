@@ -72,7 +72,7 @@ func CreateMysqlHandler(c *gin.Context) {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create mysql: %v", err))
 		return
 	}
-	c.JSON(http.StatusCreated, mysql)
+	c.JSON(http.StatusOK, mysql)
 }
 
 // GetMysqlHandler handles requests to get a mysql
