@@ -219,6 +219,16 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
+		log.Println("Installing Etcd")
+		err = k3s.InstallEtcd(
+			cfg.Install.Master.Host,
+			cfg.Install.SSH.User,
+			cfg.Install.SSH.KeyPath,
+		)
+		if err != nil {
+			panic(err)
+		}
+
 		log.Println("Installing Clickhouse")
 		err = k3s.InstallClickhouse(
 			cfg.Install.Master.Host,

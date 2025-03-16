@@ -28,6 +28,7 @@ var postgresManager *PostgresManager
 var mysqlManager *MysqlManager
 var clickhouseManager *ClickhouseManager
 var llmManager *LLMManager
+var userManager *UserManager
 
 // NewServer creates a new server instance
 func NewServer(config types.ServerConfig) *Server {
@@ -42,6 +43,7 @@ func NewServer(config types.ServerConfig) *Server {
 	mysqlManager = NewMysqlManager()
 	clickhouseManager = NewClickhouseManager()
 	llmManager = NewLLMManager()
+	userManager = NewUserManager()
 
 	// Configure CORS to allow all origins
 	corsConfig := cors.DefaultConfig()
@@ -126,13 +128,6 @@ func (s *Server) setupRoutes() {
 			volumes.GET("/:namespace/:name", GetVolumeHandler)
 			volumes.DELETE("/:namespace/:name", DeleteVolumeHandler)
 		}
-		namespaces := v0.Group("/namespaces")
-		{
-			namespaces.GET("", ListNamespacesHandler)
-			namespaces.POST("/:name", CreateNamespaceHandler)
-			namespaces.GET("/:name", GetNamespaceHandler)
-			namespaces.DELETE("/:name", DeleteNamespaceHandler)
-		}
 		llms := v0.Group("/llms")
 		{
 			llms.POST("/:namespace/:name", CreateLLMHandler)
@@ -140,10 +135,22 @@ func (s *Server) setupRoutes() {
 			llms.DELETE("/:namespace/:name", DeleteLLMHandler)
 			llms.GET("/:namespace", ListLLMsHandler)
 		}
-		portforward := v0.Group("/portforward")
+		namespaces := v0.Group("/namespaces")
 		{
-			portforward.GET("/:type/:namespace/:name/start", PortForwardStartHandler)
-			portforward.GET("/:type/:namespace/:name/stop", PortForwardStopHandler)
+			namespaces.GET("", ListNamespacesHandler)
+			namespaces.POST("/:name", CreateNamespaceHandler)
+			namespaces.GET("/:name", GetNamespaceHandler)
+			namespaces.DELETE("/:name", DeleteNamespaceHandler)
+		}
+		users := v0.Group("/users")
+		{
+			users.GET("", ListUsersHandler)
+			users.POST("/:name", CreateUserHandler)
+			users.GET("/:name", GetUserHandler)
+			users.DELETE("/:name", DeleteUserHandler)
+			users.POST("/:name/password", SetUserPasswordHandler)
+			users.POST("/:name/namespaces/:namespace", AddNamespaceToUserHandler)
+			users.DELETE("/:name/namespaces/:namespace", RemoveNamespaceFromUserHandler)
 		}
 	}
 
@@ -168,6 +175,8 @@ func (s *Server) Start() error {
 // Serve starts the server with the given configuration
 func Serve(serverConfig types.ServerConfig) {
 	server = NewServer(serverConfig)
+	defer userManager.etcdClient.Close()
+
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
