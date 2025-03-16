@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
+	"github.com/rusik69/govnocloud2/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -75,6 +76,12 @@ var clientCmd = &cobra.Command{
 				panic("namespaces subcommand required [list|get|create|delete]")
 			}
 			handleNamespaces(c, args[1:])
+
+		case "users":
+			if len(args) < 2 {
+				panic("users subcommand required [list|get|create|delete|setpassword|addnamespace|removenamespace]")
+			}
+			handleUsers(c, args[1:])
 
 		default:
 			panic("unknown action: " + args[0])
@@ -520,6 +527,90 @@ func handleMysql(c *client.Client, args []string) {
 			panic(err)
 		}
 		fmt.Printf("%+v\n", db)
+
+	default:
+		panic("unknown action: " + args[0])
+	}
+}
+
+func handleUsers(c *client.Client, args []string) {
+	switch args[0] {
+	case "list":
+		users, err := c.ListUsers()
+		if err != nil {
+			panic(err)
+		}
+		for _, user := range users {
+			fmt.Printf("%+v\n", user)
+		}
+
+	case "create":
+		if len(args) < 3 {
+			panic("required: name password")
+		}
+		user := types.User{
+			Name:     args[1],
+			Password: args[2],
+		}
+		// Add optional namespaces if provided
+		if len(args) > 3 {
+			user.Namespaces = args[3:]
+		}
+		err := c.CreateUser(args[1], user)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("user created successfully")
+
+	case "delete":
+		if len(args) < 2 {
+			panic("user name required")
+		}
+		err := c.DeleteUser(args[1])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("user deleted successfully")
+
+	case "get":
+		if len(args) < 2 {
+			panic("user name required")
+		}
+		user, err := c.GetUser(args[1])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%+v\n", user)
+
+	case "setpassword":
+		if len(args) < 3 {
+			panic("required: name password")
+		}
+		err := c.SetUserPassword(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("user password set successfully")
+
+	case "addnamespace":
+		if len(args) < 3 {
+			panic("required: username namespace")
+		}
+		err := c.AddNamespaceToUser(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("namespace added to user successfully")
+
+	case "removenamespace":
+		if len(args) < 3 {
+			panic("required: username namespace")
+		}
+		err := c.RemoveNamespaceFromUser(args[1], args[2])
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("namespace removed from user successfully")
 
 	default:
 		panic("unknown action: " + args[0])

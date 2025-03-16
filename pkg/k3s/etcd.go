@@ -10,7 +10,7 @@ import (
 // InstallEtcd installs etcd on the cluster
 func InstallEtcd(host, user, key string) error {
 	// Add etcd helm repo
-	cmd := "sudo apt install -y etcd-server etcd-client"
+	cmd := "sudo apt install -y etcd-server etcd-client; sudo systemctl enable --now etcd"
 	log.Println(cmd)
 	if out, err := ssh.Run(cmd, host, key, user, "", true, 300); err != nil {
 		return fmt.Errorf("error adding etcd helm repo: %w", err)
