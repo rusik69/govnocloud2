@@ -108,6 +108,7 @@ func (m *MasterConfig) Uninstall() {
 		{"sudo systemctl stop govnocloud2.service", "stop govnocloud2 service"},
 		{"sudo systemctl stop govnocloud2-web.service", "stop govnocloud2-web service"},
 		{"sudo systemctl stop etcd.service", "stop etcd service"},
+		{"sudo apt purge -y etcd-server etcd-client", "remove etcd"},
 		{"sudo rm -rf /etc/systemd/system/govnocloud2-web.service || true", "remove web service file"},
 		{"sudo rm -rf /etc/systemd/system/govnocloud2.service || true", "remove service file"},
 		{"sudo systemctl daemon-reload || true", "reload systemd"},
