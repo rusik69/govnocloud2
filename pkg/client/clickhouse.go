@@ -90,7 +90,7 @@ func (c *Client) DeleteClickhouse(name, namespace string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("error deleting clickhouse cluster: status=%s body=%s", resp.Status, string(body))
 	}
