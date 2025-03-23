@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -61,21 +62,31 @@ func NewNamespaceManager() *NamespaceManager {
 
 // CreateNamespaceHandler creates a new namespace
 func CreateNamespaceHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Println("namespace name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
 		return
 	}
 	// check if namespace is reserved
 	if types.ReservedNamespaces[name] {
-		log.Println("namespace is reserved")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
 	}
-	err := namespaceManager.CreateNamespace(name)
+	if !CheckNamespaceAccess(username, name) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+		return
+	}
+	err = namespaceManager.CreateNamespace(name)
 	if err != nil {
-		log.Println("failed to create namespace", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -85,20 +96,31 @@ func CreateNamespaceHandler(c *gin.Context) {
 
 // DeleteNamespaceHandler deletes a namespace
 func DeleteNamespaceHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
+		respondWithError(c, http.StatusBadRequest, "namespace name is required")
 		return
 	}
 	// check if namespace is reserved
 	if types.ReservedNamespaces[name] {
-		log.Println("namespace is reserved")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
 	}
-	err := namespaceManager.DeleteNamespace(name)
+	if !CheckNamespaceAccess(username, name) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+		return
+	}
+	err = namespaceManager.DeleteNamespace(name)
 	if err != nil {
-		log.Println("failed to delete namespace", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -108,9 +130,17 @@ func DeleteNamespaceHandler(c *gin.Context) {
 
 // ListNamespacesHandler lists all namespaces
 func ListNamespacesHandler(c *gin.Context) {
+	auth, _, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespaces, err := namespaceManager.ListNamespaces()
 	if err != nil {
-		log.Println("failed to list namespaces", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -120,21 +150,32 @@ func ListNamespacesHandler(c *gin.Context) {
 
 // GetNamespaceHandler gets details of a specific namespace
 func GetNamespaceHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	name := c.Param("name")
 	if name == "" {
-		log.Println("namespace name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace name is required"})
 		return
 	}
 	// check if namespace is reserved
 	if types.ReservedNamespaces[name] {
-		log.Println("namespace is reserved")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
+		return
+	}
+	if !CheckNamespaceAccess(username, name) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	namespace, err := namespaceManager.GetNamespace(name)
 	if err != nil {
-		log.Println("failed to get namespace", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

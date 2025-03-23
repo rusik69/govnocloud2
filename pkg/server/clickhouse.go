@@ -11,7 +11,6 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
-
 // ClickhouseManager handles clickhouse operations
 type ClickhouseManager struct {
 	kubectl KubectlRunner
@@ -26,20 +25,26 @@ func NewClickhouseManager() *ClickhouseManager {
 
 // ListClickhouseHandler handles requests to list clickhouse
 func ListClickhouseHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	clickhouse, err := clickhouseManager.ListClusters(namespace)
 	if err != nil {
-		log.Printf("failed to list clickhouse: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list clickhouse: %v", err))
 		return
 	}
@@ -48,26 +53,31 @@ func ListClickhouseHandler(c *gin.Context) {
 
 // CreateClickhouseHandler handles requests to create a new clickhouse
 func CreateClickhouseHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	cluster := types.Clickhouse{}
 	if err := c.ShouldBindJSON(&cluster); err != nil {
-		log.Printf("failed to bind clickhouse: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("failed to bind clickhouse: %v", err))
 		return
 	}
-	err := clickhouseManager.CreateCluster(namespace, cluster)
+	err = clickhouseManager.CreateCluster(namespace, cluster)
 	if err != nil {
-		log.Printf("failed to create clickhouse: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create clickhouse: %v", err))
 		return
 	}
@@ -76,20 +86,26 @@ func CreateClickhouseHandler(c *gin.Context) {
 
 // DeleteClickhouseHandler handles requests to delete a clickhouse
 func DeleteClickhouseHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
-	err := clickhouseManager.DeleteCluster(namespace, c.Param("name"))
+	err = clickhouseManager.DeleteCluster(namespace, c.Param("name"))
 	if err != nil {
-		log.Printf("failed to delete clickhouse: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete clickhouse: %v", err))
 		return
 	}
@@ -98,20 +114,26 @@ func DeleteClickhouseHandler(c *gin.Context) {
 
 // GetClickhouseHandler handles requests to get a clickhouse
 func GetClickhouseHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	clickhouse, err := clickhouseManager.GetCluster(namespace, c.Param("name"))
 	if err != nil {
-		log.Printf("failed to get clickhouse: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get clickhouse: %v", err))
 		return
 	}

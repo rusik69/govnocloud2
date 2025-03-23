@@ -191,6 +191,7 @@ type APIResponse struct {
 
 // respondWithError sends an error response
 func respondWithError(c *gin.Context, code int, message string) {
+	log.Printf("responding with error: %s", message)
 	c.JSON(code, APIResponse{
 		Success: false,
 		Error:   message,

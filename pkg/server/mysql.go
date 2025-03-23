@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -25,20 +24,26 @@ func NewMysqlManager() *MysqlManager {
 
 // ListMysqlHandler handles requests to list mysql
 func ListMysqlHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	mysql, err := mysqlManager.ListClusters(namespace)
 	if err != nil {
-		log.Printf("failed to list mysql: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list mysql: %v", err))
 		return
 	}
@@ -47,28 +52,32 @@ func ListMysqlHandler(c *gin.Context) {
 
 // CreateMysqlHandler handles requests to create a new mysql
 func CreateMysqlHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
-
 	var mysql types.Mysql
 	if err := c.BindJSON(&mysql); err != nil {
-		log.Printf("failed to bind JSON: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("failed to bind JSON: %v", err))
 		return
 	}
 
 	mysql.Namespace = namespace
 	if err := mysqlManager.CreateCluster(namespace, mysql); err != nil {
-		log.Printf("failed to create mysql: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create mysql: %v", err))
 		return
 	}
@@ -77,20 +86,26 @@ func CreateMysqlHandler(c *gin.Context) {
 
 // GetMysqlHandler handles requests to get a mysql
 func GetMysqlHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	mysql, err := mysqlManager.GetCluster(namespace, c.Param("name"))
 	if err != nil {
-		log.Printf("failed to get mysql: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get mysql: %v", err))
 		return
 	}
@@ -99,19 +114,25 @@ func GetMysqlHandler(c *gin.Context) {
 
 // DeleteMysqlHandler handles requests to delete a mysql
 func DeleteMysqlHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	if err := mysqlManager.DeleteCluster(namespace, c.Param("name")); err != nil {
-		log.Printf("failed to delete mysql: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete mysql: %v", err))
 		return
 	}

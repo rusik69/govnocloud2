@@ -15,6 +15,7 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
+
 // VMManager handles VM operations
 type VMManager struct {
 	kubectl KubectlRunner
@@ -31,9 +32,26 @@ func NewVMManager() *VMManager {
 
 // CreateVMHandler handles VM creation requests
 func CreateVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+		return
+	}
 	var vm types.VM
 	if err := c.BindJSON(&vm); err != nil {
-		log.Printf("invalid request: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
@@ -48,7 +66,7 @@ func CreateVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid VM image: %s", vm.Image))
 		return
 	}
-	if err := vmManager.CreateVM(vm); err != nil {
+	if err := vmManager.CreateVM(namespace, vm); err != nil {
 		log.Printf("failed to create VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create VM: %v", err))
 		return
@@ -58,7 +76,7 @@ func CreateVMHandler(c *gin.Context) {
 }
 
 // CreateVM creates a new virtual machine
-func (m *VMManager) CreateVM(vm types.VM) error {
+func (m *VMManager) CreateVM(namespace string, vm types.VM) error {
 	vmSize := types.VMSizes[vm.Size]
 	vmImage := types.VMImages[vm.Image]
 	vmConfig := fmt.Sprintf(`apiVersion: kubevirt.io/v1
@@ -99,7 +117,7 @@ spec:
             chpasswd:
               expire: false
             ssh_pwauth: true`,
-		vm.Name, vm.Namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.Image)
+		vm.Name, namespace, vm.Size, vm.Image, vmSize.RAM, vmSize.CPU, vmImage.Image)
 	log.Println(vmConfig)
 	// Write config to temporary file
 	tmpfile, err := os.CreateTemp("", "vm-*.yaml")
@@ -132,10 +150,26 @@ spec:
 
 // ListVMsHandler handles VM listing requests
 func ListVMsHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
+	if namespace == "" {
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+		return
+	}
 	vms, err := vmManager.ListVMs(namespace)
 	if err != nil {
-		log.Printf("failed to list VMs: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list VMs: %v", err))
 		return
 	}
@@ -158,14 +192,7 @@ func (m *VMManager) ListVMs(namespace string) ([]string, error) {
 
 	// Split the space-separated output into slice
 	names := strings.Fields(string(out))
-	// Filter out reserved namespaces
-	res := []string{}
-	for _, name := range names {
-		if !types.ReservedNamespaces[name] {
-			res = append(res, name)
-		}
-	}
-	return res, nil
+	return names, nil
 }
 
 // Add this struct before the GetVM function
@@ -185,12 +212,25 @@ type VMTemplate struct {
 
 // GetVMHandler handles VM retrieval requests
 func GetVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
-	name := c.Param("name")
 	if namespace == "" {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+		return
+	}
+	name := c.Param("name")
 	if name == "" {
 		respondWithError(c, http.StatusBadRequest, "name is required")
 		return
@@ -198,7 +238,6 @@ func GetVMHandler(c *gin.Context) {
 
 	vm, err := vmManager.GetVM(name, namespace)
 	if err != nil {
-		log.Printf("failed to get VM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get VM: %v", err))
 		return
 	}
@@ -228,9 +267,17 @@ func (m *VMManager) GetVM(name, namespace string) (types.VM, error) {
 
 // DeleteVMHandler handles VM deletion requests
 func DeleteVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
@@ -240,11 +287,8 @@ func DeleteVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-
-	// Check if namespace is reserved
-	if types.ReservedNamespaces[namespace] {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 
@@ -269,9 +313,17 @@ func (m *VMManager) DeleteVM(name, namespace string) error {
 
 // StartVMHandler handles VM start requests
 func StartVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
@@ -281,10 +333,8 @@ func StartVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// check if namespace is reserved
-	if types.ReservedNamespaces[namespace] {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	// check if VM is already running
@@ -326,9 +376,17 @@ func (m *VMManager) StartVM(name, namespace string) error {
 
 // StopVMHandler handles VM stop requests
 func StopVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
@@ -338,10 +396,8 @@ func StopVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// check if namespace is reserved
-	if types.ReservedNamespaces[namespace] {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	// check if VM is already stopped
@@ -383,9 +439,17 @@ func (m *VMManager) StopVM(name, namespace string) error {
 
 // RestartVMHandler handles VM restart requests
 func RestartVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
@@ -395,10 +459,8 @@ func RestartVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// check if namespace is reserved
-	if types.ReservedNamespaces[namespace] {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	if err := vmManager.RestartVM(name, namespace); err != nil {
@@ -428,9 +490,17 @@ func (m *VMManager) RestartVM(name, namespace string) error {
 
 // WaitVMHandler handles VM wait requests
 func WaitVMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("VM name is required")
 		respondWithError(c, http.StatusBadRequest, "VM name is required")
 		return
 	}
@@ -440,10 +510,8 @@ func WaitVMHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// check if namespace is reserved
-	if types.ReservedNamespaces[namespace] {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	if err := vmManager.WaitVM(name, namespace); err != nil {

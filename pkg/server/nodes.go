@@ -64,6 +64,15 @@ func NewNodeManager() *NodeManager {
 
 // ListNodesHandler handles HTTP requests to list nodes
 func ListNodesHandler(c *gin.Context) {
+	auth, _, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	nodes, err := nodeManager.ListNodes()
 	if err != nil {
 		log.Printf("failed to list nodes: %v", err)
@@ -95,13 +104,25 @@ func (m *NodeManager) ListNodes() ([]string, error) {
 
 // GetNodeHandler handles HTTP requests to get node details
 func GetNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	nodeName := c.Param("name")
 	if nodeName == "" {
 		log.Printf("node name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "node name is required"})
 		return
 	}
-
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	node, err := nodeManager.GetNode(nodeName)
 	if err != nil {
 		log.Printf("failed to get node %s: %v", nodeName, err)
@@ -162,13 +183,25 @@ func (m *NodeManager) GetNode(name string) (*types.Node, error) {
 
 // DeleteNodeHandler handles HTTP requests to delete a node
 func DeleteNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	nodeName := c.Param("name")
 	if nodeName == "" {
 		log.Printf("node name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "node name is required"})
 		return
 	}
-
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	node, err := nodeManager.GetNode(nodeName)
 	if err != nil {
 		log.Printf("failed to get node %s: %v", nodeName, err)
@@ -200,22 +233,32 @@ func (m *NodeManager) DeleteNode(name string) error {
 
 // AddNodeHandler handles HTTP requests to add a node
 func AddNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Printf("failed to read request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read request body"})
 		return
 	}
 	log.Println(string(body))
 	var node types.Node
 	if err := json.Unmarshal(body, &node); err != nil {
-		log.Printf("failed to parse request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse request body"})
 		return
 	}
 
 	if err := nodeManager.AddNode(node); err != nil {
-		log.Printf("failed to add node: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to add node: %v", err)})
 		return
 	}
@@ -232,6 +275,19 @@ func (m *NodeManager) AddNode(node types.Node) error {
 
 // RestartNodeHandler handles HTTP requests to restart a node
 func RestartNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	nodeName := c.Param("name")
 	if nodeName == "" {
 		log.Printf("node name is required")
@@ -290,14 +346,25 @@ func (m *NodeManager) RestartNode(name string) error {
 
 // SuspendNodeHandler handles HTTP requests to suspend a node
 func SuspendNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	hostName := c.Param("name")
 	if hostName == "" {
-		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
 	if err := nodeManager.SuspendNode(hostName, server.config.User, server.config.Key); err != nil {
-		log.Printf("failed to suspend node %s: %v", hostName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to suspend node: %v", err)})
 		return
 	}
@@ -315,14 +382,25 @@ func (m *NodeManager) SuspendNode(host, user, key string) error {
 
 // ResumeNodeHandler handles HTTP requests to resume a node
 func ResumeNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	hostName := c.Param("name")
 	if hostName == "" {
-		log.Printf("host name is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
 	if err := nodeManager.ResumeNode(hostName, server.config.User, server.config.Key); err != nil {
-		log.Printf("failed to resume node %s: %v", hostName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to resume node: %v", err)})
 		return
 	}
@@ -335,6 +413,19 @@ func (m *NodeManager) ResumeNode(host, user, key string) error {
 
 // UpgradeNodeHandler handles HTTP requests to upgrade a node
 func UpgradeNodeHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	hostName := c.Param("name")
 	if hostName == "" {
 		log.Printf("host name is required")

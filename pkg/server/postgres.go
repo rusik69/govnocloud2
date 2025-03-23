@@ -28,21 +28,26 @@ func NewPostgresManager() *PostgresManager {
 
 // ListPostgresHandler handles requests to list postgres
 func ListPostgresHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	postgres, err := postgresManager.ListClusters(namespace)
 	if err != nil {
-		log.Printf("failed to list databases: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to list databases: %v", err)})
 		return
 	}
@@ -51,27 +56,31 @@ func ListPostgresHandler(c *gin.Context) {
 
 // CreatePostgresHandler handles requests to create a new postgres
 func CreatePostgresHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	var postgres types.Postgres
 	if err := c.BindJSON(&postgres); err != nil {
-		log.Printf("invalid request: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
 
 	if err := postgresManager.CreateCluster(&postgres); err != nil {
-		log.Printf("failed to create postgres: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create postgres: %v", err))
 		return
 	}
@@ -81,9 +90,17 @@ func CreatePostgresHandler(c *gin.Context) {
 
 // GetPostgresHandler handles requests to get postgres details
 func GetPostgresHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("postgres name is required")
 		respondWithError(c, http.StatusBadRequest, "postgres name is required")
 		return
 	}
@@ -95,22 +112,18 @@ func GetPostgresHandler(c *gin.Context) {
 		return
 	}
 
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 
 	postgres, err := postgresManager.GetCluster(name, namespace)
 	if err != nil {
-		log.Printf("failed to get postgres: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get postgres: %v", err))
 		return
 	}
 
 	if postgres == nil {
-		log.Printf("postgres not found")
 		respondWithError(c, http.StatusNotFound, "postgres not found")
 		return
 	}
@@ -120,29 +133,33 @@ func GetPostgresHandler(c *gin.Context) {
 
 // DeletePostgresHandler handles requests to delete a postgres
 func DeletePostgresHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("postgres name is required")
 		respondWithError(c, http.StatusBadRequest, "postgres name is required")
 		return
 	}
 
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
 
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 
 	if err := postgresManager.DeleteCluster(name, namespace); err != nil {
-		log.Printf("failed to delete postgres: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete postgres: %v", err))
 		return
 	}

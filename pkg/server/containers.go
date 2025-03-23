@@ -26,21 +26,26 @@ func NewContainerManager() *ContainerManager {
 
 // ListContainersHandler handles requests to list containers
 func ListContainersHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	containers, err := containerManager.ListContainers(namespace)
 	if err != nil {
-		log.Printf("failed to list containers: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list containers: %v", err))
 		return
 	}
@@ -50,34 +55,37 @@ func ListContainersHandler(c *gin.Context) {
 
 // CreateContainerHandler handles requests to create a new container
 func CreateContainerHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("name is required")
 		respondWithError(c, http.StatusBadRequest, "name is required")
-		return
-	}
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
 		return
 	}
 	var container types.Container
 	if err := c.BindJSON(&container); err != nil {
-		log.Printf("invalid request: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
 		return
 	}
 	container.Namespace = namespace
 	container.Name = name
 	if err := containerManager.CreateContainer(&container); err != nil {
-		log.Printf("container create error: %s", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create container: %v", err))
 		return
 	}
@@ -87,21 +95,30 @@ func CreateContainerHandler(c *gin.Context) {
 
 // GetContainerHandler handles requests to get container details
 func GetContainerHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		name := c.Param("name")
+		if name == "" {
+			respondWithError(c, http.StatusBadRequest, "container name is required")
+			return
+		}
+	}
+	namespace := c.Param("namespace")
+	if namespace == "" {
+		respondWithError(c, http.StatusBadRequest, "namespace is required")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
 		respondWithError(c, http.StatusBadRequest, "container name is required")
 		return
 	}
-	namespace := c.Param("namespace")
-	if namespace == "" {
-		log.Printf("namespace is required")
-		respondWithError(c, http.StatusBadRequest, "namespace is required")
-		return
-	}
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 	container, err := containerManager.GetContainer(name, namespace)
@@ -118,30 +135,35 @@ func GetContainerHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, container)
+	return
 }
 
 // DeleteContainerHandler handles requests to delete a container
 func DeleteContainerHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
-		log.Printf("container name is required")
 		respondWithError(c, http.StatusBadRequest, "container name is required")
 		return
 	}
 
 	namespace := c.Param("namespace")
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-	// Check if namespace is reserved
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
-
 	if err := containerManager.DeleteContainer(name, namespace); err != nil {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete container: %v", err))
 		return

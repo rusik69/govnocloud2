@@ -26,42 +26,42 @@ func NewLLMManager() *LLMManager {
 
 // CreateLLMHandler handles LLM creation requests
 func CreateLLMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	namespace := c.Param("namespace")
 	name := c.Param("name")
-
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-
 	if name == "" {
-		log.Printf("name is required")
 		respondWithError(c, http.StatusBadRequest, "name is required")
 		return
 	}
-
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
-
 	var llm types.LLM
 	if err := c.BindJSON(&llm); err != nil {
-		log.Printf("invalid request body: %v", err)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid request body: %v", err))
 		return
 	}
 
 	if llm.Type == "" {
-		log.Printf("type is required")
 		respondWithError(c, http.StatusBadRequest, "type is required")
 		return
 	}
 
 	if _, ok := types.LLMTypes[llm.Type]; !ok {
-		log.Printf("invalid type: %s", llm.Type)
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid type: %s", llm.Type))
 		return
 	}
@@ -80,30 +80,33 @@ func CreateLLMHandler(c *gin.Context) {
 
 // GetLLMHandler handles LLM retrieval requests
 func GetLLMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	name := c.Param("name")
-
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
 
 	if name == "" {
-		log.Printf("name is required")
 		respondWithError(c, http.StatusBadRequest, "name is required")
 		return
 	}
-
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 
 	llm, err := llmManager.GetLLM(namespace, name)
 	if err != nil {
-		log.Printf("failed to get LLM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get LLM: %v", err))
 		return
 	}
@@ -113,29 +116,32 @@ func GetLLMHandler(c *gin.Context) {
 
 // DeleteLLMHandler handles LLM deletion requests
 func DeleteLLMHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
 	name := c.Param("name")
-
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
 
 	if name == "" {
-		log.Printf("name is required")
 		respondWithError(c, http.StatusBadRequest, "name is required")
 		return
 	}
-
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
 
 	if err := llmManager.DeleteLLM(namespace, name); err != nil {
-		log.Printf("failed to delete LLM: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete LLM: %v", err))
 		return
 	}
@@ -219,20 +225,24 @@ func (m *LLMManager) DeleteLLM(namespace, name string) error {
 
 // ListLLMsHandler handles list llms request
 func ListLLMsHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	namespace := c.Param("namespace")
-
 	if namespace == "" {
-		log.Printf("namespace is required")
 		respondWithError(c, http.StatusBadRequest, "namespace is required")
 		return
 	}
-
-	if _, ok := types.ReservedNamespaces[namespace]; ok {
-		log.Printf("namespace %s is reserved", namespace)
-		respondWithError(c, http.StatusForbidden, fmt.Sprintf("namespace %s is reserved", namespace))
+	if !CheckNamespaceAccess(username, namespace) {
+		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
 		return
 	}
-
 	llms, err := llmManager.ListLLMs(namespace)
 	if err != nil {
 		log.Printf("failed to list LLMs: %v", err)

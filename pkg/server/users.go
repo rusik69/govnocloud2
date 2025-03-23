@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -310,11 +311,77 @@ func (m *UserManager) VerifyPassword(name, password string) (bool, error) {
 	return true, nil
 }
 
+// CheckAuth verifies user authentication from request headers
+func CheckAuth(c *gin.Context) (bool, string, error) {
+	username := c.GetHeader("User")
+	password := c.GetHeader("Password")
+
+	if username == "" || password == "" {
+		return false, "", fmt.Errorf("missing authentication headers")
+	}
+
+	// Verify the password against stored hash
+	valid, err := userManager.VerifyPassword(username, password)
+	if err != nil {
+		return false, "", fmt.Errorf("authentication error: %w", err)
+	}
+
+	if !valid {
+		return false, "", fmt.Errorf("invalid credentials")
+	}
+
+	return true, username, nil
+}
+
+// CheckNamespaceAccess checks if a user has access to a namespace
+func CheckNamespaceAccess(username, namespace string) bool {
+	user, err := userManager.GetUser(username)
+	if err != nil {
+		return false
+	}
+
+	if user == nil {
+		return false
+	}
+
+	if types.ReservedNamespaces[namespace] && !user.IsAdmin {
+		return false
+	}
+
+	return slices.Contains(user.Namespaces, namespace)
+}
+
+// CheckAdminAccess checks if a user is an admin
+func CheckAdminAccess(username string) bool {
+	user, err := userManager.GetUser(username)
+	if err != nil {
+		return false
+	}
+
+	if user == nil {
+		return false
+	}
+
+	return user.IsAdmin
+}
+
 // ListUsersHandler handles requests to list users
 func ListUsersHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	users, err := userManager.ListUsers()
 	if err != nil {
-		log.Printf("failed to list users: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to list users: %v", err))
 		return
 	}
@@ -323,6 +390,19 @@ func ListUsersHandler(c *gin.Context) {
 
 // GetUserHandler handles requests to get a user
 func GetUserHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
 		log.Printf("name is required")
@@ -344,6 +424,19 @@ func GetUserHandler(c *gin.Context) {
 
 // CreateUserHandler handles requests to create a new user
 func CreateUserHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
 		log.Printf("name is required")
@@ -356,7 +449,7 @@ func CreateUserHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, fmt.Sprintf("failed to bind user: %v", err))
 		return
 	}
-	err := userManager.CreateUser(name, user)
+	err = userManager.CreateUser(name, user)
 	if err != nil {
 		log.Printf("failed to create user: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to create user: %v", err))
@@ -367,13 +460,26 @@ func CreateUserHandler(c *gin.Context) {
 
 // DeleteUserHandler handles requests to delete a user
 func DeleteUserHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
 		log.Printf("name is required")
 		respondWithError(c, http.StatusBadRequest, "name is required")
 		return
 	}
-	err := userManager.DeleteUser(name)
+	err = userManager.DeleteUser(name)
 	if err != nil {
 		log.Printf("failed to delete user: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to delete user: %v", err))
@@ -384,6 +490,19 @@ func DeleteUserHandler(c *gin.Context) {
 
 // GetUserPasswordHandler handles requests to get a user's password
 func GetUserPasswordHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
 		log.Printf("name is required")
@@ -401,6 +520,19 @@ func GetUserPasswordHandler(c *gin.Context) {
 
 // SetUserPasswordHandler handles requests to set a user's password
 func SetUserPasswordHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	if name == "" {
 		log.Printf("name is required")
@@ -433,6 +565,19 @@ func SetUserPasswordHandler(c *gin.Context) {
 
 // AddNamespaceToUserHandler handles requests to add a namespace to a user
 func AddNamespaceToUserHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	namespace := c.Param("namespace")
 	if name == "" || namespace == "" {
@@ -440,7 +585,7 @@ func AddNamespaceToUserHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "name and namespace are required")
 		return
 	}
-	err := userManager.AddNamespaceToUser(name, namespace)
+	err = userManager.AddNamespaceToUser(name, namespace)
 	if err != nil {
 		log.Printf("failed to add namespace to user: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to add namespace to user: %v", err))
@@ -451,6 +596,19 @@ func AddNamespaceToUserHandler(c *gin.Context) {
 
 // RemoveNamespaceFromUserHandler handles requests to remove a namespace from a user
 func RemoveNamespaceFromUserHandler(c *gin.Context) {
+	auth, username, err := CheckAuth(c)
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to check auth: %v", err))
+		return
+	}
+	if !auth {
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user does not have admin access")
+		return
+	}
 	name := c.Param("name")
 	namespace := c.Param("namespace")
 	if name == "" || namespace == "" {
@@ -458,7 +616,7 @@ func RemoveNamespaceFromUserHandler(c *gin.Context) {
 		respondWithError(c, http.StatusBadRequest, "name and namespace are required")
 		return
 	}
-	err := userManager.RemoveNamespaceFromUser(name, namespace)
+	err = userManager.RemoveNamespaceFromUser(name, namespace)
 	if err != nil {
 		log.Printf("failed to remove namespace from user: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to remove namespace from user: %v", err))
