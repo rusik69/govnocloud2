@@ -126,16 +126,12 @@ func GetContainerHandler(c *gin.Context) {
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to get container: %v", err))
 		return
 	}
-
 	log.Printf("%+v", container)
-
 	if container == nil {
 		respondWithError(c, http.StatusNotFound, "container not found")
 		return
 	}
-
 	c.JSON(http.StatusOK, container)
-	return
 }
 
 // DeleteContainerHandler handles requests to delete a container
