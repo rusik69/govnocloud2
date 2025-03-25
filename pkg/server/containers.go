@@ -101,11 +101,8 @@ func GetContainerHandler(c *gin.Context) {
 		return
 	}
 	if !auth {
-		name := c.Param("name")
-		if name == "" {
-			respondWithError(c, http.StatusBadRequest, "container name is required")
-			return
-		}
+		respondWithError(c, http.StatusUnauthorized, "unauthorized")
+		return
 	}
 	namespace := c.Param("namespace")
 	if namespace == "" {

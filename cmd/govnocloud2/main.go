@@ -22,10 +22,11 @@ type Config struct {
 }
 
 type MasterConfig struct {
-	Host       string
-	KeyPath    string
-	PubKeyPath string
-	Interface  string
+	Host         string
+	KeyPath      string
+	PubKeyPath   string
+	Interface    string
+	RootPassword string
 }
 
 type WorkerConfig struct {
@@ -53,8 +54,10 @@ type WebConfig struct {
 }
 
 type ClientConfig struct {
-	Host string
-	Port string
+	Host     string
+	Port     string
+	User     string
+	Password string
 }
 
 type ServerConfig struct {
@@ -151,14 +154,17 @@ func initConfig() error {
 			Path: "/var/www/govnocloud2",
 		},
 		Client: ClientConfig{
-			Host: "127.0.0.1",
-			Port: "6969",
+			Host:     "127.0.0.1",
+			Port:     "6969",
+			User:     "root",
+			Password: "password",
 		},
 		Install: InstallConfig{
 			Master: MasterConfig{
-				KeyPath:    "~/.ssh/id_rsa",
-				PubKeyPath: "~/.ssh/id_rsa.pub",
-				Interface:  "enp0s31f6",
+				KeyPath:      "~/.ssh/id_rsa",
+				PubKeyPath:   "~/.ssh/id_rsa.pub",
+				Interface:    "enp0s31f6",
+				RootPassword: "password",
 			},
 			Workers: WorkerConfig{
 				IPRange:   "10.0.0.0/24",
@@ -225,6 +231,8 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.SSH.PubKeyPath, "pubkey", "", cfg.Install.SSH.PubKeyPath, "ssh public key")
 	flags.StringVarP(&cfg.Install.Master.PubKeyPath, "masterpubkey", "", cfg.Install.Master.PubKeyPath, "master public key path")
 	flags.StringVarP(&cfg.Install.Master.KeyPath, "masterkey", "", cfg.Install.Master.KeyPath, "master key path")
+	flags.StringVarP(&cfg.Install.Master.RootPassword, "masterrootpassword", "", cfg.Install.Master.RootPassword, "master root password")
+	flags.StringVarP(&cfg.Install.Master.Interface, "masterinterface", "", cfg.Install.Master.Interface, "master interface name")
 	flags.StringVarP(&cfg.Install.Workers.Interface, "interface", "", cfg.Install.Workers.Interface, "interface name")
 	flags.StringVarP(&cfg.Install.ImagesDir, "imagesdir", "", cfg.Install.ImagesDir, "images directory")
 	flags.BoolVarP(&cfg.Install.Monitoring.Enabled, "monitoring", "", cfg.Install.Monitoring.Enabled, "enable monitoring")
