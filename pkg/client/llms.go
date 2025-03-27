@@ -34,6 +34,8 @@ func (c *Client) CreateLLM(name, namespace, llmType string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -65,6 +67,10 @@ func (c *Client) DeleteLLM(namespace, name string) error {
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting LLM: %w", err)
@@ -91,6 +97,8 @@ func (c *Client) GetLLM(name, namespace string) (types.LLM, error) {
 		return types.LLM{}, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -118,7 +126,8 @@ func (c *Client) ListLLMs(namespace string) ([]types.LLM, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing LLMs: %w", err)

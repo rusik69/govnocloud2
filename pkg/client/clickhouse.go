@@ -22,9 +22,19 @@ func (c *Client) CreateClickhouse(name, namespace string, replicas int) error {
 	if err != nil {
 		return fmt.Errorf("error marshaling clickhouse: %w", err)
 	}
+	// Create a new request to properly set headers
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/clickhouse/%s/%s", c.baseURL, namespace, name), bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
 
-	url := fmt.Sprintf("%s/clickhouse/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(data))
+	// Set content type and authentication headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// Use the client's httpClient to send the request
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating clickhouse cluster: %w", err)
 	}
@@ -40,8 +50,19 @@ func (c *Client) CreateClickhouse(name, namespace string, replicas int) error {
 
 // GetClickhouse gets a clickhouse cluster.
 func (c *Client) GetClickhouse(name, namespace string) (*types.Clickhouse, error) {
-	url := fmt.Sprintf("%s/clickhouse/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	// Create a new request to properly set headers
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/clickhouse/%s/%s", c.baseURL, namespace, name), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	// Set content type and authentication headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// Use the client's httpClient to send the request
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error getting clickhouse cluster: %w", err)
 	}
@@ -59,8 +80,19 @@ func (c *Client) GetClickhouse(name, namespace string) (*types.Clickhouse, error
 
 // ListClickhouse lists clickhouse clusters.
 func (c *Client) ListClickhouse(namespace string) ([]types.Clickhouse, error) {
-	url := fmt.Sprintf("%s/clickhouse/%s", c.baseURL, namespace)
-	resp, err := c.httpClient.Get(url)
+	// Create a new request to properly set headers
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/clickhouse/%s", c.baseURL, namespace), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	// Set content type and authentication headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// Use the client's httpClient to send the request
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing clickhouse clusters: %w", err)
 	}
@@ -78,12 +110,18 @@ func (c *Client) ListClickhouse(namespace string) ([]types.Clickhouse, error) {
 
 // DeleteClickhouse deletes a clickhouse cluster.
 func (c *Client) DeleteClickhouse(name, namespace string) error {
-	url := fmt.Sprintf("%s/clickhouse/%s/%s", c.baseURL, namespace, name)
-	req, err := http.NewRequest("DELETE", url, nil)
+	// Create a new request to properly set headers
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/clickhouse/%s/%s", c.baseURL, namespace, name), nil)
 	if err != nil {
 		return fmt.Errorf("error creating delete request: %w", err)
 	}
 
+	// Set content type and authentication headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// Use the client's httpClient to send the request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting clickhouse cluster: %w", err)

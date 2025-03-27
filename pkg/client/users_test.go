@@ -12,15 +12,15 @@ import (
 // const testNamespace = "test"
 
 // User-specific test constants
-const testUser = "testuser"
-const testPassword = "testpassword"
+const testNewUser = "testuser"
+const testNewPassword = "testpassword"
 
 func TestCreateUser(t *testing.T) {
 	user := types.User{
-		Password:   testPassword,
+		Password:   testNewPassword,
 		Namespaces: []string{},
 	}
-	err := cli.CreateUser(testUser, user)
+	err := cli.CreateUser(testNewUser, user)
 	if err != nil {
 		t.Fatalf("error creating user: %v", err)
 	}
@@ -28,7 +28,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	user, err := cli.GetUser(testUser)
+	user, err := cli.GetUser(testNewUser)
 	if err != nil {
 		t.Fatalf("error getting user: %v", err)
 	}
@@ -44,7 +44,7 @@ func TestListUsers(t *testing.T) {
 }
 
 func TestSetUserPassword(t *testing.T) {
-	err := cli.SetUserPassword(testUser, "newpassword")
+	err := cli.SetUserPassword(testNewUser, testNewPassword)
 	if err != nil {
 		t.Fatalf("error setting user password: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestSetUserPassword(t *testing.T) {
 
 func TestAddNamespaceToUser(t *testing.T) {
 	// Using the testNamespace variable defined in containers_test.go
-	err := cli.AddNamespaceToUser(testUser, testNamespace)
+	err := cli.AddNamespaceToUser(testNewUser, testNamespace)
 	if err != nil {
 		t.Fatalf("error adding namespace to user: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestAddNamespaceToUser(t *testing.T) {
 
 func TestRemoveNamespaceFromUser(t *testing.T) {
 	// Using the testNamespace variable defined in containers_test.go
-	err := cli.RemoveNamespaceFromUser(testUser, testNamespace)
+	err := cli.RemoveNamespaceFromUser(testNewUser, testNamespace)
 	if err != nil {
 		t.Fatalf("error removing namespace from user: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestRemoveNamespaceFromUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	err := cli.DeleteUser(testUser)
+	err := cli.DeleteUser(testNewUser)
 	if err != nil {
 		t.Fatalf("error deleting user: %v", err)
 	}

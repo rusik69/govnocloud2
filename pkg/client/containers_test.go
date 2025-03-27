@@ -10,7 +10,7 @@ import (
 var cli *client.Client
 
 func init() {
-	cli = client.NewClient(testHost, testPort)
+	cli = client.NewClient(testHost, testPort, testUser, testPassword)
 	err := cli.CreateNamespace(testNamespace)
 	if err != nil {
 		log.Fatalf("error creating namespace: %v", err)
@@ -22,6 +22,8 @@ const (
 	testPort       = "6969"
 	testNamespace  = "test"
 	testNamespace2 = "test2"
+	testUser       = "root"
+	testPassword   = "password"
 )
 
 // TestCreateContainer tests the CreateContainer function.

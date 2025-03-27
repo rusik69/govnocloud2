@@ -36,6 +36,9 @@ func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk, 
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
 	defer cancel()
@@ -58,7 +61,20 @@ func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk, 
 // ListContainers lists containers.
 func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
 	url := fmt.Sprintf("%s/containers/%s", c.baseURL, namespace)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing containers: %w", err)
 	}
@@ -85,7 +101,20 @@ func (c *Client) GetContainer(name, namespace string) (types.Container, error) {
 		return types.Container{}, fmt.Errorf("namespace is required")
 	}
 	url := fmt.Sprintf("%s/containers/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return types.Container{}, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return types.Container{}, fmt.Errorf("error getting container: %w", err)
 	}
@@ -115,6 +144,14 @@ func (c *Client) DeleteContainer(name, namespace string) error {
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

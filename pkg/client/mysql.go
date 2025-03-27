@@ -2,10 +2,12 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
@@ -25,7 +27,20 @@ func (c *Client) CreateMysql(name, namespace string, instances, routerInstances 
 	}
 
 	url := fmt.Sprintf("%s/mysql/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(data))
+	req, err := http.NewRequest("POST", url, bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating mysql cluster: %w", err)
 	}
@@ -42,7 +57,20 @@ func (c *Client) CreateMysql(name, namespace string, instances, routerInstances 
 // GetMysql gets a mysql cluster.
 func (c *Client) GetMysql(name, namespace string) (*types.Mysql, error) {
 	url := fmt.Sprintf("%s/mysql/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error getting mysql cluster: %w", err)
 	}
@@ -61,7 +89,20 @@ func (c *Client) GetMysql(name, namespace string) (*types.Mysql, error) {
 // ListMysql lists mysql clusters.
 func (c *Client) ListMysql(namespace string) ([]types.Mysql, error) {
 	url := fmt.Sprintf("%s/mysql/%s", c.baseURL, namespace)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing mysql clusters: %w", err)
 	}
@@ -84,6 +125,14 @@ func (c *Client) DeleteMysql(name, namespace string) error {
 	if err != nil {
 		return fmt.Errorf("error creating delete request: %w", err)
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+
+	// set timeout to 600s
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
