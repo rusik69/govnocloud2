@@ -270,6 +270,8 @@ func setupClientFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
 	flags.StringVarP(&cfg.Client.Host, "host", "", cfg.Client.Host, "server host")
 	flags.StringVarP(&cfg.Client.Port, "port", "", cfg.Client.Port, "server port")
+	flags.StringVarP(&cfg.Client.User, "user", "", cfg.Client.User, "server username")
+	flags.StringVarP(&cfg.Client.Password, "password", "", cfg.Client.Password, "server password")
 }
 
 func setupWebFlags(cmd *cobra.Command) {

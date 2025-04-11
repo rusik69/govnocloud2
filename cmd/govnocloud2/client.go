@@ -19,7 +19,7 @@ var clientCmd = &cobra.Command{
 			panic("action is required")
 		}
 
-		c := client.NewClient(cfg.Client.Host, cfg.Client.Port)
+		c := client.NewClient(cfg.Client.Host, cfg.Client.Port, cfg.Client.User, cfg.Client.Password)
 
 		switch args[0] {
 		case "version":
