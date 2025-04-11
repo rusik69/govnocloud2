@@ -15,7 +15,8 @@ func (c *Client) CreateNamespace(name string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating namespace: %w", err)
@@ -37,7 +38,8 @@ func (c *Client) DeleteNamespace(name string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting namespace: %w", err)
@@ -54,7 +56,14 @@ func (c *Client) DeleteNamespace(name string) error {
 // ListNamespaces lists all namespaces
 func (c *Client) ListNamespaces() ([]string, error) {
 	url := fmt.Sprintf("%s/namespaces", c.baseURL)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing namespaces: %w", err)
 	}
@@ -75,7 +84,14 @@ func (c *Client) ListNamespaces() ([]string, error) {
 // GetNamespace gets details of a specific namespace
 func (c *Client) GetNamespace(name string) (string, error) {
 	url := fmt.Sprintf("%s/namespaces/%s", c.baseURL, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error getting namespace: %w", err)
 	}

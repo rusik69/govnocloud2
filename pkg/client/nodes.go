@@ -12,7 +12,14 @@ import (
 
 // ListNodes retrieves a list of all nodes
 func (c *Client) ListNodes() ([]string, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/nodes", c.baseURL))
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/nodes", c.baseURL), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -37,7 +44,14 @@ func (c *Client) ListNodes() ([]string, error) {
 
 // GetNode retrieves details of a specific node
 func (c *Client) GetNode(name string) (*types.Node, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/nodes/%s", c.baseURL, name))
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/nodes/%s", c.baseURL, name), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -83,11 +97,14 @@ func (c *Client) AddNode(name, host, masterHost, user, key string) error {
 		return fmt.Errorf("failed to marshal node: %w", err)
 	}
 
-	resp, err := c.httpClient.Post(
-		fmt.Sprintf("%s/nodes", c.baseURL),
-		"application/json",
-		bytes.NewBuffer(nodeJSON),
-	)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/nodes", c.baseURL), bytes.NewBuffer(nodeJSON))
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -106,15 +123,13 @@ func (c *Client) AddNode(name, host, masterHost, user, key string) error {
 
 // DeleteNode removes a node from the cluster
 func (c *Client) DeleteNode(name string) error {
-	req, err := http.NewRequest(
-		http.MethodDelete,
-		fmt.Sprintf("%s/nodes/%s", c.baseURL, name),
-		nil,
-	)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/nodes/%s", c.baseURL, name), nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
@@ -135,11 +150,14 @@ func (c *Client) DeleteNode(name string) error {
 
 // RestartNode restarts a specific node
 func (c *Client) RestartNode(name string) error {
-	resp, err := c.httpClient.Post(
-		fmt.Sprintf("%s/nodes/%s/restart", c.baseURL, name),
-		"application/json",
-		nil,
-	)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/nodes/%s/restart", c.baseURL, name), nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -159,9 +177,14 @@ func (c *Client) RestartNode(name string) error {
 
 // UpgradeNode upgrades a node
 func (c *Client) UpgradeNode(ip string) error {
-	resp, err := c.httpClient.Get(
-		fmt.Sprintf("%s/nodes/%s/upgrade", c.baseURL, ip),
-	)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/nodes/%s/upgrade", c.baseURL, ip), nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
