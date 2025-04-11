@@ -365,6 +365,19 @@ func CheckAdminAccess(username string) bool {
 	return user.IsAdmin
 }
 
+// CreateRootUser creates a root user
+func CreateRootUser() error {
+	user := types.User{
+		Name:    "root",
+		IsAdmin: true,
+	}
+	err := userManager.CreateUser("root", user)
+	if err != nil {
+		return fmt.Errorf("failed to create root user: %w", err)
+	}
+	return nil
+}
+
 // ListUsersHandler handles requests to list users
 func ListUsersHandler(c *gin.Context) {
 	auth, username, err := CheckAuth(c)

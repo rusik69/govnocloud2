@@ -19,6 +19,10 @@ var serverCmd = &cobra.Command{
 		log.Println("user: ", cfg.Server.User)
 		log.Println("password: ", cfg.Server.Password)
 		log.Println("key: ", cfg.Server.Key)
+		err := server.CreateRootUser()
+		if err != nil {
+			log.Fatalf("failed to create root user: %v", err)
+		}
 		server.Serve(cfg.Server)
 	},
 }
