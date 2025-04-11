@@ -81,8 +81,8 @@ func CreateNamespaceHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
 	}
-	if !CheckNamespaceAccess(username, name) {
-		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user is not an admin")
 		return
 	}
 	err = namespaceManager.CreateNamespace(name)
@@ -115,8 +115,8 @@ func DeleteNamespaceHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "namespace is reserved"})
 		return
 	}
-	if !CheckNamespaceAccess(username, name) {
-		respondWithError(c, http.StatusForbidden, "user does not have access to this namespace")
+	if !CheckAdminAccess(username) {
+		respondWithError(c, http.StatusForbidden, "user is not an admin")
 		return
 	}
 	err = namespaceManager.DeleteNamespace(name)
