@@ -22,9 +22,12 @@ func (c *Client) CreateNamespace(name string) error {
 		return fmt.Errorf("error creating namespace: %w", err)
 	}
 	defer resp.Body.Close()
-
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error reading response body: %w", err)
+	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to create namespace: %d", resp.StatusCode)
+		return fmt.Errorf("failed to create namespace: %s %d", string(body), resp.StatusCode)
 	}
 
 	return nil
@@ -47,7 +50,11 @@ func (c *Client) DeleteNamespace(name string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to delete namespace: %d", resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("error reading response body: %w", err)
+		}
+		return fmt.Errorf("failed to delete namespace: %s %d", string(body), resp.StatusCode)
 	}
 
 	return nil
@@ -70,7 +77,11 @@ func (c *Client) ListNamespaces() ([]string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to list namespaces: %d", resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("error reading response body: %w", err)
+		}
+		return nil, fmt.Errorf("failed to list namespaces: %s %d", string(body), resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -98,7 +109,11 @@ func (c *Client) GetNamespace(name string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get namespace: %d", resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("error reading response body: %w", err)
+		}
+		return "", fmt.Errorf("failed to get namespace: %s %d", string(body), resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
