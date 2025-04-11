@@ -37,7 +37,8 @@ func (c *Client) CreatePostgres(name, namespace, size string, replicas int, stor
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating database: %w", err)
@@ -55,7 +56,14 @@ func (c *Client) CreatePostgres(name, namespace, size string, replicas int, stor
 // GetPostgres gets a postgres cluster.
 func (c *Client) GetPostgres(name, namespace string) (types.Postgres, error) {
 	url := fmt.Sprintf("%s/postgres/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return types.Postgres{}, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return types.Postgres{}, fmt.Errorf("error getting postgres cluster: %w", err)
 	}
@@ -74,7 +82,14 @@ func (c *Client) GetPostgres(name, namespace string) (types.Postgres, error) {
 // ListPostgres lists postgres clusters.
 func (c *Client) ListPostgres(namespace string) ([]types.Postgres, error) {
 	url := fmt.Sprintf("%s/postgres/%s", c.baseURL, namespace)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error listing databases: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing databases: %w", err)
 	}
@@ -97,7 +112,9 @@ func (c *Client) DeletePostgres(name, namespace string) error {
 	if err != nil {
 		return fmt.Errorf("error deleting postgres cluster: %w", err)
 	}
-
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting postgres cluster: %w", err)

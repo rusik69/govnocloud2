@@ -56,7 +56,8 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating VM: %w", err)
@@ -74,7 +75,14 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 // ListVMs lists VMs.
 func (c *Client) ListVMs(namespace string) ([]string, error) {
 	url := fmt.Sprintf("%s/vms/%s", c.baseURL, namespace)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing VMs: %w", err)
 	}
@@ -96,7 +104,14 @@ func (c *Client) ListVMs(namespace string) ([]string, error) {
 // GetVM gets a VM.
 func (c *Client) GetVM(name, namespace string) (*types.VM, error) {
 	url := fmt.Sprintf("%s/vms/%s/%s", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error getting VM: %w", err)
 	}
@@ -122,7 +137,9 @@ func (c *Client) DeleteVM(name, namespace string) error {
 	if err != nil {
 		return fmt.Errorf("error creating delete request: %w", err)
 	}
-
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting VM: %w", err)
@@ -140,10 +157,14 @@ func (c *Client) DeleteVM(name, namespace string) error {
 // WaitVM waits for a VM to be ready
 func (c *Client) WaitVM(name, namespace string) error {
 	url := fmt.Sprintf("%s/vms/%s/%s/wait", c.baseURL, namespace, name)
-	client := &http.Client{
-		Timeout: 10 * time.Minute,
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
 	}
-	resp, err := client.Get(url)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error waiting for VM: %w", err)
 	}
@@ -160,7 +181,14 @@ func (c *Client) WaitVM(name, namespace string) error {
 // StartVM starts a VM
 func (c *Client) StartVM(name, namespace string) error {
 	url := fmt.Sprintf("%s/vms/%s/%s/start", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error starting VM: %w", err)
 	}
@@ -177,7 +205,14 @@ func (c *Client) StartVM(name, namespace string) error {
 // StopVM stops a VM
 func (c *Client) StopVM(name, namespace string) error {
 	url := fmt.Sprintf("%s/vms/%s/%s/stop", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error stopping VM: %w", err)
 	}
@@ -194,7 +229,14 @@ func (c *Client) StopVM(name, namespace string) error {
 // RestartVM restarts a VM
 func (c *Client) RestartVM(name, namespace string) error {
 	url := fmt.Sprintf("%s/vms/%s/%s/restart", c.baseURL, namespace, name)
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error restarting VM: %w", err)
 	}
