@@ -171,6 +171,8 @@ func (c *Client) AddNamespaceToUser(name, namespace string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User", c.username)
+	req.Header.Set("Password", c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to add namespace to user: %w", err)
