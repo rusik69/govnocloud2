@@ -344,7 +344,11 @@ func CheckNamespaceAccess(username, namespace string) bool {
 		return false
 	}
 
-	if types.ReservedNamespaces[namespace] && !user.IsAdmin {
+	if user.IsAdmin {
+		return true
+	}
+
+	if types.ReservedNamespaces[namespace] {
 		return false
 	}
 
