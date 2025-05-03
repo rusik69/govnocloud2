@@ -131,7 +131,7 @@ func initConfig() error {
 			KeyPath:    "~/.ssh/id_rsa",
 			PubKeyPath: "~/.ssh/id_rsa.pub",
 			Host:       "localhost",
-			Interface:  "enp0s31f6",
+			Interface:  "enp0s25",
 		},
 		Kube: KubeConfig{
 			ConfigPath: filepath.Join(homeDir, ".kube/config"),
