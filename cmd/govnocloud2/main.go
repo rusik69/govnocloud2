@@ -190,7 +190,7 @@ func initConfig() error {
 			Nat: NatConfig{
 				Enabled:           true,
 				ExternalInterface: "wlp2s0",
-				InternalInterface: "enp0s31f6",
+				InternalInterface: "enp0s25",
 			},
 			Longhorn: LonghornConfig{
 				Host: "longhorn.govno.cloud",
