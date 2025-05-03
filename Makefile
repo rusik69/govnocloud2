@@ -10,32 +10,32 @@ buildmac:
 	GOARCH=arm64 GOOS=darwin go build -o bin/govnocloud2-darwin-arm64 cmd/govnocloud2/*.go
 
 install:
-	DEBUG=true bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3,10.0.0.4 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 install
+	DEBUG=true bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab install
 
 installmac:
-	DEBUG=true bin/govnocloud2-darwin-arm64 --master 192.168.1.64 --ips 10.0.0.2,10.0.0.3,10.0.0.4 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 install
+	DEBUG=true bin/govnocloud2-darwin-arm64 --master 192.168.1.64 --ips 10.0.0.2,10.0.0.3 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab install
 
 uninstall:
-	bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3,10.0.0.4 uninstall
+	bin/govnocloud2-linux-amd64 --master 10.0.0.1 --ips 10.0.0.2,10.0.0.3 uninstall
 
 uninstallmac:
-	bin/govnocloud2-darwin-arm64 --master 192.168.1.64 --ips 10.0.0.2,10.0.0.3,10.0.0.4 uninstall
+	bin/govnocloud2-darwin-arm64 --master 192.168.1.64 --ips 10.0.0.2,10.0.0.3 uninstall
 
 test:
 	go test -v ./...
 
 wol:
-	bin/govnocloud2-linux-amd64 tool wol --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 --iprange 10.0.0.255 --master 10.0.0.1
+	bin/govnocloud2-linux-amd64 tool wol --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab --iprange 10.0.0.255 --master 10.0.0.1
 	sleep 5
 
 wolmac:
-	bin/govnocloud2-darwin-arm64 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab,28:d2:44:ed:85:f9 --iprange 10.0.0.255 --master 192.168.1.64 tool wol
+	bin/govnocloud2-darwin-arm64 --macs f0:de:f1:67:8c:92,3c:97:0e:71:77:ab --iprange 10.0.0.255 --master 192.168.1.64 tool wol
 
 suspend:
-	bin/govnocloud2-linux-amd64 tool suspend --ips 10.0.0.2,10.0.0.3,10.0.0.4 --master 10.0.0.1
+	bin/govnocloud2-linux-amd64 tool suspend --ips 10.0.0.2,10.0.0.3 --master 10.0.0.1
 
 suspendmac:
-	bin/govnocloud2-darwin-arm64 tool suspend --ips 10.0.0.2,10.0.0.3,10.0.0.4 --master 192.168.1.64
+	bin/govnocloud2-darwin-arm64 tool suspend --ips 10.0.0.2,10.0.0.3 --master 192.168.1.64
 
 logs:
 	sudo journalctl _SYSTEMD_INVOCATION_ID=`systemctl show -p InvocationID --value govnocloud2.service`
