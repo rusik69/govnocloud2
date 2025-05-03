@@ -163,7 +163,7 @@ func initConfig() error {
 			Master: MasterConfig{
 				KeyPath:      "~/.ssh/id_rsa",
 				PubKeyPath:   "~/.ssh/id_rsa.pub",
-				Interface:    "enp0s31f6",
+				Interface:    "enp0s25",
 				RootPassword: "password",
 			},
 			Workers: WorkerConfig{
