@@ -160,7 +160,7 @@ func (p *PackageConfig) generateDNSMasqConfig() string {
 
 	config.WriteString(fmt.Sprintf("interface=%s\n", p.Interface))
 	config.WriteString("bind-interfaces\n")
-	config.WriteString(fmt.Sprintf("dhcp-range=enp0s31f6,%s\n", p.DHCPRange))
+	config.WriteString(fmt.Sprintf("dhcp-range=%s,%s\n", p.Interface, p.DHCPRange))
 
 	for _, entry := range p.NetworkInfo {
 		config.WriteString(fmt.Sprintf("dhcp-host=%s,%s\n", entry.MAC, entry.IP))
