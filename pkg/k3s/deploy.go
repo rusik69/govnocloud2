@@ -93,7 +93,7 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 	webConfig := GovnocloudServiceConfig{
 		Name:        "govnocloud2-web",
 		Description: "govnocloud2 web",
-		ExecStart:   fmt.Sprintf("%s web --port %s --host %s --path %s", destPath, webPort, webHost, webPath),
+		ExecStart:   fmt.Sprintf("%s web --port %s --host %s --webpath %s", destPath, webPort, webHost, webPath),
 		User:        "root",
 	}
 
