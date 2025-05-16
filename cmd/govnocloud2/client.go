@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
@@ -9,14 +11,75 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// CommandHandler defines the interface for resource command handlers
+type CommandHandler interface {
+	Handle(c *client.Client, args []string)
+}
+
+// BaseCommandHandler provides common functionality for all command handlers
+type BaseCommandHandler struct {
+	ResourceName string
+	Commands     map[string]CommandFunc
+}
+
+// CommandFunc defines the function signature for command handlers
+type CommandFunc func(c *client.Client, args []string) error
+
+// NewBaseCommandHandler creates a new base command handler
+func NewBaseCommandHandler(resourceName string) *BaseCommandHandler {
+	return &BaseCommandHandler{
+		ResourceName: resourceName,
+		Commands:     make(map[string]CommandFunc),
+	}
+}
+
+// RegisterCommand registers a new command handler
+func (h *BaseCommandHandler) RegisterCommand(name string, handler CommandFunc) {
+	h.Commands[name] = handler
+}
+
+// Handle processes the command
+func (h *BaseCommandHandler) Handle(c *client.Client, args []string) {
+	if len(args) == 0 {
+		handleError(fmt.Errorf("%s subcommand required", h.ResourceName))
+	}
+
+	cmd := args[0]
+	handler, exists := h.Commands[cmd]
+	if !exists {
+		handleError(fmt.Errorf("unknown action: %s", cmd))
+	}
+
+	if err := handler(c, args[1:]); err != nil {
+		handleError(err)
+	}
+}
+
+var handlers = map[string]CommandHandler{
+	"nodes":      initNodeHandler(),
+	"vms":        initVMHandler(),
+	"containers": initContainerHandler(),
+	"clickhouse": initClickhouseHandler(),
+	"postgres":   initPostgresHandler(),
+	"mysql":      initMysqlHandler(),
+	"volumes":    initVolumeHandler(),
+	"namespaces": initNamespaceHandler(),
+	"users":      initUserHandler(),
+}
+
 // client command
 var clientCmd = &cobra.Command{
 	Use:   "client [action] [args]",
 	Short: "govnocloud2 client",
-	Long:  `govnocloud2 client`,
+	Long: `govnocloud2 client is a command-line interface for managing GovnoCloud resources.
+	
+	Examples:
+	  govnocloud2 client nodes list
+	  govnocloud2 client vms create myvm ubuntu 2 4 20
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			panic("action is required")
+			handleError(fmt.Errorf("action is required"))
 		}
 
 		c := client.NewClient(cfg.Client.Host, cfg.Client.Port, cfg.Client.User, cfg.Client.Password)
@@ -25,596 +88,542 @@ var clientCmd = &cobra.Command{
 		case "version":
 			serverVer, err := client.GetServerVersion(cfg.Client.Host, cfg.Client.Port)
 			if err != nil {
-				panic(err)
+				handleError(err)
 			}
 			fmt.Println("server version:", serverVer)
 
-		case "nodes":
-			if len(args) < 2 {
-				panic("nodes subcommand required [list|get|add|delete|restart]")
-			}
-			handleNodes(c, args[1:])
-
-		case "vms":
-			if len(args) < 2 {
-				panic("vms subcommand required [list|get|create|delete]")
-			}
-			handleVMs(c, args[1:])
-
-		case "containers":
-			if len(args) < 2 {
-				panic("containers subcommand required [list|get|create|delete]")
-			}
-			handleContainers(c, args[1:])
-
-		case "clickhouse":
-			if len(args) < 2 {
-				panic("clickhouse subcommand required [list|get|create|delete]")
-			}
-			handleClickhouse(c, args[1:])
-
-		case "postgres":
-			if len(args) < 2 {
-				panic("postgres subcommand required [list|get|create|delete]")
-			}
-			handlePostgres(c, args[1:])
-
-		case "mysql":
-			if len(args) < 2 {
-				panic("mysql subcommand required [list|get|create|delete]")
-			}
-			handleMysql(c, args[1:])
-
-		case "volumes":
-			if len(args) < 2 {
-				panic("volumes subcommand required [list|get|create|delete]")
-			}
-			handleVolumes(c, args[1:])
-
-		case "namespaces":
-			if len(args) < 2 {
-				panic("namespaces subcommand required [list|get|create|delete]")
-			}
-			handleNamespaces(c, args[1:])
-
-		case "users":
-			if len(args) < 2 {
-				panic("users subcommand required [list|get|create|delete|setpassword|addnamespace|removenamespace]")
-			}
-			handleUsers(c, args[1:])
-
 		default:
-			panic("unknown action: " + args[0])
+			handler, exists := handlers[args[0]]
+			if !exists {
+				handleError(fmt.Errorf("unknown action: %s", args[0]))
+			}
+			handler.Handle(c, args[1:])
 		}
 	},
 }
 
-func handleNodes(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
+func initNodeHandler() CommandHandler {
+	handler := NewBaseCommandHandler("nodes")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
 		nodes, err := c.ListNodes()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, node := range nodes {
 			fmt.Println(node)
 		}
+		return nil
+	})
 
-	case "get":
-		if len(args) < 2 {
-			panic("node name required")
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		node, err := c.GetNode(args[1])
+		node, err := c.GetNode(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Printf("%+v\n", node)
+		return printJSON(node)
+	})
 
-	case "add":
-		if len(args) < 6 {
-			panic("required: name host masterhost user key")
+	handler.RegisterCommand("add", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 5); err != nil {
+			return err
 		}
-		err := c.AddNode(args[1], args[2], args[3], args[4], args[5])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("node added successfully")
+		return c.AddNode(args[0], args[1], args[2], args[3], args[4])
+	})
 
-	case "delete":
-		if len(args) < 2 {
-			panic("node name required")
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		err := c.DeleteNode(args[1])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("node deleted successfully")
+		return c.DeleteNode(args[0])
+	})
 
-	case "restart":
-		if len(args) < 2 {
-			panic("node name required")
+	handler.RegisterCommand("restart", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		err := c.RestartNode(args[1])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("node restarted successfully")
+		return c.RestartNode(args[0])
+	})
 
-	default:
-		panic("unknown action: " + args[0])
-	}
+	return handler
 }
 
-func handleVMs(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
-		if len(args) < 2 {
-			panic("namespace required")
+func initVMHandler() CommandHandler {
+	handler := NewBaseCommandHandler("vms")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		vms, err := c.ListVMs(args[1])
+		vms, err := c.ListVMs(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, vm := range vms {
 			fmt.Println(vm)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 5 {
-			panic("required: name image size namespace")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 4); err != nil {
+			return err
 		}
-		err := c.CreateVM(args[1], args[2], args[3], args[4])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("VM created successfully")
+		return c.CreateVM(args[0], args[1], args[2], args[3])
+	})
 
-	case "delete":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.DeleteVM(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("VM deleted successfully")
+		return c.DeleteVM(args[0], args[1])
+	})
 
-	case "get":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		vm, err := c.GetVM(args[1], args[2])
+		vm, err := c.GetVM(args[0], args[1])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Printf("%+v\n", vm)
+		return printJSON(vm)
+	})
 
-	case "wait":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("wait", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.WaitVM(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("VM waited successfully")
+		return c.WaitVM(args[0], args[1])
+	})
 
-	case "stop":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("stop", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.StopVM(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("VM stopped successfully")
+		return c.StopVM(args[0], args[1])
+	})
 
-	case "start":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("start", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.StartVM(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("VM started successfully")
+		return c.StartVM(args[0], args[1])
+	})
 
-	case "restart":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("restart", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.RestartVM(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("VM restarted successfully")
-	default:
-		panic("unknown action: " + args[0])
-	}
+		return c.RestartVM(args[0], args[1])
+	})
+
+	return handler
 }
 
-func handleContainers(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
-		if len(args) < 2 {
-			panic("namespace required")
+func initContainerHandler() CommandHandler {
+	handler := NewBaseCommandHandler("containers")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		containers, err := c.ListContainers(args[1])
+		containers, err := c.ListContainers(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, container := range containers {
 			fmt.Printf("%+v\n", container)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 8 {
-			panic("required: name image namespace cpu ram disk port")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 7); err != nil {
+			return err
 		}
-		cpu, _ := strconv.Atoi(args[4])
-		ram, _ := strconv.Atoi(args[5])
-		disk, _ := strconv.Atoi(args[6])
-		port, _ := strconv.Atoi(args[7])
-		err := c.CreateContainer(args[1], args[2], args[3], cpu, ram, disk, port)
+		cpu, err := parseInt(args[3])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("container created successfully")
-
-	case "delete":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		err := c.DeleteContainer(args[1], args[2])
+		ram, err := parseInt(args[4])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("container deleted successfully")
-
-	case "get":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		container, err := c.GetContainer(args[1], args[2])
+		disk, err := parseInt(args[5])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Printf("%+v\n", container)
+		port, err := parseInt(args[6])
+		if err != nil {
+			return err
+		}
+		return c.CreateContainer(args[0], args[1], args[2], cpu, ram, disk, port)
+	})
 
-	default:
-		panic("unknown action: " + args[0])
-	}
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		return c.DeleteContainer(args[0], args[1])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		container, err := c.GetContainer(args[0], args[1])
+		if err != nil {
+			return err
+		}
+		return printJSON(container)
+	})
+
+	return handler
 }
 
-func handleVolumes(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
-		if len(args) < 2 {
-			panic("namespace required")
+func initVolumeHandler() CommandHandler {
+	handler := NewBaseCommandHandler("volumes")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		volumes, err := c.ListVolumes(args[1])
+		volumes, err := c.ListVolumes(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, volume := range volumes {
 			fmt.Println(volume)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 4 {
-			panic("required: name namespace size")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 3); err != nil {
+			return err
 		}
-		err := c.CreateVolume(args[1], args[2], args[3])
+		return c.CreateVolume(args[0], args[1], args[2])
+	})
+
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		return c.DeleteVolume(args[0], args[1])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		volume, err := c.GetVolume(args[0], args[1])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("volume created successfully")
+		return printJSON(volume)
+	})
 
-	case "delete":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		err := c.DeleteVolume(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("volume deleted successfully")
-
-	case "get":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		volume, err := c.GetVolume(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%+v\n", volume)
-
-	default:
-		panic("unknown action: " + args[0])
-	}
+	return handler
 }
 
-func handleNamespaces(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
+func initNamespaceHandler() CommandHandler {
+	handler := NewBaseCommandHandler("namespaces")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
 		namespaces, err := c.ListNamespaces()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, ns := range namespaces {
 			fmt.Println(ns)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 2 {
-			panic("namespace name required")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		err := c.CreateNamespace(args[1])
+		return c.CreateNamespace(args[0])
+	})
+
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
+		}
+		return c.DeleteNamespace(args[0])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
+		}
+		ns, err := c.GetNamespace(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("namespace created successfully")
+		return printJSON(ns)
+	})
 
-	case "delete":
-		if len(args) < 2 {
-			panic("namespace name required")
-		}
-		err := c.DeleteNamespace(args[1])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("namespace deleted successfully")
-
-	case "get":
-		if len(args) < 2 {
-			panic("namespace name required")
-		}
-		ns, err := c.GetNamespace(args[1])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%+v\n", ns)
-
-	default:
-		panic("unknown action: " + args[0])
-	}
+	return handler
 }
 
-func handleClickhouse(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
-		if len(args) < 2 {
-			panic("namespace required")
+func initClickhouseHandler() CommandHandler {
+	handler := NewBaseCommandHandler("clickhouse")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		clickhouses, err := c.ListClickhouse(args[1])
+		clickhouses, err := c.ListClickhouse(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, ch := range clickhouses {
 			fmt.Printf("%+v\n", ch)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 4 {
-			panic("required: name namespace replicas")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 3); err != nil {
+			return err
 		}
-		replicas, _ := strconv.Atoi(args[3])
-		err := c.CreateClickhouse(args[1], args[2], replicas)
+		replicas, err := parseInt(args[2])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("clickhouse created successfully")
+		return c.CreateClickhouse(args[0], args[1], replicas)
+	})
 
-	case "delete":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.DeleteClickhouse(args[1], args[2])
+		return c.DeleteClickhouse(args[0], args[1])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		ch, err := c.GetClickhouse(args[0], args[1])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("clickhouse deleted successfully")
+		return printJSON(ch)
+	})
 
-	case "get":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		ch, err := c.GetClickhouse(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%+v\n", ch)
-
-	default:
-		panic("unknown action: " + args[0])
-	}
+	return handler
 }
 
-func handlePostgres(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
-		if len(args) < 2 {
-			panic("namespace required")
+func initPostgresHandler() CommandHandler {
+	handler := NewBaseCommandHandler("postgres")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		dbs, err := c.ListPostgres(args[1])
+		dbs, err := c.ListPostgres(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, db := range dbs {
 			fmt.Printf("%+v\n", db)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 6 {
-			panic("required: name namespace size instances routerInstances")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 5); err != nil {
+			return err
 		}
-		instances, _ := strconv.Atoi(args[4])
-		routerInstances, _ := strconv.Atoi(args[5])
-		err := c.CreatePostgres(args[1], args[2], args[3], instances, routerInstances)
+		instances, err := parseInt(args[3])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("postgres created successfully")
-
-	case "delete":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		err := c.DeletePostgres(args[1], args[2])
+		routerInstances, err := parseInt(args[4])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("postgres deleted successfully")
+		return c.CreatePostgres(args[0], args[1], args[2], instances, routerInstances)
+	})
 
-	case "get":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		db, err := c.GetPostgres(args[1], args[2])
+		return c.DeletePostgres(args[0], args[1])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		db, err := c.GetPostgres(args[0], args[1])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Printf("%+v\n", db)
+		return printJSON(db)
+	})
 
-	default:
-		panic("unknown action: " + args[0])
-	}
+	return handler
 }
 
-func handleMysql(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
-		if len(args) < 2 {
-			panic("namespace required")
+func initMysqlHandler() CommandHandler {
+	handler := NewBaseCommandHandler("mysql")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		dbs, err := c.ListMysql(args[1])
+		dbs, err := c.ListMysql(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, db := range dbs {
 			fmt.Printf("%+v\n", db)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 5 {
-			panic("required: name namespace instances routerInstances")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 4); err != nil {
+			return err
 		}
-		instances, _ := strconv.Atoi(args[3])
-		routerInstances, _ := strconv.Atoi(args[4])
-		err := c.CreateMysql(args[1], args[2], instances, routerInstances)
+		instances, err := parseInt(args[2])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("mysql created successfully")
-
-	case "delete":
-		if len(args) < 3 {
-			panic("required: name namespace")
-		}
-		err := c.DeleteMysql(args[1], args[2])
+		routerInstances, err := parseInt(args[3])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println("mysql deleted successfully")
+		return c.CreateMysql(args[0], args[1], instances, routerInstances)
+	})
 
-	case "get":
-		if len(args) < 3 {
-			panic("required: name namespace")
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		db, err := c.GetMysql(args[1], args[2])
+		return c.DeleteMysql(args[0], args[1])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		db, err := c.GetMysql(args[0], args[1])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Printf("%+v\n", db)
+		return printJSON(db)
+	})
 
-	default:
-		panic("unknown action: " + args[0])
-	}
+	return handler
 }
 
-func handleUsers(c *client.Client, args []string) {
-	switch args[0] {
-	case "list":
+func initUserHandler() CommandHandler {
+	handler := NewBaseCommandHandler("users")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
 		users, err := c.ListUsers()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, user := range users {
 			fmt.Printf("%+v\n", user)
 		}
+		return nil
+	})
 
-	case "create":
-		if len(args) < 3 {
-			panic("required: name password")
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
 		user := types.User{
-			Name:     args[1],
-			Password: args[2],
+			Name:     args[0],
+			Password: args[1],
 		}
 		// Add optional namespaces if provided
-		if len(args) > 3 {
-			user.Namespaces = args[3:]
+		if len(args) > 2 {
+			user.Namespaces = args[2:]
 		}
-		err := c.CreateUser(args[1], user)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("user created successfully")
+		return c.CreateUser(args[0], user)
+	})
 
-	case "delete":
-		if len(args) < 2 {
-			panic("user name required")
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		err := c.DeleteUser(args[1])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("user deleted successfully")
+		return c.DeleteUser(args[0])
+	})
 
-	case "get":
-		if len(args) < 2 {
-			panic("user name required")
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
 		}
-		user, err := c.GetUser(args[1])
+		user, err := c.GetUser(args[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Printf("%+v\n", user)
+		return printJSON(user)
+	})
 
-	case "setpassword":
-		if len(args) < 3 {
-			panic("required: name password")
+	handler.RegisterCommand("setpassword", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.SetUserPassword(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("user password set successfully")
+		return c.SetUserPassword(args[0], args[1])
+	})
 
-	case "addnamespace":
-		if len(args) < 3 {
-			panic("required: username namespace")
+	handler.RegisterCommand("addnamespace", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.AddNamespaceToUser(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("namespace added to user successfully")
+		return c.AddNamespaceToUser(args[0], args[1])
+	})
 
-	case "removenamespace":
-		if len(args) < 3 {
-			panic("required: username namespace")
+	handler.RegisterCommand("removenamespace", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
 		}
-		err := c.RemoveNamespaceFromUser(args[1], args[2])
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("namespace removed from user successfully")
+		return c.RemoveNamespaceFromUser(args[0], args[1])
+	})
 
-	default:
-		panic("unknown action: " + args[0])
+	return handler
+}
+
+func handleError(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
+}
+
+func validateArgs(args []string, required int) error {
+	if len(args) < required {
+		return fmt.Errorf("insufficient arguments: expected %d, got %d", required, len(args))
+	}
+	return nil
+}
+
+func parseInt(s string) (int, error) {
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("invalid number: %s", s)
+	}
+	return val, nil
+}
+
+func printJSON(v interface{}) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(v)
 }
 
 func init() {

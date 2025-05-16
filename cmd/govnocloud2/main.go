@@ -179,13 +179,13 @@ func initConfig() error {
 			ImagesDir: "/var/lib/govnocloud2/images",
 			Monitoring: MonitoringConfig{
 				Enabled:             true,
-				GrafanaHost:         "grafana.govno.cloud",
-				PrometheusHost:      "prometheus.govno.cloud",
-				AlertmanagerHost:    "alertmanager.govno.cloud",
-				KubevirtManagerHost: "kubevirt.govno.cloud",
+				GrafanaHost:         "grafana.govno2.cloud",
+				PrometheusHost:      "prometheus.govno2.cloud",
+				AlertmanagerHost:    "alertmanager.govno2.cloud",
+				KubevirtManagerHost: "kubevirt.govno2.cloud",
 			},
 			Dashboard: DashboardConfig{
-				Host: "dashboard.govno.cloud",
+				Host: "dashboard.govno2.cloud",
 			},
 			Nat: NatConfig{
 				Enabled:           true,
@@ -193,7 +193,7 @@ func initConfig() error {
 				InternalInterface: "enp0s25",
 			},
 			Longhorn: LonghornConfig{
-				Host: "longhorn.govno.cloud",
+				Host: "longhorn.govno2.cloud",
 				Disk: "sda",
 			},
 		},
