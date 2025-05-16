@@ -10,7 +10,7 @@ import (
 )
 
 // InstallLonghorn installs Longhorn storage system into the Kubernetes cluster
-func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost, disk string) error {
+func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost, disk string, formatDisk bool) error {
 	log.Println("Installing Longhorn storage system...")
 
 	// Add the Longhorn Helm repository
@@ -35,23 +35,27 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		return fmt.Errorf("failed to create longhorn namespace: %s: %w", out, err)
 	}
 
-	cmd = "sudo apt-get update ; " +
+	baseCmd := "sudo apt-get update ; " +
 		"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils ; " +
 		"sudo modprobe dm_crypt ; " +
 		"sudo systemctl disable --now multipathd.socket ; " +
 		"sudo systemctl disable --now multipathd.service ; " +
 		"sudo systemctl enable --now iscsid ; " +
-		"sudo umount /mnt ; sudo umount /var/lib/longhorn ; " +
-		"sudo dd if=/dev/zero of=/dev/" + disk + " bs=1M count=100 ; " +
-		"sudo blockdev --rereadpt /dev/" + disk + " ; " +
-		"sudo mkfs.ext4 /dev/" + disk + " ; " +
-		"sudo mkdir -p /var/lib/longhorn ; " +
-		"sudo mount /dev/" + disk + " /var/lib/longhorn"
+		"sudo umount /mnt ; sudo umount /var/lib/longhorn"
+
+	if formatDisk {
+		baseCmd += fmt.Sprintf(" ; sudo dd if=/dev/zero of=/dev/%s bs=1M count=100 ; "+
+			"sudo blockdev --rereadpt /dev/%s ; "+
+			"sudo mkfs.ext4 /dev/%s", disk, disk, disk)
+	}
+
+	baseCmd += fmt.Sprintf(" ; sudo mkdir -p /var/lib/longhorn ; "+
+		"sudo mount /dev/%s /var/lib/longhorn", disk)
 
 	for _, nodeIP := range nodeIPs {
 		// Install required packages
 		cmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
-			"'"+cmd+"'",
+			"'"+baseCmd+"'",
 			keyPath, user, nodeIP)
 		log.Println(cmd)
 		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {

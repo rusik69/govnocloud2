@@ -101,8 +101,9 @@ type NatConfig struct {
 }
 
 type LonghornConfig struct {
-	Host string
-	Disk string
+	Host       string
+	Disk       string
+	FormatDisk bool
 }
 
 var (
@@ -243,6 +244,7 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.StringVarP(&cfg.Install.Dashboard.Host, "dashboardhost", "", cfg.Install.Dashboard.Host, "dashboard host")
 	flags.StringVarP(&cfg.Install.Longhorn.Host, "longhornhost", "", cfg.Install.Longhorn.Host, "longhorn host")
 	flags.StringVarP(&cfg.Install.Longhorn.Disk, "longhorndisk", "", cfg.Install.Longhorn.Disk, "longhorn disk")
+	flags.BoolVarP(&cfg.Install.Longhorn.FormatDisk, "longhornformatdisk", "", cfg.Install.Longhorn.FormatDisk, "format longhorn disk")
 	flags.BoolVarP(&cfg.Install.Nat.Enabled, "nat", "", cfg.Install.Nat.Enabled, "enable nat")
 	flags.StringVarP(&cfg.Install.Nat.ExternalInterface, "nat-external-interface", "", cfg.Install.Nat.ExternalInterface, "external interface")
 	flags.StringVarP(&cfg.Install.Nat.InternalInterface, "nat-internal-interface", "", cfg.Install.Nat.InternalInterface, "internal interface")
