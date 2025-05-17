@@ -59,9 +59,6 @@ func Deploy(host, serverHost, webHost, serverPort, webPort, user, password, key,
 	if err := ssh.Rsync("pkg/web/templates/*", webPath+"/templates", host, "root", key); err != nil {
 		return fmt.Errorf("failed to sync web files: %w", err)
 	}
-	if err := ssh.Rsync("pkg/web/static/*", webPath+"/static", host, "root", key); err != nil {
-		return fmt.Errorf("failed to sync web files: %w", err)
-	}
 
 	// Make binary executable
 	cmd := fmt.Sprintf("sudo chmod +x %s", destPath)
