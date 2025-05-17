@@ -13,7 +13,7 @@ func Listen(host, port, webPath string) error {
 	router.Use(gin.Recovery())
 
 	// Load templates
-	router.LoadHTMLGlob(webPath + "/*.html")
+	router.LoadHTMLGlob(webPath + "/templates/*.html")
 
 	// Log requests
 	router.Use(func(c *gin.Context) {
