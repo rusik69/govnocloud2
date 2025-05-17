@@ -194,8 +194,9 @@ func initConfig() error {
 				InternalInterface: "enp0s25",
 			},
 			Longhorn: LonghornConfig{
-				Host: "longhorn.govno2.cloud",
-				Disk: "sda",
+				Host:       "longhorn.govno2.cloud",
+				Disk:       "sda",
+				FormatDisk: false,
 			},
 		},
 	}
