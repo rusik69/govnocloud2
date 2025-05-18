@@ -66,7 +66,7 @@
 
 {{ define "nodes_scripts" }}
 <script>
-    const API_BASE = 'http://master.govno.cloud:6969/api/v0';
+    const API_BASE = '{{ .ApiBase }}/api/v0';
 
     // Load nodes on page load
     document.addEventListener('DOMContentLoaded', loadNodes);

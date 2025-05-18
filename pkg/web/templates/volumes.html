@@ -89,7 +89,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        const API_BASE = 'http://master.govno.cloud:6969/api/v0';
+    <script>
+        const API_BASE = '{{ .ApiBase }}/api/v0';
 
         // Load volumes on page load
         document.addEventListener('DOMContentLoaded', loadVolumes);

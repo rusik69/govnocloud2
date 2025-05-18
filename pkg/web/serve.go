@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Listen(host, port, webPath string) error {
+func Listen(host, port, webPath, apiBase string) error {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
@@ -34,53 +34,60 @@ func Listen(host, port, webPath string) error {
 	// Redirect root to nodes page
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title":  "GovnoCloud Dashboard",
-			"Active": "home",
+			"Title":   "GovnoCloud Dashboard",
+			"Active":  "home",
+			"ApiBase": apiBase,
 		})
 	})
 
 	router.GET("/nodes", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "nodes.html", gin.H{
-			"Title":  "Nodes - GovnoCloud",
-			"Active": "nodes",
+			"Title":   "Nodes - GovnoCloud",
+			"Active":  "nodes",
+			"ApiBase": apiBase,
 		})
 	})
 
 	router.GET("/vms", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "vms.html", gin.H{
-			"Title":  "VMs - GovnoCloud",
-			"Active": "vms",
+			"Title":   "VMs - GovnoCloud",
+			"Active":  "vms",
+			"ApiBase": apiBase,
 		})
 	})
 
 	router.GET("/containers", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "containers.html", gin.H{
-			"Title":  "Containers - GovnoCloud",
-			"Active": "containers",
+			"Title":   "Containers - GovnoCloud",
+			"Active":  "containers",
+			"ApiBase": apiBase,
 		})
 	})
 
 	router.GET("/dbs", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "dbs.html", gin.H{
-			"Title":  "Databases - GovnoCloud",
-			"Active": "dbs",
+			"Title":   "Databases - GovnoCloud",
+			"Active":  "dbs",
+			"ApiBase": apiBase,
 		})
 	})
 
 	router.GET("/volumes", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "volumes.html", gin.H{
-			"Title":  "Volumes - GovnoCloud",
-			"Active": "volumes",
+			"Title":   "Volumes - GovnoCloud",
+			"Active":  "volumes",
+			"ApiBase": apiBase,
 		})
 	})
 
 	router.GET("/namespaces", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "namespaces.html", gin.H{
-			"Title":  "Namespaces - GovnoCloud",
-			"Active": "namespaces",
+			"Title":   "Namespaces - GovnoCloud",
+			"Active":  "namespaces",
+			"ApiBase": apiBase,
 		})
 	})
 
-	log.Printf("Starting web server on %s:%s (path: %s)", host, port, webPath)
+	log.Printf("Starting web server on %s:%s (path: %s, api base: %s)", host, port, webPath, apiBase)
 	return router.Run(host + ":" + port)
 }
