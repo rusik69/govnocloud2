@@ -93,6 +93,7 @@ type InstallConfig struct {
 	Dashboard  DashboardConfig
 	Longhorn   LonghornConfig
 	Nat        NatConfig
+	Web        WebConfig
 }
 
 type NatConfig struct {
@@ -251,6 +252,10 @@ func setupInstallFlags(cmd *cobra.Command) {
 	flags.BoolVarP(&cfg.Install.Nat.Enabled, "nat", "", cfg.Install.Nat.Enabled, "enable nat")
 	flags.StringVarP(&cfg.Install.Nat.ExternalInterface, "nat-external-interface", "", cfg.Install.Nat.ExternalInterface, "external interface")
 	flags.StringVarP(&cfg.Install.Nat.InternalInterface, "nat-internal-interface", "", cfg.Install.Nat.InternalInterface, "internal interface")
+	flags.StringVarP(&cfg.Install.Web.Host, "web-host", "", cfg.Install.Web.Host, "web host")
+	flags.StringVarP(&cfg.Install.Web.Port, "web-port", "", cfg.Install.Web.Port, "web port")
+	flags.StringVarP(&cfg.Install.Web.Path, "web-path", "", cfg.Install.Web.Path, "web path")
+	flags.StringVarP(&cfg.Install.Web.MasterHost, "web-master-host", "", cfg.Install.Web.MasterHost, "web master host")
 }
 
 func setupUninstallFlags(cmd *cobra.Command) {
