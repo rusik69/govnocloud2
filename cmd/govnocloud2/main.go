@@ -48,9 +48,10 @@ type KubeConfig struct {
 }
 
 type WebConfig struct {
-	Host string
-	Port string
-	Path string
+	Host       string
+	Port       string
+	Path       string
+	MasterHost string
 }
 
 type ClientConfig struct {
@@ -150,9 +151,10 @@ func initConfig() error {
 			Key:        "/home/ubuntu/.ssh/id_rsa",
 		},
 		Web: WebConfig{
-			Host: "0.0.0.0",
-			Port: "8080",
-			Path: "/var/www/govnocloud2",
+			Host:       "0.0.0.0",
+			Port:       "8080",
+			Path:       "/var/www/govnocloud2",
+			MasterHost: "master.govno2.cloud",
 		},
 		Client: ClientConfig{
 			Host:     "127.0.0.1",
