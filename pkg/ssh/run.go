@@ -84,14 +84,21 @@ func (r *RunConfig) createSSHClient() (*ssh.Client, error) {
 func (r *RunConfig) createClientConfig() (*ssh.ClientConfig, error) {
 	var auth []ssh.AuthMethod
 
+	// Try key-based authentication first
+	if r.KeyPath != "" {
+		signer, err := r.loadPrivateKey()
+		if err == nil {
+			auth = append(auth, ssh.PublicKeys(signer))
+		}
+	}
+
+	// Add password authentication as fallback
 	if r.Password != "" {
 		auth = append(auth, ssh.Password(r.Password))
-	} else {
-		signer, err := r.loadPrivateKey()
-		if err != nil {
-			return nil, err
-		}
-		auth = append(auth, ssh.PublicKeys(signer))
+	}
+
+	if len(auth) == 0 {
+		return nil, fmt.Errorf("no authentication methods available")
 	}
 
 	return &ssh.ClientConfig{

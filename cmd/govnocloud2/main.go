@@ -165,7 +165,7 @@ func initConfig() error {
 			MasterHost: "10.0.0.1",
 			User:       "ubuntu",
 			Password:   defaultPassword,
-			Key:        "/home/ubuntu/.ssh/id_rsa",
+			Key:        filepath.Join(homeDir, ".ssh/id_rsa"),
 		},
 		Web: WebConfig{
 			Host:       "0.0.0.0",
