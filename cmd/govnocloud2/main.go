@@ -247,9 +247,6 @@ func validateConfig() error {
 	if err := checkFilePermissions(cfg.SSH.KeyPath); err != nil {
 		return err
 	}
-	if err := checkFilePermissions(cfg.SSH.PubKeyPath); err != nil {
-		return err
-	}
 
 	return nil
 }
