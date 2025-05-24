@@ -64,7 +64,14 @@ stop-vm-mac:
 
 start-vm-mac:
 	./bin/govnocloud2-darwin-arm64 client vms start test-vm test --host 192.168.1.83
+
 exec:
 	chmod +x bin/*
+
+tag:
+	@echo "Current version: $$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")"
+	@read -p "Enter new version (e.g. v1.2.3): " version; \
+	git tag -a $$version -m "Release $$version"; \
+	git push origin $$version
 
 all: get build
