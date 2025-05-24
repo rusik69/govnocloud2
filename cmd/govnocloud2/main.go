@@ -143,7 +143,7 @@ func initConfig() error {
 		SSH: SSHConfig{
 			KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
 			PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
-			User:       os.Getenv("GOVNOCLOUD_SSH_USER"),
+			User:       "ubuntu",
 			Password:   defaultPassword,
 		},
 		Master: MasterConfig{
@@ -160,23 +160,23 @@ func initConfig() error {
 			Interface: "enp0s25",
 		},
 		Server: types.ServerConfig{
-			Host:       os.Getenv("GOVNOCLOUD_SERVER_HOST"),
-			Port:       os.Getenv("GOVNOCLOUD_SERVER_PORT"),
+			Host:       "0.0.0.0",
+			Port:       "6969",
 			MasterHost: "10.0.0.1",
-			User:       os.Getenv("GOVNOCLOUD_SERVER_USER"),
+			User:       "ubuntu",
 			Password:   defaultPassword,
 			Key:        "/home/ubuntu/.ssh/id_rsa",
 		},
 		Web: WebConfig{
-			Host:       os.Getenv("GOVNOCLOUD_WEB_HOST"),
-			Port:       os.Getenv("GOVNOCLOUD_WEB_PORT"),
+			Host:       "0.0.0.0",
+			Port:       "8080",
 			Path:       "/var/www/govnocloud2",
 			MasterHost: "master.govno2.cloud",
 		},
 		Client: ClientConfig{
-			Host:     os.Getenv("GOVNOCLOUD_CLIENT_HOST"),
-			Port:     os.Getenv("GOVNOCLOUD_CLIENT_PORT"),
-			User:     os.Getenv("GOVNOCLOUD_CLIENT_USER"),
+			Host:     "localhost",
+			Port:     "6969",
+			User:     "ubuntu",
 			Password: defaultPassword,
 		},
 		Install: InstallConfig{
