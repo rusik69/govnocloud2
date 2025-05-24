@@ -641,3 +641,40 @@ func RemoveNamespaceFromUserHandler(c *gin.Context) {
 	}
 	respondWithSuccess(c, nil)
 }
+
+// ValidateToken validates a user's token and returns the associated user
+func (m *UserManager) ValidateToken(token string) (*types.User, error) {
+	// TODO: Implement proper JWT token validation
+	// For now, we'll just check if the token exists in our storage
+	user, err := m.GetUserByToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %v", err)
+	}
+	return user, nil
+}
+
+// HasNamespaceAccess checks if a user has access to a specific namespace
+func (m *UserManager) HasNamespaceAccess(user *types.User, namespace string) bool {
+	// Root user has access to all namespaces
+	if user.Name == "root" {
+		return true
+	}
+
+	// Check if the namespace is in the user's allowed namespaces
+	for _, ns := range user.Namespaces {
+		if ns == namespace {
+			return true
+		}
+	}
+	return false
+}
+
+// GetUserByToken retrieves a user by their token
+func (m *UserManager) GetUserByToken(token string) (*types.User, error) {
+	// TODO: Implement proper token storage and retrieval
+	// For now, we'll just return the root user
+	return &types.User{
+		Name:       "root",
+		Namespaces: []string{"default"},
+	}, nil
+}

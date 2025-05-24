@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/rusik69/govnocloud2/pkg/client"
 	"github.com/rusik69/govnocloud2/pkg/types"
@@ -102,6 +105,67 @@ var clientCmd = &cobra.Command{
 	},
 }
 
+// validateArgs performs comprehensive validation of command arguments
+func validateArgs(args []string, required int) error {
+	if len(args) < required {
+		return fmt.Errorf("insufficient arguments: expected %d, got %d", required, len(args))
+	}
+
+	// Validate each argument
+	for i, arg := range args {
+		if arg == "" {
+			return fmt.Errorf("argument %d cannot be empty", i+1)
+		}
+		// Check for potentially dangerous characters
+		if strings.ContainsAny(arg, ";&|`$") {
+			return fmt.Errorf("argument %d contains potentially dangerous characters", i+1)
+		}
+	}
+
+	return nil
+}
+
+// validateResourceName checks if a resource name is valid
+func validateResourceName(name string) error {
+	if name == "" {
+		return fmt.Errorf("resource name cannot be empty")
+	}
+	// Only allow alphanumeric characters, hyphens, and underscores
+	if !regexp.MustCompile(`^[a-zA-Z0-9-_]+$`).MatchString(name) {
+		return fmt.Errorf("resource name can only contain alphanumeric characters, hyphens, and underscores")
+	}
+	return nil
+}
+
+// validatePort checks if a port number is valid
+func validatePort(port string) error {
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return fmt.Errorf("invalid port number: %v", err)
+	}
+	if p < 1 || p > 65535 {
+		return fmt.Errorf("port number must be between 1 and 65535")
+	}
+	return nil
+}
+
+// validateIP checks if an IP address is valid
+func validateIP(ip string) error {
+	if net.ParseIP(ip) == nil {
+		return fmt.Errorf("invalid IP address: %s", ip)
+	}
+	return nil
+}
+
+// validateMAC checks if a MAC address is valid
+func validateMAC(mac string) error {
+	_, err := net.ParseMAC(mac)
+	if err != nil {
+		return fmt.Errorf("invalid MAC address: %v", err)
+	}
+	return nil
+}
+
 func initNodeHandler() CommandHandler {
 	handler := NewBaseCommandHandler("nodes")
 
@@ -130,6 +194,33 @@ func initNodeHandler() CommandHandler {
 	handler.RegisterCommand("add", func(c *client.Client, args []string) error {
 		if err := validateArgs(args, 5); err != nil {
 			return err
+		}
+		// Validate node name
+		if err := validateResourceName(args[0]); err != nil {
+			return err
+		}
+		// Validate IP address
+		if err := validateIP(args[1]); err != nil {
+			return err
+		}
+		// Validate MAC address
+		if err := validateMAC(args[2]); err != nil {
+			return err
+		}
+		// Validate CPU and memory values
+		cpu, err := parseInt(args[3])
+		if err != nil {
+			return err
+		}
+		if cpu < 1 {
+			return fmt.Errorf("CPU count must be at least 1")
+		}
+		mem, err := parseInt(args[4])
+		if err != nil {
+			return err
+		}
+		if mem < 512 {
+			return fmt.Errorf("memory must be at least 512MB")
 		}
 		return c.AddNode(args[0], args[1], args[2], args[3], args[4])
 	})
@@ -171,6 +262,29 @@ func initVMHandler() CommandHandler {
 	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
 		if err := validateArgs(args, 4); err != nil {
 			return err
+		}
+		// Validate namespace name
+		if err := validateResourceName(args[0]); err != nil {
+			return err
+		}
+		// Validate VM name
+		if err := validateResourceName(args[1]); err != nil {
+			return err
+		}
+		// Validate CPU and memory values
+		cpu, err := parseInt(args[2])
+		if err != nil {
+			return err
+		}
+		if cpu < 1 {
+			return fmt.Errorf("CPU count must be at least 1")
+		}
+		mem, err := parseInt(args[3])
+		if err != nil {
+			return err
+		}
+		if mem < 512 {
+			return fmt.Errorf("memory must be at least 512MB")
 		}
 		return c.CreateVM(args[0], args[1], args[2], args[3])
 	})
@@ -603,13 +717,6 @@ func handleError(err error) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-func validateArgs(args []string, required int) error {
-	if len(args) < required {
-		return fmt.Errorf("insufficient arguments: expected %d, got %d", required, len(args))
-	}
-	return nil
 }
 
 func parseInt(s string) (int, error) {

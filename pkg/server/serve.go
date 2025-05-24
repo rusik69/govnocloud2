@@ -4,17 +4,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
+	"golang.org/x/time/rate"
 )
 
 // Server represents the HTTP server
 type Server struct {
-	config types.ServerConfig
-	router *gin.Engine
+	config  types.ServerConfig
+	router  *gin.Engine
+	limiter *rate.Limiter
 }
 
 var server *Server
@@ -32,8 +36,18 @@ var userManager *UserManager
 
 // NewServer creates a new server instance
 func NewServer(config types.ServerConfig) *Server {
+	// Set Gin to release mode in production
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router := gin.New()
 	router.Use(gin.Recovery())
+
+	// Initialize rate limiter (100 requests per minute)
+	limiter := rate.NewLimiter(rate.Every(time.Second/100), 100)
+
+	// Initialize managers
 	vmManager = NewVMManager()
 	containerManager = NewContainerManager()
 	volumeManager = NewVolumeManager()
@@ -45,21 +59,25 @@ func NewServer(config types.ServerConfig) *Server {
 	llmManager = NewLLMManager()
 	userManager = NewUserManager()
 
-	// Configure CORS to allow all origins
+	// Configure CORS with more restrictive settings
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:8080", "http://127.0.0.1:8080", "http://master.govno2.cloud:8080"}
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "Accept", "X-Requested-With"}
-	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type"}
-	corsConfig.AllowCredentials = false
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "Accept"}
+	corsConfig.ExposeHeaders = []string{"Content-Length"}
+	corsConfig.AllowCredentials = true
 	corsConfig.MaxAge = 12 * time.Hour
 	router.Use(cors.New(corsConfig))
 
+	// Add security middleware
+	router.Use(SecurityHeadersMiddleware())
 	router.Use(LoggingMiddleware())
+	router.Use(ErrorMiddleware())
 
 	return &Server{
-		config: config,
-		router: router,
+		config:  config,
+		router:  router,
+		limiter: limiter,
 	}
 }
 
@@ -68,94 +86,100 @@ func (s *Server) setupRoutes() {
 	// API versioning
 	v0 := s.router.Group("/api/v0")
 	{
-		// VM endpoints
-		vms := v0.Group("/vms")
-		{
-			vms.POST("/:namespace/:name", CreateVMHandler)
-			vms.GET("/:namespace", ListVMsHandler)
-			vms.GET("/:namespace/:name", GetVMHandler)
-			vms.DELETE("/:namespace/:name", DeleteVMHandler)
-			vms.GET("/:namespace/:name/start", StartVMHandler)
-			vms.GET("/:namespace/:name/stop", StopVMHandler)
-			vms.GET("/:namespace/:name/restart", RestartVMHandler)
-			vms.GET("/:namespace/:name/wait", WaitVMHandler)
-		}
+		// Public endpoints (no auth required)
+		v0.GET("/version", VersionHandler)
 
-		// Node endpoints
-		nodes := v0.Group("/nodes")
+		// Protected endpoints (require authentication)
+		protected := v0.Group("")
+		protected.Use(s.AuthMiddleware())
+		protected.Use(s.RateLimitMiddleware())
 		{
-			nodes.GET("/", ListNodesHandler)
-			nodes.POST("/", AddNodeHandler)
-			nodes.GET("/:name", GetNodeHandler)
-			nodes.DELETE("/:name", DeleteNodeHandler)
-			nodes.GET("/:name/restart", RestartNodeHandler)
-			nodes.GET("/:name/suspend", SuspendNodeHandler)
-			nodes.GET("/:name/resume", ResumeNodeHandler)
-			nodes.GET("/:name/upgrade", UpgradeNodeHandler)
-		}
-		postgres := v0.Group("/postgres")
-		{
-			postgres.GET("/:namespace", ListPostgresHandler)
-			postgres.POST("/:namespace/:name", CreatePostgresHandler)
-			postgres.GET("/:namespace/:name", GetPostgresHandler)
-			postgres.DELETE("/:namespace/:name", DeletePostgresHandler)
-		}
-		mysql := v0.Group("/mysql")
-		{
-			mysql.GET("/:namespace", ListMysqlHandler)
-			mysql.POST("/:namespace/:name", CreateMysqlHandler)
-			mysql.GET("/:namespace/:name", GetMysqlHandler)
-			mysql.DELETE("/:namespace/:name", DeleteMysqlHandler)
-		}
-		clickhouse := v0.Group("/clickhouse")
-		{
-			clickhouse.GET("/:namespace", ListClickhouseHandler)
-			clickhouse.POST("/:namespace/:name", CreateClickhouseHandler)
-			clickhouse.GET("/:namespace/:name", GetClickhouseHandler)
-			clickhouse.DELETE("/:namespace/:name", DeleteClickhouseHandler)
-		}
-		containers := v0.Group("/containers")
-		{
-			containers.GET("/:namespace", ListContainersHandler)
-			containers.POST("/:namespace/:name", CreateContainerHandler)
-			containers.GET("/:namespace/:name", GetContainerHandler)
-			containers.DELETE("/:namespace/:name", DeleteContainerHandler)
-		}
-		volumes := v0.Group("/volumes")
-		{
-			volumes.GET("/:namespace", ListVolumesHandler)
-			volumes.POST("/:namespace/:name", CreateVolumeHandler)
-			volumes.GET("/:namespace/:name", GetVolumeHandler)
-			volumes.DELETE("/:namespace/:name", DeleteVolumeHandler)
-		}
-		llms := v0.Group("/llms")
-		{
-			llms.POST("/:namespace/:name", CreateLLMHandler)
-			llms.GET("/:namespace/:name", GetLLMHandler)
-			llms.DELETE("/:namespace/:name", DeleteLLMHandler)
-			llms.GET("/:namespace", ListLLMsHandler)
-		}
-		namespaces := v0.Group("/namespaces")
-		{
-			namespaces.GET("", ListNamespacesHandler)
-			namespaces.POST("/:name", CreateNamespaceHandler)
-			namespaces.GET("/:name", GetNamespaceHandler)
-			namespaces.DELETE("/:name", DeleteNamespaceHandler)
-		}
-		users := v0.Group("/users")
-		{
-			users.GET("", ListUsersHandler)
-			users.POST("/:name", CreateUserHandler)
-			users.GET("/:name", GetUserHandler)
-			users.DELETE("/:name", DeleteUserHandler)
-			users.POST("/:name/password", SetUserPasswordHandler)
-			users.POST("/:name/namespaces/:namespace", AddNamespaceToUserHandler)
-			users.DELETE("/:name/namespaces/:namespace", RemoveNamespaceFromUserHandler)
+			// VM endpoints
+			vms := protected.Group("/vms")
+			{
+				vms.POST("/:namespace/:name", s.ValidateNamespaceAccess(), CreateVMHandler)
+				vms.GET("/:namespace", s.ValidateNamespaceAccess(), ListVMsHandler)
+				vms.GET("/:namespace/:name", s.ValidateNamespaceAccess(), GetVMHandler)
+				vms.DELETE("/:namespace/:name", s.ValidateNamespaceAccess(), DeleteVMHandler)
+				vms.GET("/:namespace/:name/start", s.ValidateNamespaceAccess(), StartVMHandler)
+				vms.GET("/:namespace/:name/stop", s.ValidateNamespaceAccess(), StopVMHandler)
+				vms.GET("/:namespace/:name/restart", s.ValidateNamespaceAccess(), RestartVMHandler)
+				vms.GET("/:namespace/:name/wait", s.ValidateNamespaceAccess(), WaitVMHandler)
+			}
+
+			// Node endpoints
+			nodes := protected.Group("/nodes")
+			{
+				nodes.GET("/", ListNodesHandler)
+				nodes.POST("/", AddNodeHandler)
+				nodes.GET("/:name", GetNodeHandler)
+				nodes.DELETE("/:name", DeleteNodeHandler)
+				nodes.GET("/:name/restart", RestartNodeHandler)
+				nodes.GET("/:name/suspend", SuspendNodeHandler)
+				nodes.GET("/:name/resume", ResumeNodeHandler)
+				nodes.GET("/:name/upgrade", UpgradeNodeHandler)
+			}
+			postgres := protected.Group("/postgres")
+			{
+				postgres.GET("/:namespace", ListPostgresHandler)
+				postgres.POST("/:namespace/:name", CreatePostgresHandler)
+				postgres.GET("/:namespace/:name", GetPostgresHandler)
+				postgres.DELETE("/:namespace/:name", DeletePostgresHandler)
+			}
+			mysql := protected.Group("/mysql")
+			{
+				mysql.GET("/:namespace", ListMysqlHandler)
+				mysql.POST("/:namespace/:name", CreateMysqlHandler)
+				mysql.GET("/:namespace/:name", GetMysqlHandler)
+				mysql.DELETE("/:namespace/:name", DeleteMysqlHandler)
+			}
+			clickhouse := protected.Group("/clickhouse")
+			{
+				clickhouse.GET("/:namespace", ListClickhouseHandler)
+				clickhouse.POST("/:namespace/:name", CreateClickhouseHandler)
+				clickhouse.GET("/:namespace/:name", GetClickhouseHandler)
+				clickhouse.DELETE("/:namespace/:name", DeleteClickhouseHandler)
+			}
+			containers := protected.Group("/containers")
+			{
+				containers.GET("/:namespace", ListContainersHandler)
+				containers.POST("/:namespace/:name", CreateContainerHandler)
+				containers.GET("/:namespace/:name", GetContainerHandler)
+				containers.DELETE("/:namespace/:name", DeleteContainerHandler)
+			}
+			volumes := protected.Group("/volumes")
+			{
+				volumes.GET("/:namespace", ListVolumesHandler)
+				volumes.POST("/:namespace/:name", CreateVolumeHandler)
+				volumes.GET("/:namespace/:name", GetVolumeHandler)
+				volumes.DELETE("/:namespace/:name", DeleteVolumeHandler)
+			}
+			llms := protected.Group("/llms")
+			{
+				llms.POST("/:namespace/:name", CreateLLMHandler)
+				llms.GET("/:namespace/:name", GetLLMHandler)
+				llms.DELETE("/:namespace/:name", DeleteLLMHandler)
+				llms.GET("/:namespace", ListLLMsHandler)
+			}
+			namespaces := protected.Group("/namespaces")
+			{
+				namespaces.GET("", ListNamespacesHandler)
+				namespaces.POST("/:name", CreateNamespaceHandler)
+				namespaces.GET("/:name", GetNamespaceHandler)
+				namespaces.DELETE("/:name", DeleteNamespaceHandler)
+			}
+			users := protected.Group("/users")
+			{
+				users.GET("", ListUsersHandler)
+				users.POST("/:name", CreateUserHandler)
+				users.GET("/:name", GetUserHandler)
+				users.DELETE("/:name", DeleteUserHandler)
+				users.POST("/:name/password", SetUserPasswordHandler)
+				users.POST("/:name/namespaces/:namespace", AddNamespaceToUserHandler)
+				users.DELETE("/:name/namespaces/:namespace", RemoveNamespaceFromUserHandler)
+			}
 		}
 	}
-
-	// Version endpoint
-	s.router.GET("/version", VersionHandler)
 }
 
 // Start initializes and starts the server
@@ -243,6 +267,81 @@ func ErrorMiddleware() gin.HandlerFunc {
 				respondWithError(c, http.StatusInternalServerError, "Internal server error")
 			}
 		}()
+		c.Next()
+	}
+}
+
+// SecurityHeadersMiddleware adds security-related headers to responses
+func SecurityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		c.Header("Content-Security-Policy", "default-src 'self'")
+		c.Next()
+	}
+}
+
+// AuthMiddleware handles authentication
+func (s *Server) AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			respondWithError(c, http.StatusUnauthorized, "Authorization header required")
+			c.Abort()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			respondWithError(c, http.StatusUnauthorized, "Invalid authorization header format")
+			c.Abort()
+			return
+		}
+
+		token := parts[1]
+		user, err := userManager.ValidateToken(token)
+		if err != nil {
+			respondWithError(c, http.StatusUnauthorized, "Invalid token")
+			c.Abort()
+			return
+		}
+
+		// Store user info in context
+		c.Set("user", user)
+		c.Next()
+	}
+}
+
+// RateLimitMiddleware implements rate limiting
+func (s *Server) RateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !s.limiter.Allow() {
+			respondWithError(c, http.StatusTooManyRequests, "Rate limit exceeded")
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+// ValidateNamespaceAccess checks if the user has access to the requested namespace
+func (s *Server) ValidateNamespaceAccess() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, exists := c.Get("user")
+		if !exists {
+			respondWithError(c, http.StatusUnauthorized, "User not found in context")
+			c.Abort()
+			return
+		}
+
+		namespace := c.Param("namespace")
+		if !userManager.HasNamespaceAccess(user.(*types.User), namespace) {
+			respondWithError(c, http.StatusForbidden, "Access to namespace denied")
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

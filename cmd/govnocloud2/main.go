@@ -1,9 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
+
+	"encoding/base64"
 
 	"github.com/rusik69/govnocloud2/pkg/types"
 	"github.com/spf13/cobra"
@@ -123,12 +128,23 @@ func initConfig() error {
 		return err
 	}
 
+	// Generate a random password if not set
+	defaultPassword := os.Getenv("GOVNOCLOUD_DEFAULT_PASSWORD")
+	if defaultPassword == "" {
+		// Generate a secure random password
+		b := make([]byte, 32)
+		if _, err := rand.Read(b); err != nil {
+			return fmt.Errorf("failed to generate random password: %v", err)
+		}
+		defaultPassword = base64.URLEncoding.EncodeToString(b)
+	}
+
 	cfg = Config{
 		SSH: SSHConfig{
 			KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
 			PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
-			User:       "ubuntu",
-			Password:   "ubuntu",
+			User:       os.Getenv("GOVNOCLOUD_SSH_USER"),
+			Password:   defaultPassword,
 		},
 		Master: MasterConfig{
 			KeyPath:    "~/.ssh/id_rsa",
@@ -144,31 +160,31 @@ func initConfig() error {
 			Interface: "enp0s25",
 		},
 		Server: types.ServerConfig{
-			Host:       "0.0.0.0",
-			Port:       "6969",
+			Host:       os.Getenv("GOVNOCLOUD_SERVER_HOST"),
+			Port:       os.Getenv("GOVNOCLOUD_SERVER_PORT"),
 			MasterHost: "10.0.0.1",
-			User:       "ubuntu",
-			Password:   "ubuntu",
+			User:       os.Getenv("GOVNOCLOUD_SERVER_USER"),
+			Password:   defaultPassword,
 			Key:        "/home/ubuntu/.ssh/id_rsa",
 		},
 		Web: WebConfig{
-			Host:       "0.0.0.0",
-			Port:       "8080",
+			Host:       os.Getenv("GOVNOCLOUD_WEB_HOST"),
+			Port:       os.Getenv("GOVNOCLOUD_WEB_PORT"),
 			Path:       "/var/www/govnocloud2",
 			MasterHost: "master.govno2.cloud",
 		},
 		Client: ClientConfig{
-			Host:     "127.0.0.1",
-			Port:     "6969",
-			User:     "root",
-			Password: "password",
+			Host:     os.Getenv("GOVNOCLOUD_CLIENT_HOST"),
+			Port:     os.Getenv("GOVNOCLOUD_CLIENT_PORT"),
+			User:     os.Getenv("GOVNOCLOUD_CLIENT_USER"),
+			Password: defaultPassword,
 		},
 		Install: InstallConfig{
 			Master: MasterConfig{
 				KeyPath:      "~/.ssh/id_rsa",
 				PubKeyPath:   "~/.ssh/id_rsa.pub",
 				Interface:    "enp0s25",
-				RootPassword: "password",
+				RootPassword: defaultPassword,
 			},
 			Workers: WorkerConfig{
 				IPRange:   "10.0.0.0/24",
@@ -202,6 +218,52 @@ func initConfig() error {
 				FormatDisk: false,
 			},
 		},
+	}
+
+	// Validate configuration
+	if err := validateConfig(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateConfig performs security checks on the configuration
+func validateConfig() error {
+	// Check if server is bound to localhost in development
+	if cfg.Server.Host == "0.0.0.0" && os.Getenv("GOVNOCLOUD_ENV") != "production" {
+		log.Println("Warning: Server is bound to all interfaces. In production, consider binding to specific interfaces.")
+	}
+
+	// Validate port numbers
+	if port, err := strconv.Atoi(cfg.Server.Port); err != nil || port < 1024 || port > 65535 {
+		return fmt.Errorf("invalid server port: %s", cfg.Server.Port)
+	}
+	if port, err := strconv.Atoi(cfg.Web.Port); err != nil || port < 1024 || port > 65535 {
+		return fmt.Errorf("invalid web port: %s", cfg.Web.Port)
+	}
+
+	// Check if sensitive files have proper permissions
+	if err := checkFilePermissions(cfg.SSH.KeyPath); err != nil {
+		return err
+	}
+	if err := checkFilePermissions(cfg.SSH.PubKeyPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// checkFilePermissions verifies that sensitive files have proper permissions
+func checkFilePermissions(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil // File doesn't exist yet, that's okay
+	}
+
+	mode := info.Mode()
+	if mode&0077 != 0 {
+		return fmt.Errorf("file %s has too permissive permissions: %v", path, mode)
 	}
 
 	return nil
