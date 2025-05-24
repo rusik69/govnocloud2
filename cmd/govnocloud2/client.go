@@ -137,18 +137,6 @@ func validateResourceName(name string) error {
 	return nil
 }
 
-// validatePort checks if a port number is valid
-func validatePort(port string) error {
-	p, err := strconv.Atoi(port)
-	if err != nil {
-		return fmt.Errorf("invalid port number: %v", err)
-	}
-	if p < 1 || p > 65535 {
-		return fmt.Errorf("port number must be between 1 and 65535")
-	}
-	return nil
-}
-
 // validateIP checks if an IP address is valid
 func validateIP(ip string) error {
 	if net.ParseIP(ip) == nil {
