@@ -29,12 +29,15 @@ var uninstallCmd = &cobra.Command{
 		}
 
 		log.Println("Uninstalling k3s master on " + cfg.Master.Host)
-		k3s.UninstallMaster(
+		err := k3s.UninstallMaster(
 			cfg.Master.Host,
 			cfg.SSH.User,
 			cfg.SSH.KeyPath,
 			cfg.SSH.Password,
 		)
+		if err != nil {
+			panic(err)
+		}
 
 		for _, worker := range workersSplit {
 			log.Println("Uninstalling k3s worker on " + worker)

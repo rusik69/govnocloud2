@@ -88,14 +88,16 @@ func (m *MasterConfig) Deploy() error {
 }
 
 // UninstallMaster uninstalls k3s master.
-func UninstallMaster(host, user, key, password string) {
+func UninstallMaster(host, user, key, password string) error {
 	cfg := NewMasterConfig(host, user, key)
 	cfg.Password = password
-	cfg.Uninstall()
+	err := cfg.Uninstall()
+	return err
 }
 
 // Uninstall removes k3s and related files from the master
-func (m *MasterConfig) Uninstall() {
+func (m *MasterConfig) Uninstall() error {
+	success := false
 	cleanupCommands := []struct {
 		cmd  string
 		desc string
@@ -121,6 +123,12 @@ func (m *MasterConfig) Uninstall() {
 		out, err := ssh.Run(command.cmd, m.Host, m.Key, m.User, m.Password, false, 10)
 		if err != nil {
 			log.Printf("Failed to %s: %v\nOutput: %s", command.desc, err, out)
+		} else {
+			success = true
 		}
 	}
+	if !success {
+		return fmt.Errorf("failed to uninstall k3s master")
+	}
+	return nil
 }
