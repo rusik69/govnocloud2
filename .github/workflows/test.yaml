@@ -62,7 +62,7 @@ jobs:
       run: make suspend
       if: failure()
 
-    timeout-minutes: 20
+    timeout-minutes: 30
   test:
     needs: install
     runs-on: self-hosted
