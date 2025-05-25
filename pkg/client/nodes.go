@@ -17,8 +17,9 @@ func (c *Client) ListNodes() ([]string, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return nil, fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
@@ -49,8 +50,9 @@ func (c *Client) GetNode(name string) (*types.Node, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return nil, fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
@@ -102,8 +104,9 @@ func (c *Client) AddNode(name, host, masterHost, user, key string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
@@ -128,8 +131,9 @@ func (c *Client) DeleteNode(name string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
@@ -155,8 +159,9 @@ func (c *Client) RestartNode(name string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)
@@ -182,8 +187,9 @@ func (c *Client) UpgradeNode(ip string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		body, err := io.ReadAll(resp.Body)

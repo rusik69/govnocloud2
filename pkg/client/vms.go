@@ -56,8 +56,9 @@ func (c *Client) CreateVM(name, image, size, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating VM: %w", err)
@@ -80,8 +81,9 @@ func (c *Client) ListVMs(namespace string) ([]string, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return nil, fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing VMs: %w", err)
@@ -109,8 +111,9 @@ func (c *Client) GetVM(name, namespace string) (*types.VM, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return nil, fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error getting VM: %w", err)
@@ -138,8 +141,9 @@ func (c *Client) DeleteVM(name, namespace string) error {
 		return fmt.Errorf("error creating delete request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting VM: %w", err)
@@ -162,8 +166,9 @@ func (c *Client) WaitVM(name, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error waiting for VM: %w", err)
@@ -186,8 +191,9 @@ func (c *Client) StartVM(name, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error starting VM: %w", err)
@@ -210,8 +216,9 @@ func (c *Client) StopVM(name, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error stopping VM: %w", err)
@@ -234,8 +241,9 @@ func (c *Client) RestartVM(name, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	if err := c.SetAuthHeader(req); err != nil {
+		return fmt.Errorf("error setting auth header: %w", err)
+	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error restarting VM: %w", err)
