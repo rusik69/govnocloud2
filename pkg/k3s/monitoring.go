@@ -186,6 +186,7 @@ grafana:
 prometheus:
   prometheusSpec:
     retention: 30d
+	maximumStartupDurationSeconds: 600
 alertmanager:
   alertmanagerSpec: {}
 prometheusOperator:
