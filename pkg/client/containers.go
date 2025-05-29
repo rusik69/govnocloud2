@@ -36,9 +36,7 @@ func (c *Client) CreateContainer(name, image, namespace string, cpu, ram, disk, 
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -67,9 +65,7 @@ func (c *Client) ListContainers(namespace string) ([]types.Container, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return nil, fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -108,9 +104,7 @@ func (c *Client) GetContainer(name, namespace string) (types.Container, error) {
 		return types.Container{}, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return types.Container{}, fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -148,9 +142,7 @@ func (c *Client) DeleteContainer(name, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)

@@ -18,9 +18,7 @@ func (c *Client) ListUsers() ([]types.User, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return nil, fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list users: %w", err)
@@ -55,9 +53,7 @@ func (c *Client) GetUser(name string) (types.User, error) {
 		return types.User{}, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return types.User{}, fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return types.User{}, fmt.Errorf("failed to get user: %w", err)
@@ -96,9 +92,7 @@ func (c *Client) CreateUser(name string, user types.User) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
@@ -121,9 +115,7 @@ func (c *Client) DeleteUser(name string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
@@ -151,9 +143,7 @@ func (c *Client) SetUserPassword(name, password string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to set user password: %w", err)
@@ -176,9 +166,7 @@ func (c *Client) AddNamespaceToUser(name, namespace string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to add namespace to user: %w", err)
@@ -201,9 +189,7 @@ func (c *Client) RemoveNamespaceFromUser(name, namespace string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if err := c.SetAuthHeader(req); err != nil {
-		return fmt.Errorf("error setting auth header: %w", err)
-	}
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to remove namespace from user: %w", err)

@@ -15,8 +15,7 @@ func (c *Client) CreateNamespace(name string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error creating namespace: %w", err)
@@ -41,8 +40,7 @@ func (c *Client) DeleteNamespace(name string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting namespace: %w", err)
@@ -68,8 +66,7 @@ func (c *Client) ListNamespaces() ([]string, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing namespaces: %w", err)
@@ -100,8 +97,7 @@ func (c *Client) GetNamespace(name string) (string, error) {
 		return "", fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error getting namespace: %w", err)

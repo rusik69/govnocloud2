@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -69,8 +68,6 @@ func NewServer(config types.ServerConfig) *Server {
 	corsConfig.MaxAge = 12 * time.Hour
 	router.Use(cors.New(corsConfig))
 
-	// Add security middleware
-	router.Use(SecurityHeadersMiddleware())
 	router.Use(LoggingMiddleware())
 	router.Use(ErrorMiddleware())
 
@@ -91,8 +88,6 @@ func (s *Server) setupRoutes() {
 
 		// Protected endpoints (require authentication)
 		protected := v0.Group("")
-		protected.Use(s.AuthMiddleware())
-		protected.Use(s.RateLimitMiddleware())
 		{
 			// VM endpoints
 			vms := protected.Group("/vms")
@@ -267,61 +262,6 @@ func ErrorMiddleware() gin.HandlerFunc {
 				respondWithError(c, http.StatusInternalServerError, "Internal server error")
 			}
 		}()
-		c.Next()
-	}
-}
-
-// SecurityHeadersMiddleware adds security-related headers to responses
-func SecurityHeadersMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("X-Content-Type-Options", "nosniff")
-		c.Header("X-Frame-Options", "DENY")
-		c.Header("X-XSS-Protection", "1; mode=block")
-		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-		c.Header("Content-Security-Policy", "default-src 'self'")
-		c.Next()
-	}
-}
-
-// AuthMiddleware handles authentication
-func (s *Server) AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			respondWithError(c, http.StatusUnauthorized, "Authorization header required")
-			c.Abort()
-			return
-		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			respondWithError(c, http.StatusUnauthorized, "Invalid authorization header format")
-			c.Abort()
-			return
-		}
-
-		token := parts[1]
-		user, err := userManager.ValidateToken(token)
-		if err != nil {
-			respondWithError(c, http.StatusUnauthorized, "Invalid token")
-			c.Abort()
-			return
-		}
-
-		// Store user info in context
-		c.Set("user", user)
-		c.Next()
-	}
-}
-
-// RateLimitMiddleware implements rate limiting
-func (s *Server) RateLimitMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if !s.limiter.Allow() {
-			respondWithError(c, http.StatusTooManyRequests, "Rate limit exceeded")
-			c.Abort()
-			return
-		}
 		c.Next()
 	}
 }
