@@ -311,13 +311,11 @@ func (m *UserManager) VerifyPassword(name, password string) (bool, error) {
 	return true, nil
 }
 
-// CheckAuth verifies user authentication from request headers
+// CheckAuth verifies user authentication using HTTP Basic Auth
 func CheckAuth(c *gin.Context) (bool, string, error) {
-	username := c.GetHeader("User")
-	password := c.GetHeader("Password")
-
-	if username == "" || password == "" {
-		return false, "", fmt.Errorf("missing authentication headers")
+	username, password, ok := c.Request.BasicAuth()
+	if !ok {
+		return false, "", fmt.Errorf("missing basic auth credentials")
 	}
 
 	// Verify the password against stored hash
