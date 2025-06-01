@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rusik69/govnocloud2/pkg/types"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // UserManager handles user operations
@@ -80,7 +79,7 @@ func (m *UserManager) CreateUser(name string, user types.User) error {
 		}
 	}
 
-	// Hash password if provided
+	// Store password separately if provided
 	password := user.Password
 	user.Password = "" // Don't store password in user data
 
@@ -96,15 +95,9 @@ func (m *UserManager) CreateUser(name string, user types.User) error {
 		return fmt.Errorf("failed to store user in etcd: %w", err)
 	}
 
-	// Store password separately if provided
+	// Store password separately if provided (plain text)
 	if password != "" {
-		// Hash the password before storing
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			return fmt.Errorf("failed to hash password: %w", err)
-		}
-
-		err = m.SetUserPassword(name, string(hashedPassword))
+		err = m.SetUserPassword(name, password)
 		if err != nil {
 			return fmt.Errorf("failed to set user password: %w", err)
 		}
@@ -158,7 +151,7 @@ func (m *UserManager) ListUsers() ([]types.User, error) {
 	return users, nil
 }
 
-// GetUserPassword gets a user's password (hashed)
+// GetUserPassword gets a user's password (plain text)
 func (m *UserManager) GetUserPassword(name string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -176,7 +169,7 @@ func (m *UserManager) GetUserPassword(name string) (string, error) {
 	return string(resp.Kvs[0].Value), nil
 }
 
-// SetUserPassword sets a user's password
+// SetUserPassword sets a user's password (plain text)
 func (m *UserManager) SetUserPassword(name, password string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -191,7 +184,7 @@ func (m *UserManager) SetUserPassword(name, password string) error {
 		return fmt.Errorf("user %s not found", name)
 	}
 
-	// Store password
+	// Store password in plain text
 	key := fmt.Sprintf("/users/%s/password", name)
 	_, err = m.etcdClient.Put(ctx, key, password)
 	if err != nil {
@@ -293,22 +286,15 @@ func (m *UserManager) RemoveNamespaceFromUser(name, namespace string) error {
 	return nil
 }
 
-// VerifyPassword checks if the provided password matches the stored hash
+// VerifyPassword checks if the provided password matches the stored password (plain text comparison)
 func (m *UserManager) VerifyPassword(name, password string) (bool, error) {
-	hashedPassword, err := m.GetUserPassword(name)
+	storedPassword, err := m.GetUserPassword(name)
 	if err != nil {
 		return false, fmt.Errorf("failed to get stored password: %w", err)
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return false, nil
-		}
-		return false, fmt.Errorf("error comparing passwords: %w", err)
-	}
-
-	return true, nil
+	// Simple string comparison for plain text passwords
+	return storedPassword == password, nil
 }
 
 // CheckAuth verifies user authentication using HTTP Basic Auth
@@ -318,7 +304,7 @@ func CheckAuth(c *gin.Context) (bool, string, error) {
 		return false, "", fmt.Errorf("missing basic auth credentials")
 	}
 
-	// Verify the password against stored hash
+	// Verify the password against stored password (plain text)
 	valid, err := userManager.VerifyPassword(username, password)
 	if err != nil {
 		return false, "", fmt.Errorf("authentication error: %w", err)
@@ -561,15 +547,8 @@ func SetUserPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Printf("failed to hash password: %v", err)
-		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to hash password: %v", err))
-		return
-	}
-
-	err = userManager.SetUserPassword(name, string(hashedPassword))
+	// Store password in plain text (no hashing)
+	err = userManager.SetUserPassword(name, password)
 	if err != nil {
 		log.Printf("failed to set user password: %v", err)
 		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("failed to set user password: %v", err))

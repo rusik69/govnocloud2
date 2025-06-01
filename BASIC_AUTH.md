@@ -11,6 +11,7 @@ The GovnoCloud2 client uses standard HTTP Basic Authentication for all API reque
 - **Method**: HTTP Basic Authentication (RFC 7617)
 - **Header**: `Authorization: Basic <base64-encoded-credentials>`
 - **Encoding**: Base64 encoding of `username:password`
+- **Password Storage**: Plain text (no hashing)
 
 ## Usage
 
@@ -91,6 +92,14 @@ All client methods automatically include basic authentication:
 2. **Simple Implementation**: No token management or expiration handling needed
 3. **Transparent**: Authentication happens automatically on every request
 4. **Compatible**: Works with standard HTTP authentication mechanisms
+5. **Plain Text Storage**: Passwords are stored in plain text for simplicity
+
+## Password Management
+
+- **Storage**: Passwords are stored in plain text in etcd
+- **Verification**: Simple string comparison for authentication
+- **No Hashing**: No bcrypt or other password hashing is used
+- **Direct Comparison**: Provided password is compared directly with stored password
 
 ## Example
 
@@ -127,7 +136,7 @@ The client is configured with:
 - **Host**: Server hostname or IP address
 - **Port**: Server port number
 - **Username**: Authentication username
-- **Password**: Authentication password
+- **Password**: Authentication password (stored in plain text)
 
 ```go
 client := client.NewClient("localhost", "6969", "admin", "password")
