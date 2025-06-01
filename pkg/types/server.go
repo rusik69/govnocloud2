@@ -1,10 +1,11 @@
 package types
 
 type ServerConfig struct {
-	Host       string
-	Port       string
-	User       string
-	Password   string
-	Key        string
-	MasterHost string
+	Host         string
+	Port         string
+	SSHUser      string
+	SSHPassword  string
+	Key          string
+	MasterHost   string
+	RootPassword string
 }

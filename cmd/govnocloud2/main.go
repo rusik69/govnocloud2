@@ -1,14 +1,11 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
-
-	"encoding/base64"
 
 	"github.com/rusik69/govnocloud2/pkg/types"
 	"github.com/spf13/cobra"
@@ -16,14 +13,15 @@ import (
 
 // Config holds all command line flags
 type Config struct {
-	Master  MasterConfig
-	Worker  WorkerConfig
-	SSH     SSHConfig
-	Kube    KubeConfig
-	Server  types.ServerConfig
-	Web     WebConfig
-	Client  ClientConfig
-	Install InstallConfig
+	Master       MasterConfig
+	Worker       WorkerConfig
+	SSH          SSHConfig
+	Kube         KubeConfig
+	Server       types.ServerConfig
+	RootPassword string
+	Web          WebConfig
+	Client       ClientConfig
+	Install      InstallConfig
 }
 
 type MasterConfig struct {
@@ -131,12 +129,7 @@ func initConfig() error {
 	// Generate a random password if not set
 	defaultPassword := os.Getenv("GOVNOCLOUD_DEFAULT_PASSWORD")
 	if defaultPassword == "" {
-		// Generate a secure random password
-		b := make([]byte, 32)
-		if _, err := rand.Read(b); err != nil {
-			return fmt.Errorf("failed to generate random password: %v", err)
-		}
-		defaultPassword = base64.URLEncoding.EncodeToString(b)
+		defaultPassword = "password"
 	}
 
 	cfg = Config{
@@ -160,12 +153,13 @@ func initConfig() error {
 			Interface: "enp0s25",
 		},
 		Server: types.ServerConfig{
-			Host:       "0.0.0.0",
-			Port:       "6969",
-			MasterHost: "10.0.0.1",
-			User:       "ubuntu",
-			Password:   defaultPassword,
-			Key:        filepath.Join(homeDir, ".ssh/id_rsa"),
+			Host:         "0.0.0.0",
+			Port:         "6969",
+			MasterHost:   "10.0.0.1",
+			SSHUser:      "ubuntu",
+			SSHPassword:  defaultPassword,
+			Key:          filepath.Join(homeDir, ".ssh/id_rsa"),
+			RootPassword: defaultPassword,
 		},
 		Web: WebConfig{
 			Host:       "0.0.0.0",
@@ -329,10 +323,11 @@ func setupServerFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
 	flags.StringVarP(&cfg.Server.Host, "host", "", cfg.Server.Host, "listen host")
 	flags.StringVarP(&cfg.Server.Port, "port", "", cfg.Server.Port, "listen port")
-	flags.StringVarP(&cfg.Server.User, "user", "", cfg.Server.User, "ssh user")
-	flags.StringVarP(&cfg.Server.Password, "password", "", cfg.Server.Password, "ssh password")
+	flags.StringVarP(&cfg.Server.SSHUser, "user", "", cfg.Server.SSHUser, "ssh user")
+	flags.StringVarP(&cfg.Server.SSHPassword, "password", "", cfg.Server.SSHPassword, "ssh password")
 	flags.StringVarP(&cfg.Server.Key, "key", "", cfg.Server.Key, "ssh key")
 	flags.StringVarP(&cfg.Server.MasterHost, "master", "", cfg.Server.MasterHost, "master host")
+	flags.StringVarP(&cfg.Server.RootPassword, "rootpassword", "", cfg.Server.RootPassword, "root password")
 }
 
 func setupClientFlags(cmd *cobra.Command) {

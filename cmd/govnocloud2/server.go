@@ -16,8 +16,8 @@ var serverCmd = &cobra.Command{
 		log.Println("listenHost: ", cfg.Server.Host)
 		log.Println("listenPort: ", cfg.Server.Port)
 		log.Println("masterHost: ", cfg.Server.MasterHost)
-		log.Println("user: ", cfg.Server.User)
-		log.Println("password: ", cfg.Server.Password)
+		log.Println("user: ", cfg.Server.SSHUser)
+		log.Println("password: ", cfg.Server.SSHPassword)
 		log.Println("key: ", cfg.Server.Key)
 
 		server.Serve(cfg.Server)

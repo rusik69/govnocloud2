@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -295,75 +294,6 @@ func (m *UserManager) VerifyPassword(name, password string) (bool, error) {
 
 	// Simple string comparison for plain text passwords
 	return storedPassword == password, nil
-}
-
-// CheckAuth verifies user authentication using HTTP Basic Auth
-func CheckAuth(c *gin.Context) (bool, string, error) {
-	username, password, ok := c.Request.BasicAuth()
-	if !ok {
-		return false, "", fmt.Errorf("missing basic auth credentials")
-	}
-
-	// Verify the password against stored password (plain text)
-	valid, err := userManager.VerifyPassword(username, password)
-	if err != nil {
-		return false, "", fmt.Errorf("authentication error: %w", err)
-	}
-
-	if !valid {
-		return false, "", fmt.Errorf("invalid credentials")
-	}
-
-	return true, username, nil
-}
-
-// CheckNamespaceAccess checks if a user has access to a namespace
-func CheckNamespaceAccess(username, namespace string) bool {
-	user, err := userManager.GetUser(username)
-	if err != nil {
-		return false
-	}
-
-	if user == nil {
-		return false
-	}
-
-	if user.IsAdmin {
-		return true
-	}
-
-	if types.ReservedNamespaces[namespace] {
-		return false
-	}
-
-	return slices.Contains(user.Namespaces, namespace)
-}
-
-// CheckAdminAccess checks if a user is an admin
-func CheckAdminAccess(username string) bool {
-	user, err := userManager.GetUser(username)
-	if err != nil {
-		return false
-	}
-
-	if user == nil {
-		return false
-	}
-
-	return user.IsAdmin
-}
-
-// CreateRootUser creates a root user
-func CreateRootUser() error {
-	user := types.User{
-		Name:    "root",
-		IsAdmin: true,
-	}
-	err := userManager.CreateUser("root", user)
-	if err != nil {
-		return fmt.Errorf("failed to create root user: %w", err)
-	}
-	return nil
 }
 
 // ListUsersHandler handles requests to list users

@@ -172,9 +172,9 @@ func (m *NodeManager) GetNode(name string) (*types.Node, error) {
 
 	node := types.Node{
 		Host:       host,
-		User:       server.config.User,
+		User:       server.config.SSHUser,
 		Key:        server.config.Key,
-		Password:   server.config.Password,
+		Password:   server.config.SSHPassword,
 		MasterHost: server.config.MasterHost,
 		Status:     status,
 	}
@@ -224,7 +224,7 @@ func DeleteNodeHandler(c *gin.Context) {
 // DeleteNode removes a node from the cluster
 func (m *NodeManager) DeleteNode(name string) error {
 	cmd := "sudo /usr/local/bin/k3s-agent-uninstall.sh"
-	out, err := ssh.Run(cmd, name, server.config.Key, server.config.User, "", true, 600)
+	out, err := ssh.Run(cmd, name, server.config.Key, server.config.SSHUser, "", true, 600)
 	if err != nil {
 		return fmt.Errorf("failed to uninstall k3s node: %w %s", err, out)
 	}
@@ -364,7 +364,7 @@ func SuspendNodeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
-	if err := nodeManager.SuspendNode(hostName, server.config.User, server.config.Key); err != nil {
+	if err := nodeManager.SuspendNode(hostName, server.config.SSHUser, server.config.Key); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to suspend node: %v", err)})
 		return
 	}
@@ -400,7 +400,7 @@ func ResumeNodeHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "host name is required"})
 		return
 	}
-	if err := nodeManager.ResumeNode(hostName, server.config.User, server.config.Key); err != nil {
+	if err := nodeManager.ResumeNode(hostName, server.config.SSHUser, server.config.Key); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to resume node: %v", err)})
 		return
 	}

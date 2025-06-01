@@ -13,6 +13,16 @@ The GovnoCloud2 client uses standard HTTP Basic Authentication for all API reque
 - **Encoding**: Base64 encoding of `username:password`
 - **Password Storage**: Plain text (no hashing)
 
+## Default Credentials
+
+When the server starts, it automatically creates a root user with the following default credentials:
+
+- **Username**: `root`
+- **Password**: `password`
+- **Admin Access**: Yes (full access to all resources)
+
+⚠️ **Security Note**: Change the default password immediately in production environments!
+
 ## Usage
 
 The basic authentication is transparent to the user. Simply create a client instance with your credentials:
@@ -25,8 +35,8 @@ import (
 )
 
 func main() {
-    // Create client with basic authentication
-    c := client.NewClient("localhost", "6969", "admin", "password")
+    // Create client with basic authentication (using default credentials)
+    c := client.NewClient("localhost", "6969", "root", "password")
     
     // Use client methods - basic auth happens automatically
     vms, err := c.ListVMs("default")
@@ -100,6 +110,17 @@ All client methods automatically include basic authentication:
 - **Verification**: Simple string comparison for authentication
 - **No Hashing**: No bcrypt or other password hashing is used
 - **Direct Comparison**: Provided password is compared directly with stored password
+- **Default Root User**: Automatically created with username `root` and password `password`
+
+## Troubleshooting Authentication Issues
+
+If you encounter authentication errors:
+
+1. **Check credentials**: Ensure you're using the correct username and password
+2. **Default credentials**: Try using `root` / `password` for initial access
+3. **Server logs**: Check server logs for detailed authentication error messages
+4. **User exists**: Verify the user exists in the system
+5. **Password set**: Ensure the user has a password set
 
 ## Example
 
@@ -116,7 +137,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### After (Basic Auth)
 ```
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+Authorization: Basic cm9vdDpwYXNzd29yZA==
 ```
 
 ## Testing
@@ -135,9 +156,13 @@ The client is configured with:
 
 - **Host**: Server hostname or IP address
 - **Port**: Server port number
-- **Username**: Authentication username
-- **Password**: Authentication password (stored in plain text)
+- **Username**: Authentication username (default: `root`)
+- **Password**: Authentication password (default: `password`)
 
 ```go
-client := client.NewClient("localhost", "6969", "admin", "password")
+// Using default credentials
+client := client.NewClient("localhost", "6969", "root", "password")
+
+// Using custom credentials
+client := client.NewClient("localhost", "6969", "myuser", "mypassword")
 ``` 
