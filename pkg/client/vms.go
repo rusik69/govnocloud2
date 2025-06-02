@@ -12,26 +12,6 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
-// Client represents an HTTP client for VM operations
-type Client struct {
-	baseURL    string
-	username   string
-	password   string
-	httpClient *http.Client
-}
-
-// NewClient creates a new VM client
-func NewClient(host, port, username, password string) *Client {
-	return &Client{
-		baseURL:  fmt.Sprintf("http://%s:%s/api/v0", host, port),
-		username: username,
-		password: password,
-		httpClient: &http.Client{
-			Timeout: 300 * time.Second,
-		},
-	}
-}
-
 // CreateVM creates a VM.
 func (c *Client) CreateVM(name, image, size, namespace string) error {
 	vm := types.VM{

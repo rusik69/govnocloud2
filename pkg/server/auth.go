@@ -85,7 +85,7 @@ func CreateRootUser(password string) error {
 		log.Printf("Root user already exists, skipping creation")
 		return nil
 	}
-
+	log.Printf("Creating root user with password '%s'", password)
 	user := types.User{
 		Name:     "root",
 		IsAdmin:  true,
