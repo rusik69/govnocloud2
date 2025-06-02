@@ -74,4 +74,18 @@ tag:
 	git tag -a $$version -m "Release $$version"; \
 	git push origin $$version
 
+commit:
+	@read -p "Enter commit message: " message; \
+	git add .; \
+	git commit -m "$$message"
+
+push:
+	git push origin $$(git branch --show-current)
+
+commit-push:
+	@read -p "Enter commit message: " message; \
+	git add .; \
+	git commit -m "$$message"; \
+	git push origin $$(git branch --show-current)
+
 all: get build
