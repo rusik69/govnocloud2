@@ -27,7 +27,7 @@ func CheckAuth(c *gin.Context) (bool, string, error) {
 	}
 
 	if !valid {
-		log.Printf("Authentication failed for user %s: invalid credentials", username)
+		log.Printf("Authentication failed for user %s:%s invalid credentials", username, password)
 		return false, "", fmt.Errorf("invalid credentials")
 	}
 
