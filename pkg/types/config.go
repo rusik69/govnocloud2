@@ -111,17 +111,13 @@ type LonghornConfig struct {
 // DefaultConfig returns a configuration with sensible defaults
 func DefaultConfig() Config {
 	homeDir, _ := os.UserHomeDir()
-	defaultPassword := os.Getenv("GOVNOCLOUD_DEFAULT_PASSWORD")
-	if defaultPassword == "" {
-		defaultPassword = "password"
-	}
 
 	return Config{
 		SSH: SSHConfig{
 			KeyPath:    filepath.Join(homeDir, ".ssh/id_rsa"),
 			PubKeyPath: filepath.Join(homeDir, ".ssh/id_rsa.pub"),
 			User:       "ubuntu",
-			Password:   defaultPassword,
+			Password:   "ubuntu",
 		},
 		Master: MasterConfig{
 			KeyPath:    "~/.ssh/id_rsa",
@@ -141,9 +137,9 @@ func DefaultConfig() Config {
 			Port:         "6969",
 			MasterHost:   "10.0.0.1",
 			SSHUser:      "ubuntu",
-			SSHPassword:  defaultPassword,
+			SSHPassword:  "ubuntu",
 			Key:          filepath.Join(homeDir, ".ssh/id_rsa"),
-			RootPassword: defaultPassword,
+			RootPassword: "password",
 		},
 		Web: WebConfig{
 			Host:       "0.0.0.0",
@@ -154,15 +150,15 @@ func DefaultConfig() Config {
 		Client: ClientConfig{
 			Host:     "localhost",
 			Port:     "6969",
-			User:     "ubuntu",
-			Password: defaultPassword,
+			User:     "root",
+			Password: "password",
 		},
 		Install: InstallConfig{
 			Master: MasterConfig{
 				KeyPath:      "~/.ssh/id_rsa",
 				PubKeyPath:   "~/.ssh/id_rsa.pub",
 				Interface:    "enp0s25",
-				RootPassword: defaultPassword,
+				RootPassword: "password",
 			},
 			Workers: WorkerConfig{
 				IPRange:   "10.0.0.0/24",
@@ -178,7 +174,7 @@ func DefaultConfig() Config {
 				Host:       "0.0.0.0",
 				Port:       "6969",
 				User:       "ubuntu",
-				Password:   defaultPassword,
+				Password:   "ubuntu",
 				Key:        filepath.Join(homeDir, ".ssh/id_rsa"),
 				MasterHost: "10.0.0.1",
 				ImageDir:   "/var/lib/govnocloud2/images",
