@@ -83,6 +83,13 @@ func CreateRootUser(password string) error {
 
 	if existingUser != nil {
 		log.Printf("Root user already exists, skipping creation")
+		// Verify the existing user's password
+		storedPassword, err := userManager.GetUserPassword("root")
+		if err != nil {
+			log.Printf("Error getting existing root user password: %v", err)
+		} else {
+			log.Printf("Existing root user password: '%s'", storedPassword)
+		}
 		return nil
 	}
 	log.Printf("Creating root user with password '%s'", password)
@@ -98,5 +105,20 @@ func CreateRootUser(password string) error {
 	}
 
 	log.Printf("Root user created successfully with password '%s'", password)
+
+	// Verify the user was created correctly
+	createdUser, err := userManager.GetUser("root")
+	if err != nil {
+		log.Printf("Error verifying created root user: %v", err)
+	} else if createdUser != nil {
+		log.Printf("Verified root user exists: IsAdmin=%v", createdUser.IsAdmin)
+		storedPassword, err := userManager.GetUserPassword("root")
+		if err != nil {
+			log.Printf("Error getting created root user password: %v", err)
+		} else {
+			log.Printf("Verified root user password: '%s'", storedPassword)
+		}
+	}
+
 	return nil
 }
