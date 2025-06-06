@@ -163,12 +163,6 @@ var installCmd = &cobra.Command{
 			panic(err)
 		}
 
-		log.Println("Setting root password")
-		err = k3s.SetRootPassword(cfg.Install.Master.RootPassword)
-		if err != nil {
-			panic(err)
-		}
-
 		log.Println("Installing K9s")
 		err = k3s.InstallK9s(
 			cfg.Install.Master.Host,
