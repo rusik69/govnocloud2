@@ -26,6 +26,8 @@ var installCmd = &cobra.Command{
 		log.Println("alertmanager host: ", cfg.Install.Monitoring.AlertmanagerHost)
 		log.Println("kubevirt manager host: ", cfg.Install.Monitoring.KubevirtManagerHost)
 		log.Println("longhorn host: ", cfg.Install.Longhorn.Host)
+		log.Println("format disk: ", cfg.Install.Longhorn.FormatDisk)
+		log.Println("disk: ", cfg.Install.Longhorn.Disk)
 
 		if cfg.Install.Master.Host == "" {
 			panic("master is required")
