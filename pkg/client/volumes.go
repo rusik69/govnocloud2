@@ -18,8 +18,7 @@ func (c *Client) CreateVolume(name, namespace, size string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	volume := types.Volume{Name: name, Size: size}
 	jsonBody, err := json.Marshal(volume)
 	if err != nil {
@@ -45,8 +44,7 @@ func (c *Client) DeleteVolume(name, namespace string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting volume: %w", err)
@@ -68,8 +66,7 @@ func (c *Client) ListVolumes(namespace string) ([]string, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error listing volumes: %w", err)
@@ -102,8 +99,7 @@ func (c *Client) GetVolume(name, namespace string) (types.Volume, error) {
 		return types.Volume{}, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return types.Volume{}, fmt.Errorf("error getting volume: %w", err)

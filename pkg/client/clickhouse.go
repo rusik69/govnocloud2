@@ -30,8 +30,7 @@ func (c *Client) CreateClickhouse(name, namespace string, replicas int) error {
 
 	// Set content type and authentication headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// Use the client's httpClient to send the request
 	resp, err := c.httpClient.Do(req)
@@ -58,8 +57,7 @@ func (c *Client) GetClickhouse(name, namespace string) (*types.Clickhouse, error
 
 	// Set content type and authentication headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// Use the client's httpClient to send the request
 	resp, err := c.httpClient.Do(req)
@@ -88,8 +86,7 @@ func (c *Client) ListClickhouse(namespace string) ([]types.Clickhouse, error) {
 
 	// Set content type and authentication headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// Use the client's httpClient to send the request
 	resp, err := c.httpClient.Do(req)
@@ -118,8 +115,7 @@ func (c *Client) DeleteClickhouse(name, namespace string) error {
 
 	// Set content type and authentication headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// Use the client's httpClient to send the request
 	resp, err := c.httpClient.Do(req)

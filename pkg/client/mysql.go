@@ -32,8 +32,7 @@ func (c *Client) CreateMysql(name, namespace string, instances, routerInstances 
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -62,8 +61,7 @@ func (c *Client) GetMysql(name, namespace string) (*types.Mysql, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -94,8 +92,7 @@ func (c *Client) ListMysql(namespace string) ([]types.Mysql, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
@@ -126,8 +123,7 @@ func (c *Client) DeleteMysql(name, namespace string) error {
 		return fmt.Errorf("error creating delete request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User", c.username)
-	req.Header.Set("Password", c.password)
+	req.SetBasicAuth(c.username, c.password)
 
 	// set timeout to 600s
 	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
