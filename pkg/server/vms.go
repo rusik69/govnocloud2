@@ -15,7 +15,6 @@ import (
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
 
-
 // VMManager handles VM operations
 type VMManager struct {
 	kubectl KubectlRunner
@@ -362,6 +361,11 @@ func (m *VMManager) StartVM(name, namespace string) error {
 	log.Printf("starting VM %s in namespace %s", name, namespace)
 	out, err := m.virtctl.Run("start", name, "-n", namespace)
 	if err != nil {
+		// Check if the error is because VM is already running
+		if strings.Contains(string(out), "VM is already running") || strings.Contains(string(out), "already running") {
+			log.Printf("VM %s is already running in namespace %s", name, namespace)
+			return nil // Not an error, VM is already in desired state
+		}
 		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	// wait for VM to start
@@ -425,6 +429,11 @@ func (m *VMManager) StopVM(name, namespace string) error {
 	log.Printf("stopping VM %s in namespace %s", name, namespace)
 	out, err := m.virtctl.Run("stop", name, "-n", namespace)
 	if err != nil {
+		// Check if the error is because VM is already stopped
+		if strings.Contains(string(out), "VM is not running") || strings.Contains(string(out), "already stopped") || strings.Contains(string(out), "not running") {
+			log.Printf("VM %s is already stopped in namespace %s", name, namespace)
+			return nil // Not an error, VM is already in desired state
+		}
 		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
 	}
 	// wait for VM to stop
