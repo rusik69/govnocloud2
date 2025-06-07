@@ -294,10 +294,8 @@ func (m *UserManager) VerifyPassword(name, password string) (bool, error) {
 		return false, fmt.Errorf("failed to get stored password: %w", err)
 	}
 
-	log.Printf("Stored password for user %s: '%s', password: '%s'", name, storedPassword, password)
 	// Simple string comparison for plain text passwords
 	isValid := storedPassword == password
-	log.Printf("Password comparison result for user %s: %v", name, isValid)
 	return isValid, nil
 }
 

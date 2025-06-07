@@ -92,14 +92,14 @@ func (s *Server) setupRoutes() {
 			// VM endpoints
 			vms := protected.Group("/vms")
 			{
-				vms.POST("/:namespace/:name", s.ValidateNamespaceAccess(), CreateVMHandler)
-				vms.GET("/:namespace", s.ValidateNamespaceAccess(), ListVMsHandler)
-				vms.GET("/:namespace/:name", s.ValidateNamespaceAccess(), GetVMHandler)
-				vms.DELETE("/:namespace/:name", s.ValidateNamespaceAccess(), DeleteVMHandler)
-				vms.GET("/:namespace/:name/start", s.ValidateNamespaceAccess(), StartVMHandler)
-				vms.GET("/:namespace/:name/stop", s.ValidateNamespaceAccess(), StopVMHandler)
-				vms.GET("/:namespace/:name/restart", s.ValidateNamespaceAccess(), RestartVMHandler)
-				vms.GET("/:namespace/:name/wait", s.ValidateNamespaceAccess(), WaitVMHandler)
+				vms.POST("/:namespace/:name", CreateVMHandler)
+				vms.GET("/:namespace", ListVMsHandler)
+				vms.GET("/:namespace/:name", GetVMHandler)
+				vms.DELETE("/:namespace/:name", DeleteVMHandler)
+				vms.GET("/:namespace/:name/start", StartVMHandler)
+				vms.GET("/:namespace/:name/stop", StopVMHandler)
+				vms.GET("/:namespace/:name/restart", RestartVMHandler)
+				vms.GET("/:namespace/:name/wait", WaitVMHandler)
 			}
 
 			// Node endpoints
