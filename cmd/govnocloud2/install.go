@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/rusik69/govnocloud2/pkg/k3s"
+	k8s "github.com/rusik69/govnocloud2/pkg/k8s"
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +46,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing packages on " + cfg.Install.Master.Host)
-		out, err := k3s.InstallPackages(
+		out, err := k8s.InstallPackages(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -58,7 +58,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Configuring packages on " + cfg.Install.Master.Host)
-		out, err = k3s.ConfigurePackages(
+		out, err = k8s.ConfigurePackages(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -73,7 +73,7 @@ var installCmd = &cobra.Command{
 
 		if cfg.Install.Nat.Enabled {
 			log.Println("Setting up NAT")
-			err = k3s.SetupNat(
+			err = k8s.SetupNat(
 				cfg.Install.Master.Host,
 				cfg.Install.SSH.User,
 				cfg.Install.SSH.KeyPath,
@@ -86,7 +86,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Deploying server on " + cfg.Install.Master.Host)
-		err = k3s.Deploy(
+		err = k8s.Deploy(
 			cfg.Install.Master.Host,
 			cfg.Server.Host,
 			cfg.Web.Host,
@@ -103,7 +103,7 @@ var installCmd = &cobra.Command{
 
 		// Install k3sup tool
 		log.Println("Installing k3sup tool on " + cfg.Install.Master.Host)
-		err = k3s.InstallK3sUp(
+		err = k8s.InstallK3sUp(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -113,7 +113,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Deploying k3s master on " + cfg.Install.Master.Host)
-		err = k3s.DeployMaster(
+		err = k8s.DeployMaster(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -124,7 +124,7 @@ var installCmd = &cobra.Command{
 		}
 		for _, worker := range workersIPsSplit {
 			log.Println("Deploying k3s worker on " + worker)
-			err = k3s.DeployNode(
+			err = k8s.DeployNode(
 				worker,
 				cfg.Install.SSH.User,
 				cfg.Install.SSH.KeyPath,
@@ -154,7 +154,7 @@ var installCmd = &cobra.Command{
 		log.Println(out)
 
 		log.Println("Installing Etcd")
-		err = k3s.InstallEtcd(
+		err = k8s.InstallEtcd(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -162,9 +162,15 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		// create root user
+		log.Println("Creating root user")
+		err = k8s.CreateRootUser(cfg.Install.Master.RootPassword)
+		if err != nil {
+			panic(err)
+		}
 
 		log.Println("Installing K9s")
-		err = k3s.InstallK9s(
+		err = k8s.InstallK9s(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -174,7 +180,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing Helm")
-		err = k3s.InstallHelm(
+		err = k8s.InstallHelm(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -184,7 +190,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing Kubernetes Dashboard")
-		dashboardToken, err := k3s.InstallDashboard(
+		dashboardToken, err := k8s.InstallDashboard(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -195,7 +201,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing KubeVirt")
-		err = k3s.InstallKubeVirt(
+		err = k8s.InstallKubeVirt(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -207,7 +213,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing KubeVirt Manager")
-		err = k3s.InstallKubeVirtManager(
+		err = k8s.InstallKubeVirtManager(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -217,7 +223,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing Longhorn")
-		err = k3s.InstallLonghorn(
+		err = k8s.InstallLonghorn(
 			cfg.Install.Master.Host,
 			workersIPsSplit,
 			cfg.Install.SSH.User,
@@ -231,7 +237,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing Clickhouse")
-		err = k3s.InstallClickhouse(
+		err = k8s.InstallClickhouse(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -241,7 +247,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing CNPG")
-		err = k3s.InstallCNPG(
+		err = k8s.InstallCNPG(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -251,7 +257,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing MySQL operator")
-		err = k3s.InstallMySQL(
+		err = k8s.InstallMySQL(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -261,7 +267,7 @@ var installCmd = &cobra.Command{
 		}
 
 		log.Println("Installing Ollama")
-		err = k3s.InstallOllama(
+		err = k8s.InstallOllama(
 			cfg.Install.Master.Host,
 			cfg.Install.SSH.User,
 			cfg.Install.SSH.KeyPath,
@@ -272,7 +278,7 @@ var installCmd = &cobra.Command{
 
 		if cfg.Install.Monitoring.Enabled {
 			log.Println("Installing monitoring stack")
-			err = k3s.DeployPrometheus(
+			err = k8s.DeployPrometheus(
 				cfg.Install.Master.Host,
 				cfg.Install.SSH.User,
 				cfg.Install.SSH.KeyPath,

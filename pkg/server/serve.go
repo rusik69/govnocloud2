@@ -196,11 +196,6 @@ func Serve(serverConfig types.ServerConfig) {
 	server = NewServer(serverConfig)
 	defer userManager.etcdClient.Close()
 
-	err := CreateRootUser(serverConfig.RootPassword)
-	if err != nil {
-		log.Fatalf("failed to create root user: %v", err)
-	}
-
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

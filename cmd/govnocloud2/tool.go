@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/rusik69/govnocloud2/pkg/k3s"
+	k8s "github.com/rusik69/govnocloud2/pkg/k8s"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,7 @@ var wolCmd = &cobra.Command{
 			panic("master is required")
 		}
 		log.Println("running WOL on host ", cfg.Master.Host, " macs ", macsSplit)
-		k3s.Wol(
+		k8s.Wol(
 			cfg.Master.Host,
 			cfg.SSH.User,
 			cfg.SSH.KeyPath,
@@ -55,7 +55,7 @@ var suspendCmd = &cobra.Command{
 			panic("master is required")
 		}
 		log.Println("master: " + cfg.Master.Host)
-		k3s.Suspend(
+		k8s.Suspend(
 			ipsSplit,
 			cfg.Master.Host,
 			cfg.SSH.User,

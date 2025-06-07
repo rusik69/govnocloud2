@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/rusik69/govnocloud2/pkg/k3s"
+	k8s "github.com/rusik69/govnocloud2/pkg/k8s"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +29,7 @@ var uninstallCmd = &cobra.Command{
 		}
 
 		log.Println("Uninstalling k3s master on " + cfg.Master.Host)
-		err := k3s.UninstallMaster(
+		err := k8s.UninstallMaster(
 			cfg.Master.Host,
 			cfg.SSH.User,
 			cfg.SSH.KeyPath,
@@ -41,7 +41,7 @@ var uninstallCmd = &cobra.Command{
 
 		for _, worker := range workersSplit {
 			log.Println("Uninstalling k3s worker on " + worker)
-			err := k3s.UninstallNode(
+			err := k8s.UninstallNode(
 				cfg.Master.Host,
 				worker,
 				cfg.SSH.User,

@@ -1,4 +1,4 @@
-package k3s
+package k8s
 
 import (
 	"fmt"

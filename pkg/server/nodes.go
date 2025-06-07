@@ -12,7 +12,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rusik69/govnocloud2/pkg/k3s"
+	"github.com/rusik69/govnocloud2/pkg/k8s"
 	"github.com/rusik69/govnocloud2/pkg/ssh"
 	"github.com/rusik69/govnocloud2/pkg/types"
 )
@@ -266,7 +266,7 @@ func AddNodeHandler(c *gin.Context) {
 
 // AddNode adds a node to the cluster
 func (m *NodeManager) AddNode(node types.Node) error {
-	err := k3s.DeployNode(node.Host, node.User, node.Key, node.Password, node.MasterHost)
+	err := k8s.DeployNode(node.Host, node.User, node.Key, node.Password, node.MasterHost)
 	if err != nil {
 		return fmt.Errorf("failed to add node: %w", err)
 	}
