@@ -287,7 +287,6 @@ func (m *UserManager) RemoveNamespaceFromUser(name, namespace string) error {
 
 // VerifyPassword checks if the provided password matches the stored password (plain text comparison)
 func (m *UserManager) VerifyPassword(name, password string) (bool, error) {
-	log.Printf("VerifyPassword called for user: %s with password: '%s'", name, password)
 	storedPassword, err := m.GetUserPassword(name)
 	if err != nil {
 		log.Printf("Failed to get stored password for user %s: %v", name, err)
