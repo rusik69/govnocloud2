@@ -17,8 +17,6 @@ func CheckAuth(c *gin.Context) (bool, string, error) {
 		return false, "", fmt.Errorf("missing basic auth credentials")
 	}
 
-	log.Printf("Attempting authentication for user: %s", username)
-
 	// Verify the password against stored password (plain text)
 	valid, err := userManager.VerifyPassword(username, password)
 	if err != nil {
@@ -31,7 +29,6 @@ func CheckAuth(c *gin.Context) (bool, string, error) {
 		return false, "", fmt.Errorf("invalid credentials")
 	}
 
-	log.Printf("Authentication successful for user: %s", username)
 	return true, username, nil
 }
 

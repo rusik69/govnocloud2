@@ -35,31 +35,41 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		return fmt.Errorf("failed to create longhorn namespace: %s: %w", out, err)
 	}
 
-	baseCmd := "sudo apt-get update ; " +
-		"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils ; " +
-		"sudo modprobe dm_crypt ; " +
-		"sudo systemctl disable --now multipathd.socket ; " +
-		"sudo systemctl disable --now multipathd.service ; " +
-		"sudo systemctl enable --now iscsid ; " +
-		"sudo umount /mnt ; sudo umount /var/lib/longhorn"
-
-	if formatDisk {
-		baseCmd += fmt.Sprintf(" ; sudo dd if=/dev/zero of=/dev/%s bs=1M count=100 ; "+
-			"sudo blockdev --rereadpt /dev/%s ; "+
-			"sudo mkfs.ext4 /dev/%s", disk, disk, disk)
+	runCommands := []string{
+		"sudo apt-get update",
+		"sudo apt-get install -y open-iscsi nfs-common util-linux apache2-utils",
+		"sudo modprobe dm_crypt",
+		"sudo systemctl disable --now multipathd.socket",
+		"sudo systemctl disable --now multipathd.service",
+		"sudo systemctl enable --now iscsid",
+		"sudo umount /mnt",
+		"sudo umount /var/lib/longhorn",
 	}
 
-	baseCmd += fmt.Sprintf(" ; sudo mkdir -p /var/lib/longhorn ; "+
-		"sudo mount /dev/%s /var/lib/longhorn", disk)
+	if formatDisk {
+		runCommands = append(runCommands,
+			fmt.Sprintf("sudo dd if=/dev/zero of=/dev/%s bs=1M count=100", disk),
+			fmt.Sprintf("sudo blockdev --rereadpt /dev/%s", disk),
+			fmt.Sprintf("sudo mkfs.ext4 /dev/%s", disk),
+		)
+	}
+
+	runCommands = append(runCommands,
+		"sudo mkdir -p /var/lib/longhorn",
+		fmt.Sprintf("sudo mount /dev/%s /var/lib/longhorn", disk),
+	)
 
 	for _, nodeIP := range nodeIPs {
-		// Install required packages
-		cmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s "+
-			"'"+baseCmd+"'",
-			keyPath, user, nodeIP)
-		log.Println(cmd)
-		if _, err := ssh.Run(cmd, master, keyPath, user, "", true, 0); err != nil {
-			return fmt.Errorf("failed to prepare node %s: %w", nodeIP, err)
+		log.Printf("Preparing node %s", nodeIP)
+		for _, cmd := range runCommands {
+			sshCmd := fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s '%s'",
+				keyPath, user, nodeIP, cmd)
+			log.Printf("Running command on node %s: %s", nodeIP, cmd)
+			out, err := ssh.Run(sshCmd, master, keyPath, user, "", true, 0)
+			if err != nil {
+				return fmt.Errorf("failed to run command '%s' on node %s: %s: %w", cmd, nodeIP, out, err)
+			}
+			log.Printf("Command output on node %s: %s", nodeIP, out)
 		}
 	}
 

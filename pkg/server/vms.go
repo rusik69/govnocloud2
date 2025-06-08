@@ -482,18 +482,30 @@ func RestartVMHandler(c *gin.Context) {
 
 // RestartVM restarts a virtual machine
 func (m *VMManager) RestartVM(name, namespace string) error {
+	log.Printf("restarting VM %s in namespace %s", name, namespace)
+
+	// First try to stop the VM (with force to ensure it stops)
 	log.Printf("stopping VM %s in namespace %s", name, namespace)
 	out, err := m.virtctl.Run("stop", name, "-n", namespace, "--grace-period=1", "--force=true")
 	if err != nil {
-		return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
+		// Check if the error is because VM is already stopped
+		if strings.Contains(string(out), "VM is not running") || strings.Contains(string(out), "already stopped") || strings.Contains(string(out), "not running") {
+			log.Printf("VM %s is already stopped in namespace %s", name, namespace)
+		} else {
+			return fmt.Errorf("failed to stop VM %s in namespace %s: %s %w", name, namespace, out, err)
+		}
+	} else {
+		log.Printf("VM %s stopped successfully in namespace %s", name, namespace)
 	}
-	log.Printf("VM %s stopped successfully in namespace %s", name, namespace)
+
+	// Now start the VM using the existing StartVM method which has proper error handling
 	log.Printf("starting VM %s in namespace %s", name, namespace)
-	out, err = m.virtctl.Run("start", name, "-n", namespace)
+	err = m.StartVM(name, namespace)
 	if err != nil {
-		return fmt.Errorf("failed to start VM %s in namespace %s: %s %w", name, namespace, out, err)
+		return fmt.Errorf("failed to start VM after restart: %w", err)
 	}
-	log.Printf("VM %s started successfully in namespace %s", name, namespace)
+
+	log.Printf("VM %s restarted successfully in namespace %s", name, namespace)
 	return nil
 }
 
