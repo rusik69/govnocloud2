@@ -42,8 +42,8 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		"sudo systemctl disable --now multipathd.socket",
 		"sudo systemctl disable --now multipathd.service",
 		"sudo systemctl enable --now iscsid",
-		"sudo umount /mnt",
-		"sudo umount /var/lib/longhorn",
+		"sudo umount /mnt || true",
+		"sudo umount /var/lib/longhorn || true",
 	}
 
 	if formatDisk {
