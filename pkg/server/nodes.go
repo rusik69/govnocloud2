@@ -439,7 +439,7 @@ func UpgradeNodeHandler(c *gin.Context) {
 		return
 	}
 	if err := nodeManager.UpgradeNode(node.Host, node.User, node.Key); err != nil {
-		log.Printf("failed to upgrade node %s@%s: %v", node.User, node.Host, err)
+		log.Printf("failed to upgrade node %s@%s:%s %v", node.User, node.Host, node.Key, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to upgrade node: %v", err)})
 		return
 	}
