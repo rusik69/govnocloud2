@@ -439,7 +439,7 @@ func UpgradeNodeHandler(c *gin.Context) {
 		return
 	}
 	if err := nodeManager.UpgradeNode(node.Host, node.User, node.Key); err != nil {
-		log.Printf("failed to upgrade node %s: %v", hostName, err)
+		log.Printf("failed to upgrade node %s@%s: %v", node.User, node.Host, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("failed to upgrade node: %v", err)})
 		return
 	}
@@ -449,9 +449,10 @@ func UpgradeNodeHandler(c *gin.Context) {
 func (m *NodeManager) UpgradeNode(host, user, key string) error {
 	cmd := "sudo apt-get update && sudo apt-get upgrade -y"
 	log.Printf("upgrading node %s with command %s", host, cmd)
-	_, err := ssh.Run(cmd, host, key, user, "", false, 600)
+	out, err := ssh.Run(cmd, host, key, user, "", false, 600)
 	if err != nil {
 		return fmt.Errorf("failed to upgrade node: %w", err)
 	}
+	log.Printf("upgrade node %s output: %s", host, out)
 	return nil
 }

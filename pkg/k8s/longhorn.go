@@ -59,6 +59,16 @@ func InstallLonghorn(master string, nodeIPs []string, user, keyPath, ingressHost
 		fmt.Sprintf("sudo mount /dev/%s /var/lib/longhorn", disk),
 	)
 
+	log.Printf("Preparing master node")
+	for _, cmd := range runCommands {
+		log.Printf("Running command on master: %s", cmd)
+		out, err := ssh.Run(cmd, master, keyPath, user, "", true, 0)
+		if err != nil {
+			return fmt.Errorf("failed to run command '%s' on master: %s: %w", cmd, out, err)
+		}
+		log.Printf("Command output on master: %s", out)
+	}
+
 	for _, nodeIP := range nodeIPs {
 		log.Printf("Preparing node %s", nodeIP)
 		for _, cmd := range runCommands {
