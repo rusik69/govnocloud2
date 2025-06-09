@@ -174,7 +174,6 @@ spec:
 		return fmt.Errorf("failed to close temp file: %w", err)
 	}
 	cmd := []string{"apply", "-f", tmpfile.Name()}
-	log.Printf("running kubectl command: %+v", cmd)
 	out, err := m.kubectl.Run(cmd...)
 	if err != nil {
 		return fmt.Errorf("failed to create LLM %s: %s: %w", llm.Name, out, err)
@@ -186,7 +185,6 @@ spec:
 // GetLLM retrieves an LLM deployment
 func (m *LLMManager) GetLLM(namespace, name string) (*types.LLM, error) {
 	cmd := []string{"get", "Model", name, "-n", namespace, "-o", "json"}
-	log.Printf("running kubectl command: %+v", cmd)
 	out, err := m.kubectl.Run(cmd...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get LLM %s: %s: %w", name, out, err)
@@ -214,7 +212,6 @@ func (m *LLMManager) GetLLM(namespace, name string) (*types.LLM, error) {
 // DeleteLLM deletes LLM
 func (m *LLMManager) DeleteLLM(namespace, name string) error {
 	cmd := []string{"delete", "Model", name, "-n", namespace}
-	log.Printf("running kubectl command: %+v", cmd)
 	out, err := m.kubectl.Run(cmd...)
 	if err != nil {
 		return fmt.Errorf("failed to delete LLM %s: %s: %w", name, out, err)
@@ -256,7 +253,6 @@ func ListLLMsHandler(c *gin.Context) {
 // ListLLMs lists all LLMs in a namespace
 func (m *LLMManager) ListLLMs(namespace string) ([]types.LLM, error) {
 	cmd := []string{"get", "Model", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name},{.items[*].spec.image}"}
-	log.Printf("running kubectl command: %+v", cmd)
 	out, err := m.kubectl.Run(cmd...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list LLMs: %s: %w", out, err)
