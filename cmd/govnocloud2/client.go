@@ -65,6 +65,7 @@ var handlers = map[string]CommandHandler{
 	"clickhouse": initClickhouseHandler(),
 	"postgres":   initPostgresHandler(),
 	"mysql":      initMysqlHandler(),
+	"llms":       initLLMHandler(),
 	"volumes":    initVolumeHandler(),
 	"namespaces": initNamespaceHandler(),
 	"users":      initUserHandler(),
@@ -79,6 +80,7 @@ var clientCmd = &cobra.Command{
 	Examples:
 	  govnocloud2 client nodes list
 	  govnocloud2 client vms create myvm ubuntu 2 4 20
+	  govnocloud2 client help
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -94,6 +96,9 @@ var clientCmd = &cobra.Command{
 				handleError(err)
 			}
 			fmt.Println("server version:", serverVer)
+
+		case "help":
+			printHelp()
 
 		default:
 			handler, exists := handlers[args[0]]
@@ -251,28 +256,21 @@ func initVMHandler() CommandHandler {
 		if err := validateArgs(args, 4); err != nil {
 			return err
 		}
-		// Validate namespace name
+		// Validate name
 		if err := validateResourceName(args[0]); err != nil {
 			return err
 		}
-		// Validate VM name
+		// Validate image
 		if err := validateResourceName(args[1]); err != nil {
 			return err
 		}
-		// Validate CPU and memory values
-		cpu, err := parseInt(args[2])
-		if err != nil {
+		// Validate VM size
+		if err := validateResourceName(args[2]); err != nil {
 			return err
 		}
-		if cpu < 1 {
-			return fmt.Errorf("CPU count must be at least 1")
-		}
-		mem, err := parseInt(args[3])
-		if err != nil {
+		// Validate VM namespace
+		if err := validateResourceName(args[3]); err != nil {
 			return err
-		}
-		if mem < 512 {
-			return fmt.Errorf("memory must be at least 512MB")
 		}
 		return c.CreateVM(args[0], args[1], args[2], args[3])
 	})
@@ -698,6 +696,165 @@ func initUserHandler() CommandHandler {
 	})
 
 	return handler
+}
+
+func initLLMHandler() CommandHandler {
+	handler := NewBaseCommandHandler("llms")
+
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
+		}
+		llms, err := c.ListLLMs(args[0])
+		if err != nil {
+			return err
+		}
+		for _, llm := range llms {
+			fmt.Printf("%+v\n", llm)
+		}
+		return nil
+	})
+
+	handler.RegisterCommand("create", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 3); err != nil {
+			return err
+		}
+		return c.CreateLLM(args[0], args[1], args[2])
+	})
+
+	handler.RegisterCommand("delete", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		return c.DeleteLLM(args[0], args[1])
+	})
+
+	handler.RegisterCommand("get", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 2); err != nil {
+			return err
+		}
+		llm, err := c.GetLLM(args[0], args[1])
+		if err != nil {
+			return err
+		}
+		return printJSON(llm)
+	})
+	handler.RegisterCommand("list", func(c *client.Client, args []string) error {
+		if err := validateArgs(args, 1); err != nil {
+			return err
+		}
+		llms, err := c.ListLLMs(args[0])
+		if err != nil {
+			return err
+		}
+		for _, llm := range llms {
+			fmt.Printf("%+v\n", llm)
+		}
+		return nil
+	})
+
+	return handler
+}
+
+// printHelp displays the help information with all available actions
+func printHelp() {
+	fmt.Println("govnocloud2 client - Command-line interface for managing GovnoCloud resources")
+	fmt.Println()
+	fmt.Println("Usage:")
+	fmt.Println("  govnocloud2 client [resource] [action] [args...]")
+	fmt.Println()
+	fmt.Println("Available Resources and Actions:")
+	fmt.Println()
+
+	fmt.Println("  nodes:")
+	fmt.Println("    list                           - List all nodes")
+	fmt.Println("    get <name>                     - Get node details")
+	fmt.Println("    add <name> <ip> <mac> <cpu> <mem> - Add a new node")
+	fmt.Println("    delete <name>                  - Delete a node")
+	fmt.Println("    restart <name>                 - Restart a node")
+	fmt.Println()
+
+	fmt.Println("  vms:")
+	fmt.Println("    list <namespace>               - List VMs in namespace")
+	fmt.Println("    create <namespace> <name> <cpu> <mem> - Create a new VM")
+	fmt.Println("    get <namespace> <name>         - Get VM details")
+	fmt.Println("    delete <namespace> <name>      - Delete a VM")
+	fmt.Println("    start <namespace> <name>       - Start a VM")
+	fmt.Println("    stop <namespace> <name>        - Stop a VM")
+	fmt.Println("    restart <namespace> <name>     - Restart a VM")
+	fmt.Println("    wait <namespace> <name>        - Wait for VM to be ready")
+	fmt.Println()
+
+	fmt.Println("  containers:")
+	fmt.Println("    list <namespace>               - List containers in namespace")
+	fmt.Println("    create <namespace> <name> <image> <cpu> <ram> <disk> <port> - Create a container")
+	fmt.Println("    get <namespace> <name>         - Get container details")
+	fmt.Println("    delete <namespace> <name>      - Delete a container")
+	fmt.Println()
+
+	fmt.Println("  volumes:")
+	fmt.Println("    list <namespace>               - List volumes in namespace")
+	fmt.Println("    create <namespace> <name> <size> - Create a volume")
+	fmt.Println("    get <namespace> <name>         - Get volume details")
+	fmt.Println("    delete <namespace> <name>      - Delete a volume")
+	fmt.Println()
+
+	fmt.Println("  namespaces:")
+	fmt.Println("    list                           - List all namespaces")
+	fmt.Println("    create <name>                  - Create a namespace")
+	fmt.Println("    get <name>                     - Get namespace details")
+	fmt.Println("    delete <name>                  - Delete a namespace")
+	fmt.Println()
+
+	fmt.Println("  clickhouse:")
+	fmt.Println("    list <namespace>               - List ClickHouse instances in namespace")
+	fmt.Println("    create <namespace> <name> <replicas> - Create a ClickHouse instance")
+	fmt.Println("    get <namespace> <name>         - Get ClickHouse instance details")
+	fmt.Println("    delete <namespace> <name>      - Delete a ClickHouse instance")
+	fmt.Println()
+
+	fmt.Println("  postgres:")
+	fmt.Println("    list <namespace>               - List PostgreSQL instances in namespace")
+	fmt.Println("    create <namespace> <name> <version> <instances> <routers> - Create a PostgreSQL instance")
+	fmt.Println("    get <namespace> <name>         - Get PostgreSQL instance details")
+	fmt.Println("    delete <namespace> <name>      - Delete a PostgreSQL instance")
+	fmt.Println()
+
+	fmt.Println("  mysql:")
+	fmt.Println("    list <namespace>               - List MySQL instances in namespace")
+	fmt.Println("    create <namespace> <name> <instances> <routers> - Create a MySQL instance")
+	fmt.Println("    get <namespace> <name>         - Get MySQL instance details")
+	fmt.Println("    delete <namespace> <name>      - Delete a MySQL instance")
+	fmt.Println()
+
+	fmt.Println("  llms:")
+	fmt.Println("    list <namespace>               - List LLM instances in namespace")
+	fmt.Println("    create <name> <namespace> <type> - Create an LLM instance")
+	fmt.Println("    get <name> <namespace>         - Get LLM instance details")
+	fmt.Println("    delete <namespace> <name>      - Delete an LLM instance")
+	fmt.Println()
+
+	fmt.Println("  users:")
+	fmt.Println("    list                           - List all users")
+	fmt.Println("    create <name> <password> [namespaces...] - Create a user")
+	fmt.Println("    get <name>                     - Get user details")
+	fmt.Println("    delete <name>                  - Delete a user")
+	fmt.Println("    setpassword <name> <password>  - Set user password")
+	fmt.Println("    addnamespace <name> <namespace> - Add namespace to user")
+	fmt.Println("    removenamespace <name> <namespace> - Remove namespace from user")
+	fmt.Println()
+
+	fmt.Println("  Other Commands:")
+	fmt.Println("    version                        - Get server version")
+	fmt.Println("    help                           - Show this help message")
+	fmt.Println()
+
+	fmt.Println("Examples:")
+	fmt.Println("  govnocloud2 client nodes list")
+	fmt.Println("  govnocloud2 client vms create mynamespace myvm 2 4096")
+	fmt.Println("  govnocloud2 client namespaces create mynamespace")
+	fmt.Println("  govnocloud2 client users create myuser mypassword mynamespace")
+	fmt.Println("  govnocloud2 client llms create myllm mynamespace deepseek-r1-1.5b")
 }
 
 func handleError(err error) {

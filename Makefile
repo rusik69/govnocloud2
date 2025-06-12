@@ -57,13 +57,13 @@ run-web-mac:
 	DEBUG=true bin/govnocloud2-darwin-arm64 web --webpath pkg/web
 
 create-vm-mac:
-	./bin/govnocloud2-darwin-arm64 client vms create test-vm ubuntu24 small test --host 192.168.1.83
+	./bin/govnocloud2-darwin-arm64 client vms create test-vm ubuntu24 small test --host 192.168.1.64
 
 stop-vm-mac:
-	./bin/govnocloud2-darwin-arm64 client vms stop test-vm test --host 192.168.1.83
+	./bin/govnocloud2-darwin-arm64 client vms stop test-vm test --host 192.168.1.64
 
 start-vm-mac:
-	./bin/govnocloud2-darwin-arm64 client vms start test-vm test --host 192.168.1.83
+	./bin/govnocloud2-darwin-arm64 client vms start test-vm test --host 192.168.1.64
 
 exec:
 	chmod +x bin/*
