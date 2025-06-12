@@ -5,6 +5,7 @@ import (
 )
 
 func TestCreateNamespace(t *testing.T) {
+	cli := setupTestClient(t)
 	err := cli.CreateNamespace(testNamespace2)
 	if err != nil {
 		t.Fatalf("error creating namespace: %v", err)
@@ -13,6 +14,7 @@ func TestCreateNamespace(t *testing.T) {
 }
 
 func TestGetNamespace(t *testing.T) {
+	cli := setupTestClient(t)
 	namespace, err := cli.GetNamespace(testNamespace2)
 	if err != nil {
 		t.Fatalf("error getting namespace: %v", err)
@@ -21,6 +23,7 @@ func TestGetNamespace(t *testing.T) {
 }
 
 func TestListNamespaces(t *testing.T) {
+	cli := setupTestClient(t)
 	namespaces, err := cli.ListNamespaces()
 	if err != nil {
 		t.Fatalf("error listing namespaces: %v", err)
@@ -29,6 +32,7 @@ func TestListNamespaces(t *testing.T) {
 }
 
 func TestDeleteNamespace(t *testing.T) {
+	cli := setupTestClient(t)
 	err := cli.DeleteNamespace(testNamespace2)
 	if err != nil {
 		t.Fatalf("error deleting namespace: %v", err)

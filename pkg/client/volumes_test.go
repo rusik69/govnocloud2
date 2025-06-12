@@ -6,6 +6,7 @@ import (
 
 // TestCreateVolume tests the CreateVolume function
 func TestCreateVolume(t *testing.T) {
+	cli := setupTestClient(t)
 	err := cli.CreateVolume("test", testNamespace, "1Gi")
 	if err != nil {
 		t.Fatalf("error creating volume: %v", err)
@@ -15,6 +16,7 @@ func TestCreateVolume(t *testing.T) {
 
 // TestGetVolume tests the GetVolume function
 func TestGetVolume(t *testing.T) {
+	cli := setupTestClient(t)
 	volume, err := cli.GetVolume("test", testNamespace)
 	if err != nil {
 		t.Fatalf("error getting volume: %v", err)
@@ -24,6 +26,7 @@ func TestGetVolume(t *testing.T) {
 
 // TestListVolumes tests the ListVolumes function
 func TestListVolumes(t *testing.T) {
+	cli := setupTestClient(t)
 	volumes, err := cli.ListVolumes(testNamespace)
 	if err != nil {
 		t.Fatalf("error listing volumes: %v", err)
@@ -33,6 +36,7 @@ func TestListVolumes(t *testing.T) {
 
 // TestDeleteVolume tests the DeleteVolume function
 func TestDeleteVolume(t *testing.T) {
+	cli := setupTestClient(t)
 	err := cli.DeleteVolume("test", testNamespace)
 	if err != nil {
 		t.Fatalf("error deleting volume: %v", err)

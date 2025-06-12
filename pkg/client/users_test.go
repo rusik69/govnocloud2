@@ -12,13 +12,17 @@ import (
 // const testNamespace = "test"
 
 // User-specific test constants
-const testNewUser = "testuser"
-const testNewPassword = "testpassword"
+const (
+	testNewUser     = "testuser"
+	testNewPassword = "testpassword"
+)
 
 func TestCreateUser(t *testing.T) {
+	cli := setupTestClient(t)
 	user := types.User{
+		Name:       testNewUser,
 		Password:   testNewPassword,
-		Namespaces: []string{},
+		Namespaces: []string{testNamespace},
 	}
 	err := cli.CreateUser(testNewUser, user)
 	if err != nil {
@@ -28,6 +32,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
+	cli := setupTestClient(t)
 	user, err := cli.GetUser(testNewUser)
 	if err != nil {
 		t.Fatalf("error getting user: %v", err)
@@ -36,6 +41,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
+	cli := setupTestClient(t)
 	users, err := cli.ListUsers()
 	if err != nil {
 		t.Fatalf("error listing users: %v", err)
@@ -44,6 +50,7 @@ func TestListUsers(t *testing.T) {
 }
 
 func TestSetUserPassword(t *testing.T) {
+	cli := setupTestClient(t)
 	err := cli.SetUserPassword(testNewUser, testNewPassword)
 	if err != nil {
 		t.Fatalf("error setting user password: %v", err)
@@ -52,6 +59,7 @@ func TestSetUserPassword(t *testing.T) {
 }
 
 func TestAddNamespaceToUser(t *testing.T) {
+	cli := setupTestClient(t)
 	// Using the testNamespace variable defined in containers_test.go
 	err := cli.AddNamespaceToUser(testNewUser, testNamespace)
 	if err != nil {
@@ -61,6 +69,7 @@ func TestAddNamespaceToUser(t *testing.T) {
 }
 
 func TestRemoveNamespaceFromUser(t *testing.T) {
+	cli := setupTestClient(t)
 	// Using the testNamespace variable defined in containers_test.go
 	err := cli.RemoveNamespaceFromUser(testNewUser, testNamespace)
 	if err != nil {
@@ -70,6 +79,7 @@ func TestRemoveNamespaceFromUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
+	cli := setupTestClient(t)
 	err := cli.DeleteUser(testNewUser)
 	if err != nil {
 		t.Fatalf("error deleting user: %v", err)
