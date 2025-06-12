@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -17,6 +18,14 @@ const (
 	testPassword   = "password"
 )
 
+func init() {
+	cli := client.NewClient(testHost, testPort, testUser, testPassword)
+	err := cli.CreateNamespace(testNamespace)
+	if err != nil {
+		log.Fatalf("error creating namespace: %v", err)
+	}
+}
+
 // setupTestClient initializes test client and setup test namespace
 func setupTestClient(t *testing.T) *client.Client {
 	// Check if integration tests should be skipped
@@ -25,12 +34,6 @@ func setupTestClient(t *testing.T) *client.Client {
 	}
 
 	cli := client.NewClient(testHost, testPort, testUser, testPassword)
-
-	// Try to create test namespace, skip test if server is not available
-	err := cli.CreateNamespace(testNamespace)
-	if err != nil {
-		t.Skipf("Skipping test: server not available at %s:%s - %v", testHost, testPort, err)
-	}
 
 	return cli
 }
